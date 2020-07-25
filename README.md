@@ -1,2 +1,2 @@
 # disc.bu.edu
-DISC lab wensite
+DISC lab website
