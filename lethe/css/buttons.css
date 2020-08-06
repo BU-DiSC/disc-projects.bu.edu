@@ -1,0 +1,21 @@
+.btn-xl {
+    padding: 20px 40px;
+    border-color: #000;
+    border-radius: 3px;
+    text-transform: uppercase;
+    font-family: "Helvetica Neue"sans-serif;
+    font-size: 18px;
+    font-weight: bolder;
+    color: #000;
+    /*background-color: #fed136;*/
+}
+
+.btn-xl:hover,
+.btn-xl:focus,
+.btn-xl:active,
+.btn-xl.active,
+.open .dropdown-toggle.btn-xl {
+    border-color: #9a1111;
+    color: #fff;
+    background-color: rgba(238, 0, 0, 0.32);
+}
