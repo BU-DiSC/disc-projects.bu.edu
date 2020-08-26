@@ -1,0 +1,174 @@
+/*Run this command in terminal: sass --watch style.scss:style.css*/
+body {
+  position: relative;
+  min-width: 480px;
+}
+body section#problem {
+  text-align: justify;
+}
+body section#problem img {
+  float: right;
+  height: 300px;
+  margin-left: 3%;
+  margin-bottom: 1%;
+}
+body section#algorithms div.container {
+  background-color: black;
+  max-width: 100%;
+  color: white;
+  padding-top: 20px;
+  padding-bottom: 50px;
+  padding-left: 5%;
+}
+body section#algorithms strong {
+  color: #cc0000;
+}
+body section#paper div.container {
+  background-color: #f5f5f5;
+  max-width: 100%;
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+body section#paper div.container div.text {
+  width: 70%;
+  text-align: center;
+  margin-left: 15%;
+}
+body section#author div.container {
+  text-align: center;
+}
+body header#home {
+  margin: 0;
+  background-color: #cc0000;
+  color: white;
+  padding: 100px 50px 100px 50px;
+  text-align: center;
+  font-family: Poppins;
+  font-weight: 900;
+}
+body footer {
+  background-color: #565656;
+  color: #fff;
+  margin-bottom: 0.7%;
+  padding-top: 1%;
+  padding-bottom: 1%;
+}
+body footer #footerItem {
+  margin-left: 3%;
+}
+body footer #footerItem p {
+  font-weight: bold;
+}
+body footer #footerItem a {
+  color: white;
+}
+body footer #footerItem img {
+  height: 100px;
+}
+body span.anchor {
+  margin-top: -54px;
+  display: block;
+  height: 54px;
+  visibility: hidden;
+  position: relative;
+}
+
+.navbar {
+  background-color: white;
+  font-family: Roboto;
+}
+.navbar .nav-item {
+  font-size: 18px;
+  font-weight: 300;
+}
+
+.container {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+.container h1 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-family: Poppins;
+  font-weight: 700;
+}
+.container p {
+  font-family: Lato;
+  font-weight: 300;
+  font-size: 20px;
+}
+
+.graphContainer {
+  margin-bottom: 30px;
+  z-index: 2;
+}
+.graphContainer h3 {
+  text-align: center;
+  font-size: 30px;
+  font-family: Poppins;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+.graphContainer p {
+  font-family: Lato;
+  font-size: 20px;
+  font-weight: 300;
+  text-align: center;
+}
+.graphContainer #caption {
+  text-align: center;
+}
+.graphContainer .fixedInputs {
+  position: sticky;
+  -webkit-position: -webkit-sticky;
+  top: 76px;
+  background-color: white;
+  z-index: 1;
+}
+.graphContainer .collapseButton button {
+  background-color: grey;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+  width: 100%;
+}
+.graphContainer .collapseButton button i {
+  font-size: 20px;
+}
+
+#algorithm_buttons {
+  display: flex;
+  justify-content: center;
+}
+#algorithm_buttons button {
+  width: 150px;
+}
+#algorithm_buttons button span {
+  cursor: help;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+}
+#algorithm_buttons button:not(#coneAlpha) {
+  margin-left: 10px;
+}
+
+#carouselIndicators {
+  display: none;
+}
+#carouselIndicators .carousel-inner {
+  width: 70%;
+  margin-left: 15%;
+}
+#carouselIndicators .carousel-inner img {
+  width: 100%;
+}
+#carouselIndicators .carousel-inner .carousel-caption {
+  bottom: 0px;
+  left: 0%;
+  padding: 0px;
+  font-family: Lato;
+}
+#carouselIndicators .carousel-indicators {
+  bottom: -25px;
+}
+
+/*# sourceMappingURL=style.css.map */

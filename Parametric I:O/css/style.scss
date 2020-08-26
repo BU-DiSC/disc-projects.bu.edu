@@ -1,0 +1,240 @@
+/*Run this command in terminal: sass --watch style.scss:style.css*/
+$heading: Poppins;
+$body: Lato; //or Quicksand;
+$navbar: Roboto;
+$BURed: #cc0000;
+$textSize: 20px;
+
+body{
+    position: relative;
+    min-width: 480px;
+
+    section#problem{
+        text-align: justify;
+        img{
+            float:right; 
+            height:300px;
+            margin:{
+                left:3%;
+                bottom:1%
+            }
+        }
+    }
+
+    section#algorithms{
+        div.container{
+            background-color: black;
+            max-width: 100%;
+            color: white;
+            padding: {
+                top: 20px;
+                bottom: 50px;
+                left:5%;
+            }
+        }
+        strong{
+            color: $BURed;
+        }
+    }
+
+    section#paper{
+        div.container{
+            background-color: #f5f5f5;
+            max-width:100%;
+
+            div.text{
+                width: 70%;
+                text-align: center;
+                margin-left: 15%;
+            }
+
+            padding:{
+                top: 20px;
+                bottom: 20px;
+            }
+        }
+    }
+
+    section#author{
+        div.container{
+            text-align: center;
+        }
+    }
+
+    header#home{
+        margin:0;
+        background-color: $BURed;
+        color: white;
+        padding: 100px 50px 100px 50px;
+        text-align: center;
+        font:{
+            family: $heading;
+            weight: 900;
+        }
+    }
+
+    footer{
+        background-color: #565656;
+        color: #fff;
+        margin-bottom:.7%;
+        padding: {
+            top: 1%;
+            bottom: 1%;
+        }
+
+        #footerItem{
+            margin-left:3%;
+
+            p{
+                font-weight: bold;
+            }
+
+            a{
+                color: white;
+            }
+
+            img{
+                height: 100px;
+            }
+        }
+    }
+
+    span.anchor{
+        margin-top: -54px;
+        display: block;
+        height: 54px; 
+        visibility: hidden;
+        position: relative;
+    }
+}
+
+.navbar{
+    background-color: white;
+    font-family: $navbar;
+
+    .nav-item{
+        font:{
+            size: 18px;
+            weight: 300;
+        }
+
+    }
+}
+
+.container{
+    margin: {
+        top:20px;
+        bottom: 20px;
+    }
+
+    h1{
+        text-align: center;
+        margin-bottom: 20px;
+        font: {
+            family: $heading;
+            weight: 700;
+        }
+    }
+
+    p{
+        font: {
+            family: $body;
+            weight: 300;
+            size: $textSize;
+        }
+    }
+}
+
+.graphContainer{
+    margin-bottom: 30px;
+    z-index:2;
+
+    h3{
+        text-align:center;
+        font:{
+            size: 30px;
+            family: $heading;
+            weight: 600;
+        }
+        margin-bottom: 20px;
+    }
+
+    p{
+        font:{
+            family:$body;
+            size: $textSize;
+            weight: 300;
+        }
+        text-align: center;
+    }
+
+    #caption{
+        text-align: center;
+    }
+
+    .fixedInputs{
+        position: sticky;
+        -webkit-position: -webkit-sticky;
+        top: 76px;
+        background-color:white;
+        z-index:1;
+    }
+    .collapseButton{
+        button {
+            i {
+                font-size: 20px;
+            }
+            background-color:grey;
+            border-bottom:{
+                left-radius: 10px;
+                right-radius: 10px;
+            }
+            width: 100%;
+        }
+    }
+}
+
+#algorithm_buttons{
+    button{
+        span{
+            cursor: help;
+            text-decoration: underline;
+            text-decoration-style: dotted;
+        }
+        width: 150px;
+    }
+
+    button:not(#coneAlpha){
+        margin-left: 10px;
+    }
+
+    display: flex;
+    justify-content: center;
+}
+
+#carouselIndicators{
+
+    display: none;
+
+    .carousel-inner{
+        width: 70%;
+        margin-left: 15%;
+
+        img{
+            width:100%;
+        }
+
+        .carousel-caption{
+            bottom: 0px;
+            left: 0%;
+            padding: 0px;
+            font:{
+                family: $body;
+            }
+        }
+    }
+
+    .carousel-indicators{
+        bottom:-25px;
+    }
+}
