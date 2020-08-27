@@ -40,7 +40,6 @@ function calculate(wload, bLen, alpha, baseAlg){
         }
         return data;
     })();
-    console.log(result);
 	return result;
 }
 
