@@ -33,7 +33,7 @@ $(document).ready(function(){
     /*Workload Changes*/
     $workload.change(function(){
         $recalc_va.prop('disabled',false);
-        $recalc_numOp.prop('disabled',false);
+        // $recalc_numOp.prop('disabled',false);
         $recalc_buff.prop('disabled',false);
         $recalc_read.prop('disabled',false);
     	var workloadIndex = parseInt($(this).val());
@@ -48,7 +48,7 @@ $(document).ready(function(){
 
     inputs.forEach((element) => {element.change(function(){
         $recalc_va.prop('disabled',false);
-        $recalc_numOp.prop('disabled',false);
+        // $recalc_numOp.prop('disabled',false);
         $recalc_buff.prop('disabled',false);
         $recalc_read.prop('disabled',false);
     })});
@@ -123,7 +123,7 @@ $(document).ready(function(){
     });
 
     $baseAlg_buff.change(function(){
-        $recalc_numOp.prop("disabled",false);
+        $recalc_buff.prop("disabled",false);
     });
 
     $type_buff.change(function(){
