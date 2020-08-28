@@ -37,6 +37,9 @@ body section#paper div.container div.text {
 body section#author div.container {
   text-align: center;
 }
+body section#author div.container a {
+  color: black;
+}
 body header#home {
   margin: 0;
   background-color: #cc0000;
