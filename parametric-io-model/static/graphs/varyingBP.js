@@ -63,6 +63,7 @@ function updateBP(data, bufferPoolRatio){
 					borderColor: 'rgba(255, 99, 132, 0.5)',
 					backgroundColor: 'rgba(255,99,132,0.5)',
 					showLine:true,
+					borderWidth:1.2,
 					fill:false,
 				},
 
@@ -71,8 +72,10 @@ function updateBP(data, bufferPoolRatio){
 					data: getPlots(yCor,1, bufferPoolRatio),
 					borderColor: 'rgba(54, 162, 235, 0.5)',
 					backgroundColor: 'rgba(54, 162, 235, 0.5)',
+					borderWidth:1.2,
 					showLine:true,
 					fill:false,
+					pointStyle:'cross'
 				},
 
 				{
@@ -80,17 +83,21 @@ function updateBP(data, bufferPoolRatio){
 					data: getPlots(yCor,2, bufferPoolRatio),
 					borderColor: 'rgba(255, 206, 86, 0.5)',
 					backgroundColor: 'rgba(255, 206, 86, 0.5)',
+					borderWidth:1.2,
 					showLine:true,
 					fill:false,
+					pointStyle:'rect'
 				},
 
 				{
 					label: "COW-n",
 					data: getPlots(yCor,3, bufferPoolRatio),
-					borderColor: 'rgba(75, 192, 192, 0.5)',
-					backgroundColor: 'rgba(75, 192, 192, 0.5)',
+					borderColor: 'rgba(75, 192, 192, 1)',
+					backgroundColor: 'rgba(75, 192, 192, 1)',
+					borderWidth:1.2,
 					showLine:true,
 					fill:false,
+					pointStyle:'triangle'
 				},
 
 				{
@@ -98,8 +105,10 @@ function updateBP(data, bufferPoolRatio){
 					data: getPlots(yCor,4, bufferPoolRatio),
 					borderColor: 'rgba(153, 50, 204, 0.5)',
 					backgroundColor: 'rgba(153, 50, 204, 0.5)',
+					borderWidth:1.2,
 					showLine:true,
 					fill:false,
+					pointStyle:'star'
 				},
 			]
 		},

@@ -3,6 +3,8 @@ function getRPRaw(workload){
 	const alpha_val = parseInt(alpha.value);
 	const b_val = parseInt(b.value);
 
+	console.log("hmm");
+
 	var data = [];
 	for (var i = 0; i < workload.length; i++){
 		const result = calculate(workload[i],b_val,alpha_val, baseAlg);
@@ -66,6 +68,7 @@ function updateRP(data){
 					borderColor: 'rgba(54, 162, 235, 1)',
 					borderWidth: 1,
 					fill: false,
+					pointStyle:'cross',
 				},
 
 				{
@@ -75,6 +78,7 @@ function updateRP(data){
 					borderColor: 'rgba(255, 206, 86, 1)',
 					borderWidth: 1,
 					fill: false,
+					pointStyle:'rect',
 				},
 
 				{
@@ -84,6 +88,7 @@ function updateRP(data){
 					borderColor: 'rgba(75, 192, 192, 1)',
 					borderWidth: 1,
 					fill: false,
+					pointStyle:'triangle',
 				},
 
 				{
@@ -93,6 +98,7 @@ function updateRP(data){
 					borderColor: 'rgba(153, 50, 204, 1)',
 					borderWidth: 1,
 					fill: false,
+					pointStyle:'star',
 				},
 			]
 		},

@@ -78,12 +78,15 @@ $(document).ready(function(){
     //input fields
     const $baseAlg_read = $('#baseAlg_read');
     const $type_read = $('#type_read');
-    const $recalc_read = $('#recalc_read')
+    const $recalc_read = $('#recalc_read');
 
     var workloadRP;
     var rawDataRP;
+
     $recalc_read.click(function(){
         $('.spinner-read').show(400, function(){
+            $recalc_read.prop('disabled',true);
+            console.log("hmm");
             workloadRP =[];
             for (var i = 5; i < 100; i = i + 15){
                 workloadRP.push(generateWorkload(3, i));
