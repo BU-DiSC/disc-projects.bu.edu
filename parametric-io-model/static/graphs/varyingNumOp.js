@@ -71,7 +71,7 @@ function updateNO(data){
 				},
 
 				{
-					label: "CONE-\u03B1",
+					label: "CONE-n",
 					data: normalized[1],
 					backgroundColor: 'rgba(54, 162, 235, 0.2)',
 					borderColor: 'rgba(54, 162, 235, 1)',
@@ -80,7 +80,7 @@ function updateNO(data){
 				},
 
 				{
-					label: "CONE-X\u03B1",
+					label: "CONE-Xn",
 					data: normalized[2],
 					backgroundColor: 'rgba(255, 206, 86, 0.2)',
 					borderColor: 'rgba(255, 206, 86, 1)',
@@ -89,7 +89,7 @@ function updateNO(data){
 				},
 
 				{
-					label: "COW-\u03B1",
+					label: "COW-n",
 					data: normalized[3],
 					backgroundColor: 'rgba(75, 192, 192, 0.2)',
 					borderColor: 'rgba(75, 192, 192, 1)',
@@ -98,7 +98,7 @@ function updateNO(data){
 				},
 
 				{
-					label: "COW-X\u03B1",
+					label: "COW-Xn",
 					data: normalized[4],
 					backgroundColor: 'rgba(153, 50, 204, 0.2)',
 					borderColor: 'rgba(153, 50, 204, 1)',

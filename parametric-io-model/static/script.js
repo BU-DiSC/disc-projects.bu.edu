@@ -32,7 +32,6 @@ $(document).ready(function(){
     $('.closeInputs').click(function(){
         $('.fixedInputs').children('#inputs').toggle();
         $('.closeInputs').toggle();
-        $('.openInputs').toggle();
     });
 
     $('.openInputs').click(function(){

@@ -13,7 +13,7 @@ body{
         text-align: justify;
         img{
             float:right; 
-            height:300px;
+            height:400px;
             margin:{
                 left:3%;
                 bottom:1%
@@ -166,14 +166,10 @@ body{
     p{
         font:{
             family:$body;
-            size: $textSize;
+            size: 18px;
             weight: 300;
         }
-        text-align: center;
-    }
-
-    #caption{
-        text-align: center;
+        text-align: left;
     }
 
     .fixedInputs{
@@ -200,11 +196,6 @@ body{
 
 #algorithm_buttons{
     button{
-        span{
-            cursor: help;
-            text-decoration: underline;
-            text-decoration-style: dotted;
-        }
         width: 150px;
     }
 
@@ -216,29 +207,16 @@ body{
     justify-content: center;
 }
 
-#carouselIndicators{
-
-    display: none;
+#slideshow{
+    display:none;
+    margin-top:10px;
 
     .carousel-inner{
-        width: 70%;
-        margin-left: 15%;
-
-        img{
-            width:100%;
-        }
-
-        .carousel-caption{
-            bottom: 0px;
-            left: 0%;
-            padding: 0px;
-            font:{
-                family: $body;
-            }
-        }
+        width:70%;
+        margin-left:15%;
+        border-radius:3px;
     }
-
     .carousel-indicators{
-        bottom:-25px;
+        bottom:-50px;
     }
 }

@@ -8,7 +8,7 @@ body section#problem {
 }
 body section#problem img {
   float: right;
-  height: 300px;
+  height: 400px;
   margin-left: 3%;
   margin-bottom: 1%;
 }
@@ -114,12 +114,9 @@ body span.anchor {
 }
 .graphContainer p {
   font-family: Lato;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 300;
-  text-align: center;
-}
-.graphContainer #caption {
-  text-align: center;
+  text-align: left;
 }
 .graphContainer .fixedInputs {
   position: sticky;
@@ -145,33 +142,21 @@ body span.anchor {
 #algorithm_buttons button {
   width: 150px;
 }
-#algorithm_buttons button span {
-  cursor: help;
-  text-decoration: underline;
-  text-decoration-style: dotted;
-}
 #algorithm_buttons button:not(#coneAlpha) {
   margin-left: 10px;
 }
 
-#carouselIndicators {
+#slideshow {
   display: none;
+  margin-top: 10px;
 }
-#carouselIndicators .carousel-inner {
+#slideshow .carousel-inner {
   width: 70%;
   margin-left: 15%;
+  border-radius: 3px;
 }
-#carouselIndicators .carousel-inner img {
-  width: 100%;
-}
-#carouselIndicators .carousel-inner .carousel-caption {
-  bottom: 0px;
-  left: 0%;
-  padding: 0px;
-  font-family: Lato;
-}
-#carouselIndicators .carousel-indicators {
-  bottom: -25px;
+#slideshow .carousel-indicators {
+  bottom: -50px;
 }
 
 /*# sourceMappingURL=style.css.map */

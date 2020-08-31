@@ -67,7 +67,7 @@ function updateBP(data, bufferPoolRatio){
 				},
 
 				{
-					label: "CONE-\u03B1",
+					label: "CONE-n",
 					data: getPlots(yCor,1, bufferPoolRatio),
 					borderColor: 'rgba(54, 162, 235, 0.5)',
 					backgroundColor: 'rgba(54, 162, 235, 0.5)',
@@ -76,7 +76,7 @@ function updateBP(data, bufferPoolRatio){
 				},
 
 				{
-					label: "CONE-X\u03B1",
+					label: "CONE-Xn",
 					data: getPlots(yCor,2, bufferPoolRatio),
 					borderColor: 'rgba(255, 206, 86, 0.5)',
 					backgroundColor: 'rgba(255, 206, 86, 0.5)',
@@ -85,7 +85,7 @@ function updateBP(data, bufferPoolRatio){
 				},
 
 				{
-					label: "COW-\u03B1",
+					label: "COW-n",
 					data: getPlots(yCor,3, bufferPoolRatio),
 					borderColor: 'rgba(75, 192, 192, 0.5)',
 					backgroundColor: 'rgba(75, 192, 192, 0.5)',
@@ -94,7 +94,7 @@ function updateBP(data, bufferPoolRatio){
 				},
 
 				{
-					label: "COW-X\u03B1",
+					label: "COW-Xn",
 					data: getPlots(yCor,4, bufferPoolRatio),
 					borderColor: 'rgba(153, 50, 204, 0.5)',
 					backgroundColor: 'rgba(153, 50, 204, 0.5)',

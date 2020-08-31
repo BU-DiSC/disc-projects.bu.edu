@@ -46,32 +46,32 @@ function updateVA(data){
 		normalized.push(rawData[i][type]);
 	}
 	const rawDataset = [{
-		label:"\u03B1 = 8",
+		label:"n = 8",
 		data: data[3][type],
 		backgroundColor: 'rgba(255, 99, 132, 0.2)',
 		borderColor: 'rgba(255,99,132,1)',
 		borderWidth: 1,
 	}]
 	const normalizedDataset = [{
-			label: "\u03B1 = 1",
+			label: "n = 1",
 			data: normalizeData(normalized[0]),
 			backgroundColor: 'rgba(255, 99, 132, 0.2)',
 			borderColor: 'rgba(255,99,132,1)',
 			borderWidth: 1
 		},{
-			label: "\u03B1 = 2",
+			label: "n = 2",
 			data: normalizeData(normalized[1]),
 			backgroundColor: 'rgba(54, 162, 235, 0.2)',
 			borderColor: 'rgba(54, 162, 235, 1)',
 			borderWidth: 1
 		},{
-			label: "\u03B1 = 4",
+			label: "n = 4",
 			data: normalizeData(normalized[2]),
 			backgroundColor: 'rgba(255, 206, 86, 0.2)',
 			borderColor: 'rgba(255, 206, 86, 1)',
 			borderWidth: 1
 		},{
-			label: "\u03B1 = 8",
+			label: "n = 8",
 			data: normalizeData(normalized[3]),
 			backgroundColor: 'rgba(75, 192, 192, 0.2)',
 			borderColor: 'rgba(75, 192, 192, 1)',
@@ -97,7 +97,7 @@ function updateVA(data){
 	window.VAChart = new Chart(ctx, {
 		type: 'bar',
 		data: {
-			labels: [$('#baseAlg option:selected').text(), "CONE-\u03B1", "CONE-X\u03B1", "COW-\u03B1", "COW-X\u03B1"],
+			labels: [$('#baseAlg option:selected').text(), "CONE-n", "CONE-Xn", "COW-n", "COW-Xn"],
 			datasets: $('#rawData').is(':checked')?rawDataset:normalizedDataset,
 		},
 		options: {
