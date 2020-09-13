@@ -45,6 +45,7 @@ function updateVA(data){
 	for (var i = 0; i < rawData.length; i++){
 		normalized.push(rawData[i][type]);
 	}
+	//for raw data
 	const rawDataset = [{
 		label:"n = 8",
 		data: data[3][type],
@@ -52,6 +53,8 @@ function updateVA(data){
 		borderColor: 'rgba(255,99,132,1)',
 		borderWidth: 1,
 	}]
+
+	//for normalised data
 	const normalizedDataset = [{
 			label: "n = 1",
 			data: normalizeData(normalized[0]),

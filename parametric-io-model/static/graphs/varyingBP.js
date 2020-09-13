@@ -65,6 +65,8 @@ function updateBP(data, bufferPoolRatio){
 					showLine:true,
 					borderWidth:1.2,
 					fill:false,
+					pointRadius:4,
+					pointHoverRadius:4,
 				},
 
 				{
@@ -75,6 +77,8 @@ function updateBP(data, bufferPoolRatio){
 					borderWidth:1.2,
 					showLine:true,
 					fill:false,
+					pointRadius:4,
+					pointHoverRadius:4,
 					pointStyle:'cross'
 				},
 
@@ -86,6 +90,8 @@ function updateBP(data, bufferPoolRatio){
 					borderWidth:1.2,
 					showLine:true,
 					fill:false,
+					pointRadius:4,
+					pointHoverRadius:4,
 					pointStyle:'rect'
 				},
 
@@ -97,6 +103,8 @@ function updateBP(data, bufferPoolRatio){
 					borderWidth:1.2,
 					showLine:true,
 					fill:false,
+					pointRadius:4,
+					pointHoverRadius:4,
 					pointStyle:'triangle'
 				},
 
@@ -108,6 +116,8 @@ function updateBP(data, bufferPoolRatio){
 					borderWidth:1.2,
 					showLine:true,
 					fill:false,
+					pointRadius:4,
+					pointHoverRadius:4,
 					pointStyle:'star'
 				},
 			]
@@ -161,6 +171,9 @@ function updateBP(data, bufferPoolRatio){
 			},
 			legend: {
 				display: true,
+				labels:{
+					usePointStyle:true,
+				}
 			},
 			elements: {
 				line: {

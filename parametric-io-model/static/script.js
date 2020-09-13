@@ -1,14 +1,34 @@
 $(document).ready(function(){
+
+    const top = $('.fixedInputs').offset().top; 
     /*Resizing*/
     //Initial settings
     if (window.matchMedia("(max-width: 992px)").matches) {
+    } else if (window.matchMedia("(max-width:1200px)").matches) {
+        $('.fixedInputs div:nth-child(4)').find("span").first().text("Read %");
+    }else {
+        $('.fixedInputs div:nth-child(4)').find("span").first().text("Read Percentage");
     }
 
     // When window resizes
     $(window).resize(function(){
         if (window.matchMedia("(max-width: 992px)").matches) {
-        } else {
+            $()
+        } else if (window.matchMedia("(max-width:1200px)").matches) {
+            $('.fixedInputs div:nth-child(4)').find("span").first().text("Read %");
+        }else {
+            $('.fixedInputs div:nth-child(4)').find("span").first().text("Read Percentage");
+        }
+    });
 
+    $(document).scroll(function(){
+        if ($('.fixedInputs').offset().top > 1800){
+            $('.closeInputs').show();
+            $('.fixedInputs').css({"border-bottom":"0.5px solid grey"});
+        } else {
+            $('.closeInputs').hide();
+            $('.fixedInputs').children('#inputs').show();
+            $('.fixedInputs').css({"border-bottom":"0px"});
         }
     });
 
@@ -39,15 +59,3 @@ $(document).ready(function(){
         $('.closeInputs').toggle();
     });
 });
-
-$(document).scroll(function(){
-    const top = $('.fixedInputs').offset().top;
-    if ($('.fixedInputs').offset().top > 1800){
-        $('.closeInputs').show();
-        $('.fixedInputs').css({"border-bottom":"0.5px solid grey"});
-    } else {
-        $('.closeInputs').hide();
-        $('.fixedInputs').children('#inputs').show();
-        $('.fixedInputs').css({"border-bottom":"0px"});
-    }
-})

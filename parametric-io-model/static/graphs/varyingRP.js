@@ -1,10 +1,10 @@
 function getRPRaw(workload){
+	//get values from the inputs
 	const baseAlg = parseInt(baseAlg_read.value);
 	const alpha_val = parseInt(alpha.value);
 	const b_val = parseInt(b.value);
 
-	console.log("hmm");
-
+	//calculate data based on the inputs
 	var data = [];
 	for (var i = 0; i < workload.length; i++){
 		const result = calculate(workload[i],b_val,alpha_val, baseAlg);
@@ -21,6 +21,7 @@ function getRPRaw(workload){
 		data.push([totalCost,bMiss,numWrites]);
 	}
 	
+	//this data is an array of [total cost, buffer miss, number of writes] for each read write ratio
 	return data;
 }
 
@@ -29,12 +30,14 @@ function updateRP(data){
 	var typeData = [];
 	const type = parseInt(type_read.value);
 
-	const rawData = JSON.parse(JSON.stringify(data)); //deep copy raw data array
+	const rawData = JSON.parse(JSON.stringify(data)); //deep copy raw data array to prevent the original being modified
 
+	//get the correct data for the selected chart type
 	for (var i = 0; i < rawData.length; i++){
 		typeData.push(normalizeData(rawData[i][type - 1]));
 	}
 
+	//normalise the data
 	var normalized = [];
 	for (var i = 0; i < 5; i++){
 		var baseArray = [];
@@ -50,15 +53,17 @@ function updateRP(data){
 	window.readGraph = new Chart(ctx, {
 		type: 'line',
 		data: {
-			labels: ["5%","20%", "35%", "50%", "65%", "80%", "95%"],
+			labels: ["5%","20%", "35%", "50%", "65%", "80%", "95%"], //x-axis labels
 			datasets: [
 				{
-					label: $('#baseAlg_read option:selected').text(),
+					label: $('#baseAlg_read option:selected').text(), //gets the selected base algorithm from inputs
 					data: normalized[0],
 					backgroundColor: 'rgba(255, 99, 132, 0.2)',
 					borderColor: 'rgba(255,99,132,1)',
 					borderWidth: 1,
 					fill: false,
+					pointRadius:4, //marker size
+					pointHoverRadius:4,
 				},
 
 				{
@@ -68,7 +73,9 @@ function updateRP(data){
 					borderColor: 'rgba(54, 162, 235, 1)',
 					borderWidth: 1,
 					fill: false,
-					pointStyle:'cross',
+					pointStyle:'cross', //marker type
+					pointRadius:4,
+					pointHoverRadius:4,
 				},
 
 				{
@@ -79,6 +86,8 @@ function updateRP(data){
 					borderWidth: 1,
 					fill: false,
 					pointStyle:'rect',
+					pointRadius:4,
+					pointHoverRadius:4,
 				},
 
 				{
@@ -89,6 +98,8 @@ function updateRP(data){
 					borderWidth: 1,
 					fill: false,
 					pointStyle:'triangle',
+					pointRadius:4,
+					pointHoverRadius:4,
 				},
 
 				{
@@ -99,6 +110,8 @@ function updateRP(data){
 					borderWidth: 1,
 					fill: false,
 					pointStyle:'star',
+					pointRadius:4,
+					pointHoverRadius:4,
 				},
 			]
 		},
@@ -147,6 +160,9 @@ function updateRP(data){
 			},
 			legend: {
 				display: true,
+				labels:{
+					usePointStyle:true,
+				}
 			},
 			elements: {
 				line: {

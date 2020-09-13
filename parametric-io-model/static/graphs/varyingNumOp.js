@@ -156,6 +156,9 @@ function updateNO(data){
 			},
 			legend: {
 				display: true,
+				labels:{
+					usePointStyle:true,
+				}
 			},
 			elements: {
 				line: {

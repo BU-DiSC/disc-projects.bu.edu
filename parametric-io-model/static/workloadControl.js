@@ -62,7 +62,8 @@ $(document).ready(function(){
     });
 
     $recalc_va.click(function(){
-        $('.spinner-va').show(400, function(){
+        $('.spinner-va').show(400, function(){ //using callback to make sure that the followings are run after spinner
+            $recalc_va.text("Recalculate");
             $recalc_va.prop('disabled',true);
             workloadVA = generateWorkload();
             rawDataVA = getVA(workloadVA);
@@ -85,6 +86,7 @@ $(document).ready(function(){
 
     $recalc_read.click(function(){
         $('.spinner-read').show(400, function(){
+            $recalc_read.text("Recalculate");
             $recalc_read.prop('disabled',true);
             console.log("hmm");
             workloadRP =[];
@@ -114,6 +116,7 @@ $(document).ready(function(){
     var rawDataBuff;
     $recalc_buff.click(function(){
         $('.spinner-buff').show(400, function(){
+            $recalc_buff.text("Recalculate");
             $recalc_buff.prop('disabled',true);
             workloadBuff = [];
             const bufferPoolRatio = [1,2,5,10,15,20,30,50,75,90];
@@ -144,6 +147,7 @@ $(document).ready(function(){
     // var rawDataNumOp;
 
     // $recalc_numOp.click(function(){
+    //     $(this).text("Recalculate");
     //     $('.spinner-numOp').show(400, function(){
     //         workloadNumOp = [];
     //         for (var k = 1; k < 11; k++){
