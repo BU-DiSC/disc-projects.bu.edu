@@ -63,11 +63,11 @@ $(document).ready(function(){
 
     $recalc_va.click(function(){
         $('.spinner-va').show(400, function(){ //using callback to make sure that the followings are run after spinner
-            $recalc_va.text("Recalculate");
             $recalc_va.prop('disabled',true);
             workloadVA = generateWorkload();
             rawDataVA = getVA(workloadVA);
             updateVA(rawDataVA);
+            $('#span_va').text("Recalculate");
         });
     });
 
@@ -86,7 +86,6 @@ $(document).ready(function(){
 
     $recalc_read.click(function(){
         $('.spinner-read').show(400, function(){
-            $recalc_read.text("Recalculate");
             $recalc_read.prop('disabled',true);
             console.log("hmm");
             workloadRP =[];
@@ -95,6 +94,7 @@ $(document).ready(function(){
             }
             rawDataRP = getRPRaw(workloadRP);
             updateRP(rawDataRP);
+            $('#span_read').text("Recalculate");
         });
     });
 
@@ -116,7 +116,6 @@ $(document).ready(function(){
     var rawDataBuff;
     $recalc_buff.click(function(){
         $('.spinner-buff').show(400, function(){
-            $recalc_buff.text("Recalculate");
             $recalc_buff.prop('disabled',true);
             workloadBuff = [];
             const bufferPoolRatio = [1,2,5,10,15,20,30,50,75,90];
@@ -125,6 +124,7 @@ $(document).ready(function(){
             }
             rawDataBuff = getBPRaw(workloadBuff, bufferPoolRatio);
             updateBP(rawDataBuff, bufferPoolRatio);
+            $('#span_buff').text("Recalculate");
         });
     });
 
@@ -155,6 +155,7 @@ $(document).ready(function(){
     //         }
     //         rawDataNumOp = getNORaw(workloadNumOp);
     //         updateNO(rawDataNumOp);
+    //         $('#span_numOp').text("Recalculate");
     //     });
     // });
 
