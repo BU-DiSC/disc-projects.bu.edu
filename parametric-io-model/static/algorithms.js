@@ -177,7 +177,7 @@ function baseCFLRU(algorithm){
                 //if there are clean pages, evict clean page first
                 else {
                     while (dirty.includes(cleanFirst[i])) i++;
-                    buffer.splice(buffer.indexOf(cleanFirst[i]),1)[0];
+                    buffer.splice(buffer.indexOf(cleanFirst[i]),1);
                     buffer.push(page);
                 }
             }
@@ -232,8 +232,8 @@ function baseLRUWSR(algorithm){
                         dirty.push(dirty.splice(i,1)[0]);
                     }
                     dirty.splice(dirty.indexOf(buffer[i],1)[0]);
-                    buffer.splice(i,1)[0];
-                    coldflag.splice(i,1)[0];
+                    buffer.splice(i,1);
+                    coldflag.splice(i,1);
                 } else if (algorithm == cowAlpha && dirty.includes(first)){
                     // check LRU alpha number of pages in buffer
                     for(var k = 0; k < alphaVal; k++){
@@ -256,9 +256,9 @@ function baseLRUWSR(algorithm){
                     //count number of dirty pages with coldflag set
                     var i = 0;
                     while (coldflag[i] == 0)i++;
-                    coldflag.splice(i,1)[0];
-                    dirty.splice(dirty.indexOf(buffer[i]),1)[0];
-                    buffer.splice(i,1)[0];
+                    coldflag.splice(i,1);
+                    dirty.splice(dirty.indexOf(buffer[i]),1);
+                    buffer.splice(i,1);
 
                     i = 0;
                     var count = 0;
@@ -275,16 +275,24 @@ function baseLRUWSR(algorithm){
                     i = 0;
                     while (count > 0){
                         if (coldflag[i] == 1){
-                            coldflag.splice(i,1)[0];
-                            dirty.splice(dirty.indexOf(buffer[i]),1)[0];
-                            buffer.splice(i,1)[0];
+                            coldflag.splice(i,1);
+                            dirty.splice(dirty.indexOf(buffer[i]),1);
+                            buffer.splice(i,1);
                             count--;
                         }
                         i++;
                     }
                     writeCost++;
                 } else if (algorithm = coneAlpha) {
-                    
+                    for(var k = 0; k < alphaVal; k++){
+                        if(dirty.includes(buffer[k]) && coldflag[k] == 1){
+                            dirty.splice(dirty.indexOf(buffer[k]),1); 
+                            coldflag.splice(k,1);
+                            buffer.splice(k,1); //remove dirty pages from buffer & dirty from the first alpha number of pages in the buffer
+                            writeIO++;
+                        }
+                    }
+                    writeCost++;
                 } else if (algorithm = coneXAlpha){
 
                 }
