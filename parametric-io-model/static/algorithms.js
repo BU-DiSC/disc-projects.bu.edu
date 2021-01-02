@@ -20,7 +20,7 @@ function calculate(wload, bLen, alpha, baseAlg){
 	alphaVal = alpha;
 
     const algorithms = [base, coneAlpha, coneXAlpha, cowAlpha, cowXAlpha];
-    const baseAlgorithms = [baseLRU, baseLFU, baseCC];
+    const baseAlgorithms = [baseLRU, baseLFU, baseCFLRU, baseLRUWSR];
 
     var result = (function(){
         var data = [];
@@ -140,7 +140,57 @@ function baseLFU(algorithm){
     return [bufferMiss, readIO, writeIO, writeCost];
 }
 
-function baseCC(algorithm){
+function baseCFLRU(algorithm){
+    const cleanPer = 1/3;
+    const cleanSize = Math.floor(buffer.length * cleanPer);
+
+    for (var j = 0; j < workload.length; j++){
+        var type = workload[j][0];
+        var page = workload[j][1];
+
+        // add to dirty if "W"
+        if (type == "W" && !dirty.includes(page))
+            dirty.push(page);
+
+        // if buffer has page
+        if (buffer.includes(page)){
+            bufferHit++;
+            //move page to the end of buffer array
+            buffer.push(buffer.splice(buffer.indexOf(page), 1)[0]);
+            dirty.push(dirty.splice(dirty.indexOf(page),1)[0]);
+        }
+        else
+        {
+            bufferMiss++;
+            readIO++;
+            //if buffer not full
+            if (buffer.length < bufferLength){
+                buffer.push(page);
+            } else{
+                var cleanFirst = buffer.slice(0, cleanSize - 1);
+                var allDirty = true;
+                for (var k = 0; k < cleanFirst.size; k++){
+                    if (!dirty.includes(cleanFirst[i])) allDirty = false;
+                }
+                //if all pages in clean first region are dirty, then run algorithms
+                if (allDirty) algorithm(page);
+                //if there are clean pages, evict clean page first
+                else {
+                    while (dirty.includes(cleanFirst[i])) i++;
+                    buffer.splice(buffer.indexOf(cleanFirst[i]),1)[0];
+                    buffer.push(page);
+                }
+            }
+        }
+    }
+    return[bufferMiss, readIO, writeIO, writeCost];
+
+}
+
+function baseLRUWSR(algorithm){
+
+    var coldflag = [];
+
     for (var j = 0; j < workload.length; j++){
         var type = workload[j][0];
         var page = workload[j][1];
@@ -148,15 +198,22 @@ function baseCC(algorithm){
         // add to dirty if "W"
         if (type == "W" && !dirty.includes(page)){
             dirty.push(page);
+            coldflag.push(0);
+        } else {
+            coldflag.push(-1);
         }
 
         // if buffer has page
         if (buffer.includes(page)){
             bufferHit++;
+            if (dirty.includes(page)) {
+                coldflag[buffer.indexOf(page)] = 0;
+                dirty.push(dirty.splice(dirty.indexOf(page),1)[0]);
+            }
             //move page to the end of buffer array
+            coldflag.push(coldflag.splice(buffer.indexOf(page),1)[0]);
             buffer.push(buffer.splice(buffer.indexOf(page), 1)[0]);
         }
-        // if buffer doesn't have page
         else
         {
             bufferMiss++;
@@ -164,26 +221,124 @@ function baseCC(algorithm){
             //if buffer not full
             if (buffer.length < bufferLength)
                 buffer.push(page);
-            else
-            {
-                if (algorithm == base){
-                    // remove item from dirty
-                    var checkIndex = 0;
-                    var target = buffer[checkIndex];
-                    while (dirty.includes(target) && checkIndex < buffer.length -1){
-                        checkIndex++;
-                        target = buffer[checkIndex];
+            else{
+                const first = buffer[0];
+                if (algorithm == base || !dirty.includes(first)){
+                    var i = 0;
+                    while (coldflag[i] == 0){
+                        coldflag[i] = 1;
+                        coldflag.push(coldflag.splice(i,1)[0]);
+                        buffer.push(buffer.splice(i,1)[0]);
+                        dirty.push(dirty.splice(i,1)[0]);
                     }
-                    buffer.splice(checkIndex,1); // remove one item from buffer
-                    buffer.push(page);
-                } else {
-                    algorithm(page);
+                    dirty.splice(dirty.indexOf(buffer[i],1)[0]);
+                    buffer.splice(i,1)[0];
+                    coldflag.splice(i,1)[0];
+                } else if (algorithm == cowAlpha && dirty.includes(first)){
+                    // check LRU alpha number of pages in buffer
+                    for(var k = 0; k < alphaVal; k++){
+                        // if dirty, then remove from dirty and write to disk
+                        if (dirty.includes(buffer[k]) && coldflag[k] == 1){
+                            dirty.splice(dirty.indexOf(buffer[k]),1);
+                            writeIO++;
+                        } else if (dirty.includes(buffer[k]) && coldflag[k] == 0){
+                            coldflag[k] == 1; //set coldflag
+                        }
+                    }
+                    writeCost++;
+                    buffer.shift();// evict only one page
+                    //move pages with coldflag set to the end of the buffer
+                    var k = 0;
+                    while (coldflag[k] == 1) k++;
+                    coldflag.push(coldflag.splice(0,k)[0]);
+                    buffer.push(buffer.splice(0,k)[0]);
+                } else if (algorithm == cowXAlpha){
+                    //count number of dirty pages with coldflag set
+                    var i = 0;
+                    while (coldflag[i] == 0)i++;
+                    coldflag.splice(i,1)[0];
+                    dirty.splice(dirty.indexOf(buffer[i]),1)[0];
+                    buffer.splice(i,1)[0];
+
+                    i = 0;
+                    var count = 0;
+                    while (coldflag[i] == 1) {
+                        count++;
+                        i++;
+                    }
+
+                    if(count >= alphaVal)
+                        writeIO += alphaVal;
+                    else
+                        writeIO += count;
+
+                    i = 0;
+                    while (count > 0){
+                        if (coldflag[i] == 1){
+                            coldflag.splice(i,1)[0];
+                            dirty.splice(dirty.indexOf(buffer[i]),1)[0];
+                            buffer.splice(i,1)[0];
+                            count--;
+                        }
+                    }
+                    writeCost++;
+                } else if (algorithm = coneAlpha) {
+                    
+                } else if (algorithm = coneXAlpha){
+
                 }
+                buffer.push(page);
             }
         }
     }
     return[bufferMiss, readIO, writeIO, writeCost];
+
 }
+
+// function baseCC(algorithm){
+//     for (var j = 0; j < workload.length; j++){
+//         var type = workload[j][0];
+//         var page = workload[j][1];
+
+//         // add to dirty if "W"
+//         if (type == "W" && !dirty.includes(page)){
+//             dirty.push(page);
+//         }
+
+//         // if buffer has page
+//         if (buffer.includes(page)){
+//             bufferHit++;
+//             //move page to the end of buffer array
+//             buffer.push(buffer.splice(buffer.indexOf(page), 1)[0]);
+//         }
+//         // if buffer doesn't have page
+//         else
+//         {
+//             bufferMiss++;
+//             readIO++;
+//             //if buffer not full
+//             if (buffer.length < bufferLength)
+//                 buffer.push(page);
+//             else
+//             {
+//                 if (algorithm == base){
+//                     // remove item from dirty
+//                     var checkIndex = 0;
+//                     var target = buffer[checkIndex];
+//                     while (dirty.includes(target) && checkIndex < buffer.length -1){
+//                         checkIndex++;
+//                         target = buffer[checkIndex];
+//                     }
+//                     buffer.splice(checkIndex,1); // remove one item from buffer
+//                     buffer.push(page);
+//                 } else {
+//                     algorithm(page);
+//                 }
+//             }
+//         }
+//     }
+//     return[bufferMiss, readIO, writeIO, writeCost];
+// }
 
 /*Algorithms*/
 function base(page){
