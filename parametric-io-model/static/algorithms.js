@@ -280,6 +280,7 @@ function baseLRUWSR(algorithm){
                             buffer.splice(i,1)[0];
                             count--;
                         }
+                        i++;
                     }
                     writeCost++;
                 } else if (algorithm = coneAlpha) {
