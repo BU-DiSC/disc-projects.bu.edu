@@ -275,6 +275,53 @@ function baseLRUWSR(algorithm){
                     i = 0;
                     while (count > 0){
                         if (coldflag[i] == 1){
+                            coldflag[i] = -1;
+                            dirty.splice(dirty.indexOf(buffer[i]),1);
+                            count--;
+                        }
+                        i++;
+                    }
+                    writeCost++;
+                } else if (algorithm = coneAlpha) {
+                    for(var k = 0; k < alphaVal; k++){
+                        //remove page if coldflag is set
+                        if(dirty.includes(buffer[k]) && coldflag[k] == 1){
+                            dirty.splice(dirty.indexOf(buffer[k]),1); 
+                            coldflag.splice(k,1);
+                            buffer.splice(k,1); //remove dirty pages from buffer & dirty from the first alpha number of pages in the buffer
+                            writeIO++;
+                        } else if (dirty.includes(buffer[k]) && coldflag[k] == 0){
+                            //set coldflag if page is dirty and push the page to the end
+                            coldflag[k] = 1;
+                            dirty.push(dirty.splice(dirty.indexOf(buffer[k]),1)[0]);
+                            buffer.push(buffer.splice(k,1)[0]);
+                            coldflag.push(coldflag.splice(k,1)[0]);
+                        }
+                    }
+                    writeCost++;
+                } else if (algorithm = coneXAlpha){
+                    //count number of dirty pages with coldflag set
+                    var i = 0;
+                    while (coldflag[i] == 0)i++;
+                    coldflag.splice(i,1);
+                    dirty.splice(dirty.indexOf(buffer[i]),1);
+                    buffer.splice(i,1);
+
+                    i = 0;
+                    var count = 0;
+                    while (coldflag[i] == 1) {
+                        count++;
+                        i++;
+                    }
+
+                    if(count >= alphaVal)
+                        writeIO += alphaVal;
+                    else
+                        writeIO += count;
+
+                    i = 0;
+                    while (count > 0){
+                        if (coldflag[i] == 1){
                             coldflag.splice(i,1);
                             dirty.splice(dirty.indexOf(buffer[i]),1);
                             buffer.splice(i,1);
@@ -283,18 +330,6 @@ function baseLRUWSR(algorithm){
                         i++;
                     }
                     writeCost++;
-                } else if (algorithm = coneAlpha) {
-                    for(var k = 0; k < alphaVal; k++){
-                        if(dirty.includes(buffer[k]) && coldflag[k] == 1){
-                            dirty.splice(dirty.indexOf(buffer[k]),1); 
-                            coldflag.splice(k,1);
-                            buffer.splice(k,1); //remove dirty pages from buffer & dirty from the first alpha number of pages in the buffer
-                            writeIO++;
-                        }
-                    }
-                    writeCost++;
-                } else if (algorithm = coneXAlpha){
-
                 }
                 buffer.push(page);
             }
