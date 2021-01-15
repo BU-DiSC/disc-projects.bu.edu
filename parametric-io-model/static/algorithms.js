@@ -176,8 +176,10 @@ function baseCFLRU(algorithm){
                 if (allDirty) algorithm(page);
                 //if there are clean pages, evict clean page first
                 else {
-                    while (dirty.includes(cleanFirst[i])) i++;
-                    buffer.splice(buffer.indexOf(cleanFirst[i]),1);
+                    //iterate through clean first region of buffer until you find a clean page
+                    var k = 0;
+                    while (dirty.includes(cleanFirst[k])) k++;
+                    buffer.splice(buffer.indexOf(cleanFirst[k]),1);
                     buffer.push(page);
                 }
             }
@@ -190,7 +192,8 @@ function baseCFLRU(algorithm){
 function baseLRUWSR(algorithm){
 
     var coldflag = [];
-
+    var element = document.createElement('a');
+    var text = "";
     for (var j = 0; j < workload.length; j++){
         var type = workload[j][0];
         var page = workload[j][1];
@@ -198,92 +201,69 @@ function baseLRUWSR(algorithm){
         // add to dirty if "W"
         if (type == "W" && !dirty.includes(page)){
             dirty.push(page);
-            coldflag.push(0);
-        } else {
-            coldflag.push(-1);
         }
 
         // if buffer has page
         if (buffer.includes(page)){
             bufferHit++;
             if (dirty.includes(page)) {
-                coldflag[buffer.indexOf(page)] = 0;
-                dirty.push(dirty.splice(dirty.indexOf(page),1)[0]);
+                coldflag[buffer.indexOf(page)] = 0; //if the page is dirty, (re)set cold flag to 0
+                dirty.push(dirty.splice(dirty.indexOf(page),1)[0]); //move the page to the end of dirty array
+            } else {
+                coldflag[buffer.indexOf(page)] = -1;
             }
-            //move page to the end of buffer array
+            //move page to the end of buffer & coldflag arrays
             coldflag.push(coldflag.splice(buffer.indexOf(page),1)[0]);
             buffer.push(buffer.splice(buffer.indexOf(page), 1)[0]);
         }
+        //if buffer does not have a page
         else
         {
             bufferMiss++;
             readIO++;
             //if buffer not full
-            if (buffer.length < bufferLength)
+            if (buffer.length < bufferLength){
                 buffer.push(page);
-            else{
+                if (dirty.includes(page))
+                    coldflag.push(0); //if the page is dirty, (re)set cold flag to 0
+                else
+                    coldflag.push(-1);
+            }
+            //if buffer is full
+            else {
                 const first = buffer[0];
-                if (algorithm == base || !dirty.includes(first)){
-                    var i = 0;
-                    while (coldflag[i] == 0){
-                        coldflag[i] = 1;
-                        coldflag.push(coldflag.splice(i,1)[0]);
-                        buffer.push(buffer.splice(i,1)[0]);
-                        dirty.push(dirty.splice(i,1)[0]);
-                    }
-                    dirty.splice(dirty.indexOf(buffer[i],1)[0]);
-                    buffer.splice(i,1);
-                    coldflag.splice(i,1);
-                } else if (algorithm == cowAlpha && dirty.includes(first)){
-                    // check LRU alpha number of pages in buffer
-                    for(var k = 0; k < alphaVal; k++){
-                        // if dirty, then remove from dirty and write to disk
-                        if (dirty.includes(buffer[k]) && coldflag[k] == 1){
-                            dirty.splice(dirty.indexOf(buffer[k]),1);
-                            writeIO++;
-                        } else if (dirty.includes(buffer[k]) && coldflag[k] == 0){
-                            coldflag[k] == 1; //set coldflag
-                        }
-                    }
-                    writeCost++;
-                    buffer.shift();// evict only one page
-                    //move pages with coldflag set to the end of the buffer
+                //if first page is clean
+                if (!dirty.includes(first)){
+                    dirty.splice(dirty.indexOf(first),1)[0];
+                    buffer.splice(0,1);
+                    coldflag.splice(0,1);
+                }
+                //if first page is not clean && running LRU-WSR
+                else if (algorithm == base){
+                    //look for a page with cold flag set
                     var k = 0;
-                    while (coldflag[k] == 1) k++;
-                    coldflag.push(coldflag.splice(0,k)[0]);
-                    buffer.push(buffer.splice(0,k)[0]);
-                } else if (algorithm == cowXAlpha){
-                    //count number of dirty pages with coldflag set
-                    var i = 0;
-                    while (coldflag[i] == 0)i++;
-                    coldflag.splice(i,1);
-                    dirty.splice(dirty.indexOf(buffer[i]),1);
-                    buffer.splice(i,1);
-
-                    i = 0;
-                    var count = 0;
-                    while (coldflag[i] == 1) {
-                        count++;
-                        i++;
-                    }
-
-                    if(count >= alphaVal)
-                        writeIO += alphaVal;
-                    else
-                        writeIO += count;
-
-                    i = 0;
-                    while (count > 0){
-                        if (coldflag[i] == 1){
-                            coldflag[i] = -1;
-                            dirty.splice(dirty.indexOf(buffer[i]),1);
-                            count--;
+                    while (coldflag[k] == 0){
+                        if (dirty.includes(buffer[k])) {
+                            coldflag[k] = 1; //only set cold flag if page is dirty
+                            dirty.push(dirty.splice(k,1)[0]); //move the page to the end of dirty array
                         }
-                        i++;
+                        //move the page to the end of buffer & cold flag array
+                        coldflag.push(coldflag.splice(k,1)[0]);
+                        buffer.push(buffer.splice(k,1)[0]);
+                        k++;
                     }
+                    //when a page with cold flag set is found, evict that page from all arrays
+                    dirty.splice(dirty.indexOf(buffer[k]),1);
+                    buffer.splice(k,1);
+                    coldflag.splice(k,1);
+                    //write to the disk before eviction
                     writeCost++;
-                } else if (algorithm = coneAlpha) {
-                    for(var k = 0; k < alphaVal; k++){
+                    writeIO++;
+                }
+                //if first page !clean && base = CONE-n
+                else if (algorithm = coneAlpha) {
+                    //evict up to alpha number of dirty pages with cold flag set
+                    for (var k = 0; k < alphaVal; k++){
                         //remove page if coldflag is set
                         if(dirty.includes(buffer[k]) && coldflag[k] == 1){
                             dirty.splice(dirty.indexOf(buffer[k]),1); 
@@ -299,44 +279,96 @@ function baseLRUWSR(algorithm){
                         }
                     }
                     writeCost++;
-                } else if (algorithm = coneXAlpha){
-                    //count number of dirty pages with coldflag set
-                    var i = 0;
-                    while (coldflag[i] == 0)i++;
-                    coldflag.splice(i,1);
-                    dirty.splice(dirty.indexOf(buffer[i]),1);
-                    buffer.splice(i,1);
-
-                    i = 0;
+                } 
+                //if first page ! clean && base = CONE-Xn
+                else if (algorithm = coneXAlpha){
+                    //evict n number of dirty pages with cold flag set from buffer
+                    var k = 0;
                     var count = 0;
-                    while (coldflag[i] == 1) {
-                        count++;
-                        i++;
-                    }
-
-                    if(count >= alphaVal)
-                        writeIO += alphaVal;
-                    else
-                        writeIO += count;
-
-                    i = 0;
-                    while (count > 0){
-                        if (coldflag[i] == 1){
-                            coldflag.splice(i,1);
-                            dirty.splice(dirty.indexOf(buffer[i]),1);
-                            buffer.splice(i,1);
-                            count--;
+                    while (k < buffer.length && count < alphaVal){
+                        if (coldflag[k] == 1){
+                            coldflag.splice(k,1);
+                            dirty.splice(dirty.indexOf(buffer[k]),1);
+                            buffer.splice(k,1);
+                            writeIO++;
+                            count++;
                         }
-                        i++;
+                        k++;
                     }
                     writeCost++;
                 }
+                //if first page is not clean && base = COW-n
+                else if (algorithm == cowAlpha){
+                    // check LRU n number of pages in buffer
+                    for(var k = 0; k < alphaVal; k++){
+                        // if dirty, then write to disk (but not evict)
+                        if (dirty.includes(buffer[k]) && coldflag[k] == 1){
+                            coldflag[k] = -1;
+                            dirty.splice(dirty.indexOf(buffer[k]),1);
+                            writeIO++;
+                        } else if (dirty.includes(buffer[k]) && coldflag[k] == 0){
+                            coldflag[k] == 1; //set coldflag
+
+                        }
+                    }
+                    //move pages with coldflag set to the end of the buffer
+                    var k = 0;
+                    while (k < alphaVal) {
+                        if (coldflag[k] == 1){
+                            coldflag.push(coldflag.splice(k,1)[0]);
+                            buffer.push(buffer.splice(k,1)[0]);
+                        }
+                        k++;
+                    }
+                    buffer.shift();// evict only one page
+                    writeCost++;
+                } 
+                //if first page ! clean && base = COW-Xn
+                else if (algorithm == cowXAlpha){
+
+                    //evict n number of dirty pages with cold flag set from buffer
+                    var k = 0;
+                    var count = 0;
+                    while (k < buffer.length && count < alphaVal){
+                        if (coldflag[k] == 1){
+                            coldflag[i] == -1;
+                            dirty.splice(dirty.indexOf(buffer[k]),1);
+                            writeIO++;
+                            count++;
+                        }
+                        k++;
+                    }
+
+                    var l = 0;
+                    while (l < alphaVal) {
+                        if (coldflag[l] == 1){
+                            coldflag.push(coldflag.splice(l,1)[0]);
+                            buffer.push(buffer.splice(l,1)[0]);
+                        }
+                        l++;
+                    }
+                    buffer.shift();// evict only one page
+                    writeCost++;
+                } 
                 buffer.push(page);
+                if (dirty.includes(page))
+                    coldflag.push(0); //if the page is dirty, (re)set cold flag to 0
+                else
+                    coldflag.push(-1);
             }
         }
+        text+= (j+1)+"th operation\n"
+        text += "Workload\n"+workload[j][0]+workload[j][1]+"\nBuffer:"+buffer+"\nCold Flag:"+coldflag+"\nDirty:"+dirty+"\n";
+        text+="Buffer Miss:"+bufferMiss+"\nRead IO:"+readIO+"\nWrite IO:"+writeIO+"\nWrite Cost:"+writeCost+"\n\n";
     }
-    return[bufferMiss, readIO, writeIO, writeCost];
+    element.setAttribute('href', 'data:'+text+'/plain;charset=utf-8,' + encodeURIComponent(text));
+    element.setAttribute('download', "test.txt");
 
+    element.style.display = 'none';
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    return[bufferMiss, readIO, writeIO, writeCost];
 }
 
 // function baseCC(algorithm){

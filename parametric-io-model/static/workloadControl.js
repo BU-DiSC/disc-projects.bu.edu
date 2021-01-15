@@ -27,7 +27,8 @@ $(document).ready(function(){
     const workload4 = [500, 5000, 50000, 80, 15, 20, 8];
     const workload5 = [500, 10000, 50000, 95, 5, 60, 8];
     const workload6 = [500, 500, 50000, 100, 100, 60, 8];
-    var workloads = [workload1, workload2, workload3, workload4, workload5, workload6];
+    const test = [10, 30, 50, 80, 15, 90, 4];
+    var workloads = [workload1, workload2, workload3, workload4, workload5, workload6, test];
     var inputs = [$b, $n, $x, $s, $d, $e, $alpha];
 
     /*Workload Changes*/
@@ -135,6 +136,8 @@ $(document).ready(function(){
     $type_buff.change(function(){
         $('.spinner-buff').show(400, updateBP(rawDataBuff));
     });
+
+
 
     /*Varying Number of Operations*/
     //input fields
