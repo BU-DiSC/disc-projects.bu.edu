@@ -104,30 +104,30 @@
 				<p>New buffer pool page eviction algorithms:</p>
 				<ul>
 					<li>
-						<h5>CONE-n; (<strong>Con</strong>currently <strong>E</strong>vict up to <strong>n</strong> Dirty Pages)</h5>
-						<p>When evicting a dirty page, it concurrently evicts all the dirty pages from the eviction window of size n.</p>
-					</li>
-					<li>
-						<h5>CONE-Xn (<strong>Con</strong>currently <strong>E</strong>vict E<strong>x</strong>actly <strong>n</strong> Dirty Pages)</h5>
-						<p>When evicting a dirty page, it concurrently evicts n dirty pages.</p>
-					</li>
-					<li>
-						<h5>COW-n (<strong>Co</strong>ncurrently <strong>W</strong>rite up to <strong>n</strong> Dirty Pages, Evict 1)</h5>
+						<h5>COW(n) (<strong>Co</strong>ncurrent <strong>W</strong>rite-back Dirty Pages from Eviction Window of size <strong>n</strong>, Evict 1)</h5>
 						<p>When evicting a dirty page, it concurrently writes all the dirty pages from the eviction window of size n.</p>
 					</li>
 					<li>
-						<h5>COW-Xn (<strong>Co</strong>ncurrently <strong>W</strong>rite E<strong>x</strong>actly <strong>n</strong> Dirty Pages, Evict 1)</h5>
-						<p>When evicting a dirty page, it concurrently writes n dirty pages.</p>
+						<h5>COW-X(n) (<strong>Co</strong>ncurrent <strong>W</strong>rite-back E<strong>x</strong>actly <strong>n</strong> Dirty Pages, Evict 1)</h5>
+						<p>When evicting a dirty page, it concurrently writes exactly n dirty pages.</p>
+					</li>
+					<li>
+						<h5>COW(n,E) (<strong>Co</strong>ncurrent <strong>W</strong>rite-back and <strong>E</strong>vict Dirty Pages from Eviction Window of size <strong>n</strong>)</h5>
+						<p>When evicting a dirty page, it concurrently evicts and writes all the dirty pages from the eviction window of size n.</p>
+					</li>
+					<li>
+						<h5>COW-X(n,E) (<strong>Co</strong>ncurrent <strong>W</strong>rite-back and <strong>E</strong>vict E<strong>x</strong>actly <strong>n</strong> Dirty Pages)</h5>
+						<p>When evicting a dirty page, it concurrently evicts and writes n dirty pages.</p>
 					</li>
 				</ul>
 				<p>For more details on each algorithm, click on the buttons below:</p>
 
 				<div id="algorithm_buttons">
-					<button type="button" class="btn btn-secondary" id="coneAlpha">CONE-n</button>
-					<button type="button" class="btn btn-secondary" id="coneXAlpha">CONE-Xn</button>
-					<button type="button" class="btn btn-secondary" id="cowAlpha">COW-n</button>
-					<button type="button" class="btn btn-secondary" id="cowXAlpha">COW-Xn</button>
 					<button type="button" class="btn btn-secondary" id="all">All</button>
+					<button type="button" class="btn btn-secondary" id="cowAlpha">COW(n)</button>
+					<button type="button" class="btn btn-secondary" id="cowXAlpha">COW-X(n)</button>
+					<button type="button" class="btn btn-secondary" id="coneAlpha">COW(n,E)</button>
+					<button type="button" class="btn btn-secondary" id="coneXAlpha">COW-X(n,E)</button>
 				</div>
 
 				<div id="slideshow" class="carousel slide" data-ride="carousel">
@@ -330,7 +330,7 @@
 						</div>
 						<div class="col-lg-3">
 							<span id="caption">
-								<p>The runtime of CONE and COW algorithms are faster than the baseline with very little or no increase in buffer miss and total writes. The general trend is that COW algorithms performs slightly better than the CONE algorithms because they retain more pages in the bufferpool.</p>
+								<p>The runtime of COW algorithms are faster than the baseline with very little or no increase in buffer miss and total writes. The general trend is that COW(n) and COW-X(n) perform better than COW(n,E) and COW-X(n,E) because the formers retain more pages in the bufferpool.</p>
 							</span>
 						</div>
 					</div>
@@ -441,7 +441,7 @@
 						</div>
 						<div class="col-lg-3">
 							<span id="caption">
-								<p>CONE and COW algorithms performs significantly well under heavy memory pressure.</p>
+								<p>COW algorithms performs significantly well under heavy memory pressure because smaller bufferpool results in higher writes.</p>
 							</span>
 						</div>
 					</div>
