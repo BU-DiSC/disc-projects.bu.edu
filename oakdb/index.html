@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="andy huynh">
+
+    <title>OakDB</title>
+
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic" rel="stylesheet" type="text/css">
+    <link href="css/freelancer.css" rel="stylesheet">
+
+</head>
+
+<body id="page-top">
+
+
+    <nav class="navbar navbar-expand-lg bg-secondary text-uppercase fixed-top" id="mainNav">
+        <div class="container">
+            <a class="navbar-brand js-scroll-trigger" href="#page-top">OakDB</a>
+            <button class="navbar-toggler navbar-toggler-right text-uppercase font-weight-bold bg-primary text-white rounded" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+                Menu
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarResponsive">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item mx-0 mx-lg-1">
+                        <a class="nav-link py-3 px-0 px-lg-3 rounded js-scroll-trigger" href="#about">About</a>
+                    </li>
+                    <li class="nav-item mx-0 mx-lg-1">
+                        <a class="nav-link py-3 px-0 px-lg-3 rounded js-scroll-trigger" href="#problem">Problem</a>
+                    </li>
+                    <li class="nav-item mx-0 mx-lg-1">
+                        <a class="nav-link py-3 px-0 px-lg-3 rounded js-scroll-trigger" href="#research">Research</a>
+                    </li>
+                    <li class="nav-item mx-0 mx-lg-1">
+                        <a class="nav-link py-3 px-0 px-lg-3 rounded js-scroll-trigger" href="#contact">Contact</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+
+    <header class="masthead bg-primary text-white text-center">
+        <div class="container d-flex align-items-center flex-column">
+
+            <h1 class="masthead-heading text-uppercase mb-0">OakDB</h1>
+
+                <div class="divider-custom divider-light">
+                    <div class="divider-custom-line"></div>
+                    <div class="divider-custom-icon">
+                        <i class="fas fa-tree"></i>
+                    </div>
+                    <div class="divider-custom-line"></div>
+                </div>
+
+            <p class="masthead-subheading font-weight-light mb-0">
+                <i>Robust</i> comes from the latin root <i>robur</i>, which refers to oak. </p>
+        </div>
+    </header>
+
+
+    <section class="page-section bg-light text-dark mb-0" id="about">
+        <div class="container">
+
+            <h2 class="page-section-heading text-center text-uppercase text-dark">A Robust Tuning Paradigm</h2>
+
+            <div class="divider-custom divider-dark">
+                <div class="divider-custom-line-long"></div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-10 ml-auto mr-auto text-justify">
+                    <p class="lead">
+                        The increasing demand for hybrid
+                        transacational/analytical processing (HTAP)
+                        applications has created the need for new database
+                        paradigms. This has resulted in databases facing the
+                        challenge of solving increasingly complex tuning
+                        problems. Yet with increasing complexity, databases
+                        do not take into consideration variability in access
+                        patterns and resource availability. We propose a
+                        design for a robust database, OakDB, that aims to
+                        answer the following
+                    </p>
+                    <p class="lead text-center">
+                        <i>
+                            Can we design and tune systems that perform
+                            <i>close to optimal</i> subject to variability in
+                            access patterns and resource availability?
+                        </i>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <section class="page-section bg-primary text-white mb-0" id="problem">
+        <div class="container">
+
+            <h2 class="page-section-heading text-center text-uppercase text-white">Sources of Variability</h2>
+
+            <div class="divider-custom divider-light">
+                <div class="divider-custom-line-long"></div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-10 ml-auto mr-auto text-justify">
+                    <p class="lead">
+                        Modern state-of-the-art database management systems
+                        (DBMS) utilize many tools for the tuning process, and
+                        generally these tools will assume some workload
+                        knowledge. This may be in the form of a previous
+                        workload sample or model estimate, however, these
+                        assumptions are not always accurate. We have
+                        identified two major sources of unpredictabilty that
+                        DBMS tuning tools fail to consider, workload drift
+                        and resource availability.
+                        <figure style="text-align: center;">
+                            <img class="figure-img" src="img/rotational_noise.svg" style="max-width: 100%;">
+                            <figcaption>
+                                Figure 1: Beta distribution ~ Beta(5, 2)
+                                demonstrating shifts across logical blocks of
+                                the database.
+                            </figcaption>
+                        </figure>
+                    </p>
+                    <p class="lead">
+                        One part of workload drift occurs when access
+                        patterns shift across the logical blocks of the
+                        database. Figure 1 shows an example of a beta
+                        distribution shifted at varying percentages. Drift
+                        such as this can occur due to changes in the usage
+                        landscape. For example, DBMS servicing social media
+                        applications may experience workload drift when viral
+                        events cause drastic changes in the user usage. The
+                        other part of workload drift occurs between different
+                        operations. Tunings may expect a certain percentage
+                        of point queries versus inserts, but HTAP
+                        applications can clearly cause these percentages to
+                        flucuate.
+                    </p>
+                    <p class="lead">
+                        Additionally, DBMS experience unpredictabilty in
+                        resource availability. For many valuable reasons,
+                        DBMS have been migrating to the cloud over the years.
+                        The massive amounts of resources allow for high
+                        performance systems while additionally creating
+                        environments that can service multiple applications
+                        on a single computing unit. Clearly this provides many
+                        benefits as our data collection continues to grow,
+                        however, the cloud also introduces a problem with
+                        resource availability. With multiple applications
+                        living on the same node, applications may not recieve
+                        the exact amount of resources they request or expect.
+                        This can be extremely deterimental to a DBMS
+                        performance.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="page-section bg-light text-dark mb-0" id="research">
+        <div class="container">
+            <h2 class="page-section-heading text-center text-uppercase text-dark">Research</h2>
+
+            <div class="divider-custom divider-dark">
+                <div class="divider-custom-line-long"></div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-10 mr-auto ml-auto">
+                    <p class="lead">
+                        To address these sources of unpredictabilty we break
+                        down this project into five distinct stages; (i)
+                        quantifying workload drift, (ii) modeling system
+                        performance, (iii) measuring robustness, (iv)
+                        formulating a robust optimization problem, and (v)
+                        building OakDB. Each stage layouts a strategy for
+                        exploring a issue, and tying things together results
+                        in a deliverable system to show how to incorporate
+                        robustness into a DBMS.
+                    </p>
+                </div>
+            </div>
+
+            <h2 class="page-section-heading text-center text-uppercase text-dark pt-5" style="font-size: 2rem;">Current Work</h2>
+
+            <div class="row">
+                <div class="col-lg-10 mr-auto ml-auto">
+                    <p class="lead">
+                        We have tested various access pattern distributions
+                        of point queries and inserts. Figure 2 shows a
+                        mirrored configuration of access patterns for two
+                        operations and figure 3 shows a configuration where
+                        point queries are constant while inserts are heavily
+                        focused on towards earlier blocks. For rotational
+                        drift, we shifted both distributions by integer
+                        amounts, and for mass drift, we shaved percentages off
+                        the point queries distribution and scaled up inserts
+                        accordingly. Our cost function is based off of the
+                        databases latency per operation.
+                    </p>
+                </div>
+                <div class="col-lg-6 ml-auto">
+                    <figure>
+                        <img class="figure-img" src="img/ex_drift_1_beta.svg" style="max-width: 100%;">
+                        <img class="figure-img" src="img/ex_drift_1.svg" style="max-width: 100%;">
+                        <figcaption>
+                            Figure 2: Point queries distributed Beta(1, 5).
+                            Inserts distributed Beta(5, 1). Cost increases is
+                            in reference to the zero uncertainity point the
+                            DBMS was tuned for.
+                        </figcaption>
+                    </figure>
+                </div>
+                <div class="col-lg-6 mr-auto">
+                    <figure>
+                        <img class="figure-img" src="img/ex_drift_2_beta.svg" style="max-width: 100%;">
+                        <img class="figure-img" src="img/ex_drift_2_scaled.svg" style="max-width: 100%;">
+                        <figcaption>
+                            Figure 3: Point queries distributed Beta(1, 1).
+                            Inserts distributed Beta(2, 5). Note the scale is
+                            not as wide as figure 2.
+                        </figcaption>
+                    </figure>
+                </div>
+                <div class="col-lg-10 mr-auto ml-auto">
+                    <p class="lead">
+                        We see certain types of access pattern combinations
+                        result in a database tuning that can be stable or
+                        unstable in respect to workload drift. The symmetric
+                        workload, when pertubated either via rotational noise
+                        or mass results in extreme cost increases of more
+                        than 10x compared to figure 3. This exploration gives
+                        us an insight on the space of heuristics to explore
+                        inorder to create robust data systems.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="page-section bg-primary text-light mb-0" id="contact">
+        <div class="container">
+            <h2 class="page-section-heading text-center text-uppercase text-light">Meet the Team</h2>
+            <div class="divider-custom divider-light">
+                <div class="divider-custom-line-long"></div>
+            </div>
+
+            <div class="row">
+                <div class="col-auto ml-auto">
+                    <figure>
+                        <a href="http://cs-people.bu.edu/ndhuynh">
+                            <img class="img-circular" src="img/andy.jpg">
+                        </a>
+                        <figcaption>Andy Huynh</figcaption>
+                    </figure>
+                </div>
+                <div class="col-auto mr-auto">
+                    <figure>
+                        <a href="http://cs-people.bu.edu/mathan/">
+                            <img class="img-circular" src="img/manos.jpg">
+                        </a>
+                        <figcaption>Manos Athanassoulis</figcaption>
+                    </figure>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer text-center bg-light text-dark">
+        <div class="container">
+            <h2 class="page-section-heading text-center text-uppercase text-dark">Sponsors</h2>
+
+            <div class="divider-custom divider-dark">
+                <div class="divider-custom-line-long"></div>
+            </div>
+
+            <div class="row">
+                <div class ="col-auto ml-auto mr-auto">
+                    <p class="lead">
+                        This work is supported by NSF Award #1850202
+                    </p>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-auto ml-auto mr-auto">
+                    <a href="https://midas.bu.edu/">
+                        <img class="img-thumbnail" src="img/midas-logo.png" style="height: 100px;">
+                    </a>
+                    <a href="https://www.bu.edu/cs/">
+                        <img class="img-thumbnail" src="img/BU-logo.png" style="height: 100px">
+                    </a>
+                    <a href="https://nsf.gov/awardsearch/showAward?AWD_ID=1850202&HistoricalAwards=false">
+                        <img class="img-thumbnail" src="img/nsf_logo.png" style="height: 100px">
+                    </a>
+            </div>
+        </div>
+    </footer>
+
+    <div class="scroll-to-top d-lg-none position-fixed ">
+        <a class="js-scroll-trigger d-block text-center text-white rounded" href="#page-top">
+            <i class="fa fa-chevron-up"></i>
+        </a>
+    </div>
+
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="js/jqBootstrapValidation.js"></script>
+    <script src="js/contact_me.js"></script>
+    <script src="js/freelancer.min.js"></script>
+</body>
+</html>
