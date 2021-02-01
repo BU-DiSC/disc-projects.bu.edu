@@ -142,7 +142,7 @@ body span.anchor {
 #algorithm_buttons button {
   width: 150px;
 }
-#algorithm_buttons button:not(#coneAlpha) {
+#algorithm_buttons button:not(#all) {
   margin-left: 10px;
 }
 

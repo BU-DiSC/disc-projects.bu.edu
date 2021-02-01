@@ -66,32 +66,32 @@ function updateRP(data){
 					pointHoverRadius:4,
 				},
 
-				{
-					label: "CONE-n",
-					data: normalized[1],
-					backgroundColor: 'rgba(54, 162, 235, 0.2)',
-					borderColor: 'rgba(54, 162, 235, 1)',
-					borderWidth: 1,
-					fill: false,
-					pointStyle:'cross', //marker type
-					pointRadius:4,
-					pointHoverRadius:4,
-				},
+				// {
+				// 	label: "COW(n,E)",
+				// 	data: normalized[1],
+				// 	backgroundColor: 'rgba(54, 162, 235, 0.2)',
+				// 	borderColor: 'rgba(54, 162, 235, 1)',
+				// 	borderWidth: 1,
+				// 	fill: false,
+				// 	pointStyle:'cross', //marker type
+				// 	pointRadius:4,
+				// 	pointHoverRadius:4,
+				// },
+
+				// {
+				// 	label: "COW-X(n,E)",
+				// 	data: normalized[2],
+				// 	backgroundColor: 'rgba(255, 206, 86, 0.2)',
+				// 	borderColor: 'rgba(255, 206, 86, 1)',
+				// 	borderWidth: 1,
+				// 	fill: false,
+				// 	pointStyle:'rect',
+				// 	pointRadius:4,
+				// 	pointHoverRadius:4,
+				// },
 
 				{
-					label: "CONE-Xn",
-					data: normalized[2],
-					backgroundColor: 'rgba(255, 206, 86, 0.2)',
-					borderColor: 'rgba(255, 206, 86, 1)',
-					borderWidth: 1,
-					fill: false,
-					pointStyle:'rect',
-					pointRadius:4,
-					pointHoverRadius:4,
-				},
-
-				{
-					label: "COW-n",
+					label: "COW(n)",
 					data: normalized[3],
 					backgroundColor: 'rgba(75, 192, 192, 0.2)',
 					borderColor: 'rgba(75, 192, 192, 1)',
@@ -103,7 +103,7 @@ function updateRP(data){
 				},
 
 				{
-					label: "COW-Xn",
+					label: "COW-X(n)",
 					data: normalized[4],
 					backgroundColor: 'rgba(153, 50, 204, 0.2)',
 					borderColor: 'rgba(153, 50, 204, 1)',

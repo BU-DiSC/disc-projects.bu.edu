@@ -100,7 +100,7 @@ function updateVA(data){
 	window.VAChart = new Chart(ctx, {
 		type: 'bar',
 		data: {
-			labels: [$('#baseAlg option:selected').text(), "CONE-n", "CONE-Xn", "COW-n", "COW-Xn"],
+			labels: [$('#baseAlg option:selected').text(), "COW(n)", "COW-X(n)", "COW(n,E)", "COW-X(n,E)"],
 			datasets: $('#rawData').is(':checked')?rawDataset:normalizedDataset,
 		},
 		options: {
