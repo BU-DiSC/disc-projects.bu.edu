@@ -19,9 +19,9 @@ function calculate(wload, bLen, alpha, baseAlg){
 	bufferLength = bLen;
 	alphaVal = alpha;
 
-    const algorithms = [base, cowAlpha, cowXAlpha];
+    // const algorithms = [base, cowAlpha, cowXAlpha];
 
-    // const algorithms = [base, cowAlpha, cowXAlpha, coneAlpha, coneXAlpha];
+    const algorithms = [base, cowAlpha, cowXAlpha, coneAlpha, coneXAlpha];
     const baseAlgorithms = [baseLRU, baseLFU, baseCFLRU, baseLRUWSR];
 
     var result = (function(){
