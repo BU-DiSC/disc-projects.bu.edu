@@ -19,11 +19,8 @@ function calculate(wload, bLen, alpha, baseAlg){
 	bufferLength = bLen;
 	alphaVal = alpha;
 
-<<<<<<< HEAD
     //const algorithms = [base, cowAlpha, cowXAlpha];
 
-=======
->>>>>>> 2b24b697d0adf3c99ae4dc574f3025a27d8bf47a
     const algorithms = [base, cowAlpha, cowXAlpha, coneAlpha, coneXAlpha];
     const baseAlgorithms = [baseLRU, baseLFU, baseCFLRU, baseLRUWSR];
 
