@@ -83,7 +83,7 @@ class LSM {
         }
         this.PB = this.P * this.B;
         // this.L = this._getL();
-		this.cumulativeMeta = {ratio: 0, size: 0, tail: 0, totalCompLat:0, totalCompSize:0, totalSize:0, maxLat: 0};
+		this.cumulativeMeta = {ratio: 0, size: 0, tail: 0, totalCompLat:0, totalCompSize:0, totalSize:0, maxLat: 0, numComp: 0};
 		this._clearCumulativeMeta();
 		this.cumulativeData = [];
 		this._prepareCumulative();
@@ -675,12 +675,12 @@ class LSM {
         document.querySelector(`#${this.suffix}-ZR-cost`).textContent = roundTo(this._getZeroPointLookUpCost(), 2) +" I/O";
         document.querySelector(`#${this.suffix}-NZR-cost`).textContent = roundTo(this._getExistPointLookUpCost(), 2) +" I/O";
         document.querySelector(`#${this.suffix}-sQ-cost`).textContent = roundTo(this._getShortRangeLookUpCost(), 2) +" I/O";
-        document.querySelector(`#${this.suffix}-lQ-cost`).textContent = roundTo(this._getLongRangeLookUpCost(), 2) +" I/O";
+        document.querySelector(`#${this.suffix}-lQ-cost`).textContent = this._getLongRangeLookUpCost().toExponential(1) +" I/O";
         document.querySelector(`#${this.suffix}-sAMP-cost`).textContent = roundTo(this._getSpaceAmpCost(), 2);
         document.querySelector(`#${this.suffix}-ingestion-cost`).textContent = roundTo(this._getUpdateCost(), 2) + " I/O";
         document.querySelector(`#${this.suffix}-compaction-size`).textContent = this.formatBytes(this._getAvgCompSize()*1024*1024, 1);
-        document.querySelector(`#${this.suffix}-compaction-latency`).textContent = roundTo(this._getAvgCompLat()/1000.0, 2) + " s";
-        document.querySelector(`#${this.suffix}-tail-latency`).textContent = roundTo(this._getTailCompLat()/1000.0, 2) + " s";
+        document.querySelector(`#${this.suffix}-compaction-latency`).textContent = roundTo(this._getAvgCompLat(),2) + " s";
+        document.querySelector(`#${this.suffix}-tail-latency`).textContent = roundTo(this._getTailCompLat(), 2) + " s";
         document.querySelector(`#${this.suffix}-storage-cost`).textContent = this.formatBytes(this._getWorstCaseStorageSpace(), 1);
         document.querySelector(`#${this.suffix}-mem-cost`).textContent = this.formatBytes(this._getWorstCaseStorageSpace(), 1);
     }
@@ -743,14 +743,13 @@ class LSM {
 		return this.Z - 1 + f1*f2;
     }
 	_getNumSortedRun() {
-
-    if(this.L <= this.X)
-      return (this.X - 1)*this.K + this.Z;
-    return this.L*this.Z + (this.K - this.Z)*this.X
+    	if(this.L <= this.X)
+      	return (this.X - 1)*this.K + this.Z;
+    	return this.L*this.Z + (this.K - this.Z)*this.X
 	}
 
 	_getNumCompaction() {
-		return this.NCompaction;
+		return this.cumulativeData[Math.floor(this.N / this.F)].numComp;
 	}
 
 	_getMovedData() {
@@ -808,8 +807,8 @@ class LSM {
 	}
 
 	_calculateMovedData() {
-		console.log("moved data: ", this._calculateReadData() + this._calculateWriteData() * this.phi);
-		return this._calculateReadData() + this._calculateWriteData() * this.phi;
+		console.log("moved data: ", this._calculateReadData() + this._calculateWriteData());
+		return this._calculateReadData()/(1024.0*1024.0*this.mu) + this._calculateWriteData()/ (1024.0*1024.0*this.phi);
 	}
 
 	_getAvgCompSize() {
@@ -828,7 +827,7 @@ class LSM {
 	_getAvgCompLat() {
     if(this.N == 0) return 0;
 		if (!this.cumulativeData[Math.floor(this.N/this.F)].totalCompLat) return 0;
-		return this.cumulativeData[Math.floor(correctDecimal(this.N / this.F))].totalCompLat * this.PB * this.E / this.N;
+		return this.cumulativeData[Math.floor(correctDecimal(this.N / this.F))].totalCompLat*this.PB*this.E/Math.floor(correctDecimal(this.N / this.F));
 	}
 
 	_calculateTotalCompLat() {
@@ -872,7 +871,9 @@ class LSM {
 				this.N = s * this.F;
 				this.cumulativeData[s] = {totalCompSize: this._calculateTotalCompSize(),
 					 						totalCompLat: this._calculateTotalCompLat(),
-											maxLat: this._calculateTailCompLat()};
+											maxLat: this._calculateTailCompLat(),
+											numComp: this._calculateNumCompaction()};
+
 				console.log(s, "s", this.cumulativeData[s]);
 				s ++;
 			}
@@ -881,7 +882,10 @@ class LSM {
 		} else if (Math.floor(correctDecimal(this.NTotal / this.F)) > this.cumulativeMeta.size){
 			var s = this.cumulativeMeta.size
 			while (s * this.F <= this.NTotal) {
-				this.cumulativeData[s] = {totalCompSize: this._calculateTotalCompSize(), totalCompLat: this._calculateTotalCompLat(), maxLat: this._calculateTailCompLat()};
+				this.cumulativeData[s] = {totalCompSize: this._calculateTotalCompSize(), 
+											totalCompLat: this._calculateTotalCompLat(), 
+											maxLat: this._calculateTailCompLat(),
+											numComp: this._calculateNumCompaction()};
 				s ++;
 			}
 			this.cumulativeMeta.size = this.cumulativeData.length;
@@ -890,12 +894,18 @@ class LSM {
 
 	}
 
+	_calculateNumCompaction() {
+		this.cumulativeMeta.numComp += 0;
+		return this.cumulativeMeta.numComp;
+	}
+
 	_clearCumulativeMeta() {
 		this.cumulativeMeta.totalCompLat = 0;
 		this.cumulativeMeta.totalCompSize = 0;
 		this.cumulativeMeta.maxLat = 0;
 		this.cumulativeMeta.size = 0;
 		this.cumulativeMeta.ratio = 0;
+		this.cumulativeMeta.numComp = 0;
 	}
 
 }
@@ -958,6 +968,7 @@ class VanillaLSM extends LSM{
 			//var file_num = Math.ceil(entry_num / this.PB);
 			setRunGradientWrapper(elem[l], file_num, Math.ceil(level_space / this.F), elem[l].displayunit);
 			elem[l].entryNum = file_num;
+			if (file_num != 0) this.NSortedRun ++;
             return;
         }
 
@@ -966,6 +977,7 @@ class VanillaLSM extends LSM{
             entry_num = level_cap;
             rate = entry_num / level_space;
             file_num = Math.ceil(correctDecimal(entry_num / this.F));
+			if (file_num != 0) this.NSortedRun ++;
 			console.log("render level cap:", level_space);
             context = super._getTipText(l, level_space, entry_num, file_num);
             n = n - entry_num;
@@ -974,6 +986,7 @@ class VanillaLSM extends LSM{
             rate = entry_num / level_space;
 			console.log("render level cap:", level_space);
             file_num = Math.ceil(correctDecimal(entry_num / this.F));
+			if (file_num != 0) this.NSortedRun ++;
             context = super._getTipText(l, level_space, entry_num, file_num);
             n = n - entry_num;
         }
@@ -1201,11 +1214,41 @@ class VanillaLSM extends LSM{
 
 	_getNumSortedRun() {
 		if (this.MP == 0)
-			return this.L;
+			return this.NSortedRun;
 		else {
 			return this.NSortedRun;
 		}
 	}
+
+	_calculateNumCompaction() {
+		var num = Math.floor(this.N / this.F);
+		//var nLevels = this.L;
+		var sum = 0;
+		var arr = new Array(this._getL() + 1);
+		for (var i = this._getL(); i >= 1; i --) {
+			arr[i] = Math.floor(num / Math.pow(this.T, i - 1));
+			num = num - arr[i] * Math.pow(this.T, i - 1);
+		}
+		var i = 1;
+		if (this.MP == 0) {
+			i = 2;
+			sum = 1;
+			while (i <= this._getL() && arr[i] == 0) {
+				sum ++;
+				i ++;
+			}
+		} else {
+			while (i <= this._getL() && arr[i] == 0) {
+				sum ++;
+				i ++;
+			}
+		}
+	
+		console.log("nComp ", sum);
+		this.cumulativeMeta.numComp += sum;
+		return this.cumulativeMeta.numComp;
+	}
+
 
 }
 
@@ -1628,6 +1671,20 @@ class RocksDBLSM extends LSM {
         document.querySelector("#rlsm-sAMP-cost").setAttribute("data-original-title", sAMP);*/
     }
 
+	_calculateNumCompaction() {
+		var num = Math.floor(this.N / this.F);
+		var sum = 0;
+		var level = 1;
+		while (1) {
+			if (num - Math.pow(this.T, level) + 1 < 0) break;
+			sum += (Math.pow(this.T, level) - 1) * level;
+			num = num - Math.pow(this.T, level) + 1;
+		}
+		sum += num * level;
+		this.cumulativeMeta.numComp += sum;
+		return this.cumulativeMeta.numComp;
+	}
+
 
 }
 
@@ -1684,12 +1741,14 @@ class DostoevskyLSM extends LSM {
                 if ((max_runs >= 5) && (j == max_runs - 2)) {
                     child = createDots(run_width);
                     var context = "This level contains " + ratio + " runs in total";
+					if (this._getEntryNum(i, j, run_cap) != 0) this.NSortedRun ++;
                 } else {
                     child = createBtn(run_width);
                     //entry_num = super._getEntryNum(i, j, run_cap);
 					entry_num = this._getEntryNum(i, j, run_cap);
                     rate = correctDecimal(entry_num / run_cap);
                     var file_num = Math.ceil(correctDecimal(entry_num / this.F));
+					if (file_num != 0) this.NSortedRun ++;
                     context = super._getTipText(i, run_cap, entry_num, file_num);
                     setRunGradient(child, rate);
                 }
@@ -1759,6 +1818,30 @@ class DostoevskyLSM extends LSM {
           this.X = 0;
         }
     }
+
+	_getNumSortedRun() {
+		return this.NSortedRun;
+	}
+	
+	_calculateNumCompaction() {
+		var num = Math.floor(this.N / this.F);
+		//var nLevels = this.L;
+		var sum = 0;
+		var arr = new Array(this._getL() + 1);
+		for (var i = this._getL(); i >= 1; i --) {
+			arr[i] = Math.floor(num / Math.pow(this.T, i - 1));
+			num = num - arr[i] * Math.pow(this.T, i - 1);
+		}
+		var i = 1;
+		while (i <= this._getL() && arr[i] == 0) {
+			sum ++;
+			i ++;
+		}
+	
+		console.log("nComp ", sum);
+		this.cumulativeMeta.numComp += sum;
+		return this.cumulativeMeta.numComp;
+	}
 }
 
 class OSM extends LSM {
@@ -1824,10 +1907,13 @@ class OSM extends LSM {
                 if ((tmp_max_runs >= 5) && (j == tmp_max_runs - 2)) {
                     child = createDots(run_width);
                     var context = "This level contains " + ratio + " runs in total";
+					entry_num = this._getEntryNum(i, j, run_cap);
+					if (entry_num != 0) this.NSortedRun ++;
                 } else {
                     child = createBtn(run_width);
                     //entry_num = super._getEntryNum(i, j, run_cap);
 					entry_num = this._getEntryNum(i, j, run_cap);
+					if (entry_num != 0) this.NSortedRun ++;
                     rate = correctDecimal(entry_num / run_cap);
                     var file_num = Math.ceil(correctDecimal(entry_num / this.F));
                     context = super._getTipText(i, run_cap, entry_num, file_num);
@@ -1896,6 +1982,29 @@ class OSM extends LSM {
         this.L = this._getL();
     }
 
+	_getNumSortedRun() {
+		return this.NSortedRun;
+	}
+	
+	_calculateNumCompaction() {
+		var num = Math.floor(this.N / this.F);
+		//var nLevels = this.L;
+		var sum = 0;
+		var arr = new Array(this._getL() + 1);
+		for (var i = this._getL(); i >= 1; i --) {
+			arr[i] = Math.floor(num / Math.pow(this.T, i - 1));
+			num = num - arr[i] * Math.pow(this.T, i - 1);
+		}
+		var i = 1;
+		while (i <= this._getL() && arr[i] == 0) {
+			sum ++;
+			i ++;
+		}
+	
+		console.log("nComp ", sum);
+		this.cumulativeMeta.numComp += sum;
+		return this.cumulativeMeta.numComp;
+	}
 }
 
 
@@ -2383,7 +2492,7 @@ function validate(self, target, input) {
             break;
         case `${target}-input-mu`:  //mu > 0
             if (input.mu <= 0) {
-                alert("Invalid input: the storage sequential over random access speed >= 0");
+                alert("Invalid input: the storage read speed >= 0");
                 restoreInput(`#${target}-input-mu`);
             } else {
                 setInput(`#${target}-input-mu`);
@@ -2391,7 +2500,7 @@ function validate(self, target, input) {
             break;
         case `${target}-input-phi`:  //phi > 0
             if (input.phi <= 0) {
-                alert("Invalid input: the storage write over read speed should be >= 0");
+                alert("Invalid input: the storage write speed should be >= 0");
                 restoreInput(`#${target}-input-phi`);
             } else {
                 setInput(`#${target}-input-phi`);
@@ -3068,8 +3177,8 @@ function initSlider() {
 	window.sliders["dlsm"] = window.dlsmProgressSlider;
 	window.sliders["osm"] = window.osmProgressSlider;
 
-	console.log("granularity = ", document.querySelector("#granularity-input"));
-	window.granularity = document.querySelector("#granularity-input").value;
+	//console.log("granularity = ", document.querySelector("#granularity-input"));
+	//window.granularity = document.querySelector("#granularity-input").value;
 
 	window.runningIds = new Map();
 }
@@ -3268,7 +3377,7 @@ document.querySelector("#cmp-select-P").onchange = runCmp;
 document.querySelector("#cmp-select-Mbf").onchange = runCmp;
 document.querySelector("#cmp-bg-merging").onchange = runCmp;
 document.querySelector("#cmp-threshold").onchange = runCmp;
-document.querySelector("#granularity-input").onchange = runCmp;
+//document.querySelector("#granularity-input").onchange = runCmp;
 //document.querySelector("#adjustable-progress-bar").onchange = runCmp;
 // document.querySelector("#cmp-osm-tiering").onclick = runCmp;
 // Individual LSM analysis event trigger
