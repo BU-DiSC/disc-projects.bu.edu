@@ -3178,7 +3178,7 @@ function initSlider() {
 	window.sliders["osm"] = window.osmProgressSlider;
 
 	//console.log("granularity = ", document.querySelector("#granularity-input"));
-	//window.granularity = document.querySelector("#granularity-input").value;
+	window.granularity = document.querySelector("#granularity-input").value;
 
 	window.runningIds = new Map();
 }
