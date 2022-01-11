@@ -1,4 +1,8 @@
-const level_physical_capacities = [48, 36, 27, 22, 17, 12, 9, 6, 4];
+const level_physical_capacities = [48, 36, 27, 22, 17, 12, 9, 6, 4]
+const color_table=["#80ff8b","#80fff9","#8091ff","#b980ff","#ff8080","#ffb980","#edfa00","#00fa32","#0021fa","#8900fa","#c7041e"]
+const name_table=["Vanilla-LSM","Partial Compaction","Hybrid-Strategy","Build-Your-Own"]
+var traces_for_plots = {}
+var plotted_metrics = ["level"]
 
 // Event handling
 document.addEventListener("DOMContentLoaded",
@@ -53,6 +57,7 @@ class LSM {
         this.preMP = this.MP;
 		this.NSortedRun = 0;
 		this.NCompaction = 0;
+    this.plotIdx = 0;
 
         if(prefix) {
             this.T = document.querySelector(`#${prefix}-input-T`).value;
@@ -86,6 +91,7 @@ class LSM {
 		this.cumulativeMeta = {ratio: 0, size: 0, tail: 0, totalCompLat:0, totalCompSize:0, totalSize:0, maxLat: 0, numComp: 0};
 		this._clearCumulativeMeta();
 		this.cumulativeData = [];
+    this.cumulativeLevelThreshold = [];
 		this._prepareCumulative();
     }
 
@@ -238,7 +244,7 @@ class LSM {
         if (entryNum == 0) return 1;
         var L;
         var l1_cap = this.PB * (this.T - 1);
-        var log = entryNum * (this.T - 1) / l1_cap + 1;
+        var log = entryNum * (this.T - 1) / l1_cap;
         L = Math.ceil(getBaseLog(this.T, log));
         return (L < 1) ? 1 : L;
     }
@@ -685,9 +691,27 @@ class LSM {
         document.querySelector(`#${this.suffix}-mem-cost`).textContent = this.formatBytes(this._getWorstCaseStorageSpace(), 1);
     }
 
+    updatePlotData() {
+      // update data for level plots
+      var s = 0;
+      var lvl_idx = 0;
+      traces_for_plots[plotted_metrics[0]][this.plotIdx].x = [];
+      traces_for_plots[plotted_metrics[0]][this.plotIdx].y = [];
+      while(s*this.F <= this.N){
+        traces_for_plots[plotted_metrics[0]][this.plotIdx].x.push(s*this.F);
+        traces_for_plots[plotted_metrics[0]][this.plotIdx].y.push(lvl_idx+1);
+        s++;
+        if(s*this.F > this.cumulativeLevelThreshold[lvl_idx]){
+          lvl_idx++;
+        }
+      }
+
+    }
+
     show() {
         this.showBush();
         this.showCost();
+        this.updatePlotData();
     }
 
     _getUpdateCost() {
@@ -776,7 +800,7 @@ class LSM {
 			sum += arr[1] - 1;
 		}
 
-		console.log("read: ", sum)
+		//console.log("read: ", sum)
 		return sum;
 	}
 
@@ -790,7 +814,7 @@ class LSM {
 			arr[i] = Math.floor(num / Math.pow(this.T, i - 1));
 			num = num - arr[i] * Math.pow(this.T, i - 1);
 		}
-		console.log(arr);
+		//console.log(arr);
 		if (arr[1] == 0) {
 			sum += this.T;
 			var j = 2;
@@ -801,19 +825,19 @@ class LSM {
 		} else {
 			sum += arr[1];
 		}
-		console.log("write: ",sum);
+		//console.log("write: ",sum);
 
 		return sum;
 	}
 
 	_calculateMovedData() {
-		console.log("moved data: ", this._calculateReadData() + this._calculateWriteData());
+		//console.log("moved data: ", this._calculateReadData() + this._calculateWriteData());
 		return this._calculateReadData()/(1024.0*1024.0*this.mu) + this._calculateWriteData()/ (1024.0*1024.0*this.phi);
 	}
 
 	_getAvgCompSize() {
-		console.log("n / f", this.N/this.F);
-		console.log("size", this.cumulativeMeta.size);
+		//console.log("n / f", this.N/this.F);
+		//console.log("size", this.cumulativeMeta.size);
     if(this.N == 0) return 0;
 		if (!this.cumulativeData[Math.floor(this.N/this.F)].totalCompSize) return 0;
 		return this.cumulativeData[Math.floor(correctDecimal(this.N / this.F))].totalCompSize * this.PB * this.E / this.N;
@@ -863,6 +887,26 @@ class LSM {
 
 	_prepareCumulative() {
 
+    this.cumulativeLevelThreshold = [];
+    if(this.name != "RocksDBLSM"){
+      var max_L = this._getL(this.NTotal - this.NTotal%this.PB);
+      for(let i = 1; i < max_L; i++){
+        this.cumulativeLevelThreshold.push(Math.pow(this.T, i)*this.PB);
+      }
+    }else{
+      var fileNum = Math.ceil(this.NTotal / this.F);
+      var i = 0;
+      var L = 0;
+      while (i < fileNum) {
+          L += 1;
+          i += this._getLevelCapacityByFile(L);
+          this.cumulativeLevelThreshold.push(i*this.F);
+
+      }
+    }
+
+
+
 		if (this.T != this.cumulativeMeta.ratio) {
 			var s = 0;
 			this.cumulativeData = [];
@@ -874,16 +918,17 @@ class LSM {
 											maxLat: this._calculateTailCompLat(),
 											numComp: this._calculateNumCompaction()};
 
-				console.log(s, "s", this.cumulativeData[s]);
+				//console.log(s, "s", this.cumulativeData[s]);
 				s ++;
+
 			}
 			this.cumulativeMeta.ratio = this.T;
 			this.cumulativeMeta.size = this.cumulativeData.length;
 		} else if (Math.floor(correctDecimal(this.NTotal / this.F)) > this.cumulativeMeta.size){
 			var s = this.cumulativeMeta.size
 			while (s * this.F <= this.NTotal) {
-				this.cumulativeData[s] = {totalCompSize: this._calculateTotalCompSize(), 
-											totalCompLat: this._calculateTotalCompLat(), 
+				this.cumulativeData[s] = {totalCompSize: this._calculateTotalCompSize(),
+											totalCompLat: this._calculateTotalCompLat(),
 											maxLat: this._calculateTailCompLat(),
 											numComp: this._calculateNumCompaction()};
 				s ++;
@@ -914,7 +959,7 @@ class LSM {
 class VanillaLSM extends LSM{
     constructor(tarConf, tarRes) {
         super(tarConf, tarRes);
-
+        this.plotIdx = 0;
     }
 
     _getEntryNum(offset, run_cap, jth) {
@@ -1243,7 +1288,7 @@ class VanillaLSM extends LSM{
 				i ++;
 			}
 		}
-	
+
 		console.log("nComp ", sum);
 		this.cumulativeMeta.numComp += sum;
 		return this.cumulativeMeta.numComp;
@@ -1260,6 +1305,7 @@ class RocksDBLSM extends LSM {
         this.MP = 0;
         this.DEFAULT.MP = 0;
         this.preMP = 0;
+        this.plotIdx = 1;
     }
     _getThreshold() {
         var L = this._getL();
@@ -1294,6 +1340,7 @@ class RocksDBLSM extends LSM {
         if (fileNum == 0) return 1;
         var L = 0;
         var i = 0;
+
         while (i < fileNum) {
             L += 1;
             i += this._getLevelCapacityByFile(L);
@@ -1599,6 +1646,7 @@ class RocksDBLSM extends LSM {
             this.showBush();
         }
         this.showCost();
+        this.updatePlotData();
     }
 
     /* update current state */
@@ -1694,6 +1742,7 @@ class DostoevskyLSM extends LSM {
         this.MP = 1;
         this.DEFAULT.MP = 1;
         this.preMP = 1;
+        this.plotIdx = 2;
     }
 
     _getRunCapacity(ith, level) {
@@ -1822,7 +1871,7 @@ class DostoevskyLSM extends LSM {
 	_getNumSortedRun() {
 		return this.NSortedRun;
 	}
-	
+
 	_calculateNumCompaction() {
 		var num = Math.floor(this.N / this.F);
 		//var nLevels = this.L;
@@ -1837,7 +1886,7 @@ class DostoevskyLSM extends LSM {
 			sum ++;
 			i ++;
 		}
-	
+
 		console.log("nComp ", sum);
 		this.cumulativeMeta.numComp += sum;
 		return this.cumulativeMeta.numComp;
@@ -1852,6 +1901,7 @@ class OSM extends LSM {
         this.preMP = 1;
         // the number of tiered levels
         this.X = document.querySelector(`#osm-num-tired-level-input`).value;
+        this.plotIdx = 3;
     }
 
     _getRunCapacity(ith, level) {
@@ -1985,7 +2035,7 @@ class OSM extends LSM {
 	_getNumSortedRun() {
 		return this.NSortedRun;
 	}
-	
+
 	_calculateNumCompaction() {
 		var num = Math.floor(this.N / this.F);
 		//var nLevels = this.L;
@@ -2000,11 +2050,31 @@ class OSM extends LSM {
 			sum ++;
 			i ++;
 		}
-	
+
 		console.log("nComp ", sum);
 		this.cumulativeMeta.numComp += sum;
 		return this.cumulativeMeta.numComp;
 	}
+}
+
+function initPlot(){
+  for(let i = 0; i < plotted_metrics.length; i++){
+    traces_for_plots[plotted_metrics[i]] = [];
+    for(let j = 0; j < 4; j++){
+      traces_for_plots[plotted_metrics[i]].push({
+        x: [],
+        y: [],
+        marker: {size: 7, opacity: 0.9, symbol: 'circle', color:color_table[j%color_table.length],"line": { "width": 2, color: "#999999"}},
+        mode: 'lines+markers',
+        line: {color:color_table[j%color_table.length], width: 3},
+        showlegend: true,
+        name: name_table[j],
+        hovertemplate:
+            "%{y:.2f}h",
+        type: 'scatter'
+      })
+    }
+  }
 }
 
 
@@ -2099,6 +2169,34 @@ function changeProgressBar(slider, newVal) {
 		const total = document.querySelector("#adjustable-progress-bar")["aria-valuemax"];
 		document.querySelector("#adjustable-progress-bar")["style"] = "width: " + newVal/total * 100 + "%";
 	}*/
+}
+
+function runPlots(){
+  if(!$("#show-plot-btn").attr("style").includes("display: none")){
+    return;
+  }
+  var p_width = $("#plot-result").width()*0.9;
+  var layout={
+      height:500,
+      width:p_width,
+      title: "#Levels - #keys",
+      margin: {
+          l: 50,
+          r: 50,
+          b: 40,
+          t: 40,
+          pad: 0
+      },
+      yaxis: {
+          title: '#Levels'
+      },
+      xaxis: {
+          title: '#keys',
+      },
+      hovermode: false,
+  };
+
+  Plotly.newPlot('plot-result', traces_for_plots["level"], layout, {displayModeBar: false});
 }
 
 function runCmp() {
@@ -2252,6 +2350,8 @@ function runCmp() {
 					break;
 			}
     }
+
+    runPlots()
 }
 
 
@@ -3203,8 +3303,10 @@ function stopAllIndiv() {
 //     value: 5,
 //     precision: 20
 // });
+initPlot();
 initSlider();
 initCmp();
+
 
 // Event attributes, trigger
 // Analysis mode selection trigger
@@ -3485,5 +3587,21 @@ document.querySelector("#osm-select-E").onchange = runIndiv;
 document.querySelector("#osm-select-P").onchange = runIndiv;
 document.querySelector("#osm-select-Mbf").onchange = runIndiv;
 
+document.querySelector("#show-stats-btn").onclick = function(){
+  $("#show-stats-btn").hide();
+  $("#cost-result").show();
+
+  $("#show-plot-btn").show();
+  $("#plot-result").hide();
+  runPlots();
+}
+document.querySelector("#show-plot-btn").onclick = function(){
+  $("#show-stats-btn").show();
+  $("#cost-result").hide();
+
+  $("#show-plot-btn").hide();
+  $("#plot-result").show();
+  runPlots();
+}
 
 });
