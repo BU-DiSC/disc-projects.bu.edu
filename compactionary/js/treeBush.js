@@ -2,7 +2,7 @@ const level_physical_capacities = [48, 36, 27, 22, 17, 12, 9, 6, 4]
 const color_table=["#80ff8b","#80fff9","#8091ff","#b980ff","#ff8080","#ffb980","#edfa00","#00fa32","#0021fa","#8900fa","#c7041e"]
 const name_table=["Vanilla-LSM","Partial Compaction","Hybrid-Strategy","Build-Your-Own"]
 var traces_for_plots = {}
-var plotted_metrics = ["level"]
+var plotted_metrics = ["level", "run", "num_compaction","avg_cmpct_size","avg_cmpct_lat","ingest_cost"]
 
 // Event handling
 document.addEventListener("DOMContentLoaded",
@@ -32,6 +32,171 @@ function (event) {
 // suffix: result targets subclasses {vlsm, rlsm, dlsm, osm}
 // preMP: previous state of merge policy before switching analysis mode
 class CumulativeStats {
+
+}
+
+class LSM_tree {
+  constructor(n=0) {
+      this._DEFAULT = {
+          N: 0,
+          levels: [0],
+          K: 1,
+          Z: 1,
+          X: 0,
+          T: 2,
+          F: 16384,
+          phi: 1,
+          mu: 1,
+          partial_compact: false,
+          bg_compact: false,
+          bg_threshold: 1.0
+      };
+      this.N = n;
+      this.K = this._DEFAULT.K;
+      this.levels = this._DEFAULT.levels;
+      this.Z = this._DEFAULT.Z;
+      this.X = this._DEFAULT.X;
+      this.T = this._DEFAULT.T;
+      this.F = this._DEFAULT.F;
+      this.mu = this._DEFAULT.mu;
+      this.phi = this._DEFAULT.phi;
+      this.partial_compact = this._DEFAULT.partial_compact;
+      this.bg_compact = this._DEFAULT.bg_compact;
+      this.bg_threshold = this._DEFAULT.bg_threshold;
+      if(this.partial_compact){
+        this.K = 1;
+        this.Z = 1;
+      }
+  }
+
+  get structure(){
+    return this.levels;
+  }
+
+  flush_one_buffer(){
+    var result = {num_compaction:0,max_io_cmpct:0,summed_read_cmpct:0,summed_write_cmpct:0}
+
+    var tmp_ratio = 1;
+    if(this.partial_compact && this.bg_compact) tmp_ratio = this.bg_threshold;
+
+    if(this.levels[0] != 0){
+      if((this.levels.length == 1 && this.Z == 1) || this.K == 1){
+        result.num_compaction++;
+        num_read = this.levels[0];
+        num_write = num_read + 1;
+        result.summed_read_cmpct += num_read;
+        result.summed_write_cmpct += num_write;
+        result.max_io_cmpct = Math.max(result.max_io_cmpct, num_read/this.mu + num_write/this.phi);
+      }else{
+        var run_capacity = Math.ceil(this.T/this.K);
+        var extra_num = this.levels[0]%run_capacity;
+        if(extra_num > 0){
+          result.num_compaction++;
+          num_read = extra_num;
+          num_write = extra_num + 1;
+          result.summed_read_cmpct += num_read;
+          result.summed_write_cmpct += num_write;
+          result.max_io_cmpct = Math.max(result.max_io_cmpct, num_read/this.mu + num_write/this.phi);
+        }
+
+      }
+    }
+    this.levels[0]++;
+    var cur_lvl = 0;
+    var num_read = 0;
+    var num_write = 0;
+    while(this.levels[cur_lvl] >= Math.pow(this.T, cur_lvl+1)*tmp_ratio){
+      if(this.levels.length - 1 == cur_lvl){
+        this.levels.push(0)
+      }
+      if(this.partial_compact){
+        if(this.levels[cur_lvl+1] != 0){
+          result.num_compaction++;
+          num_read = 1 + Math.min(this.T, this.levels[cur_lvl+1]);
+          num_write = num_read;
+          result.summed_read_cmpct += num_read;
+          result.summed_write_cmpct += num_write;
+          result.max_io_cmpct = Math.max(result.max_io_cmpct, num_read/this.mu + num_write/this.phi);
+        }
+        this.levels[cur_lvl]--;
+        this.levels[cur_lvl+1]++;
+
+
+      }else{
+        // merge into a single run first
+        if((this.Z != 1 && cur_lvl == 0) || this.K != 1){
+          result.num_compaction++;
+          result.summed_read_cmpct += this.levels[cur_lvl];
+          result.summed_write_cmpct += this.levels[cur_lvl];
+          result.max_io_cmpct = Math.max(result.max_io_cmpct, this.levels[cur_lvl]/this.mu/1024/1024 + num_write/this.phi/1024/1024);
+        }
+        // merge into the next level
+        if(this.levels[cur_lvl+1] != 0){
+          var run_capacity = Math.ceil(Math.pow(this.T, cur_lvl+2)/this.K);
+          if(cur_lvl + 1>= this.X || cur_lvl + 1 == this.levels.length - 1){
+            run_capacity = Math.ceil(Math.pow(this.T, cur_lvl+2)/this.Z);
+          }
+          var extra_num = this.levels[cur_lvl+1]%run_capacity;
+          if(extra_num > 0){
+            result.num_compaction++;
+            num_read = extra_num + this.levels[cur_lvl];
+            num_write = num_read;
+            result.summed_read_cmpct += num_read;
+            result.summed_write_cmpct += num_write;
+            result.max_io_cmpct = Math.max(result.max_io_cmpct, num_read/this.mu + num_write/this.phi);
+          }
+        }
+        this.levels[cur_lvl+1] += this.levels[cur_lvl];
+        this.levels[cur_lvl] = 0;
+      }
+
+
+      cur_lvl++;
+    }
+    return result;
+  }
+
+  getRunsPerLvl(){
+    var result = [];
+    if(this.levels.length == 1){
+      if(this.levels[0] > 0){
+        return [1];
+      }else{
+        return [0];
+      }
+    }
+    for(let i = 0; i < this.levels.length; i++){
+      if(this.levels[i] > 0){
+        if((this.K == 1 && this.Z == 1) || this.partial_compact){
+          result.push(1);
+        }else if(this.K != 1){
+          if(i < this.X && i < this.levels.length - 1){
+            result.push(Math.ceil(this.levels[i]/(Math.ceil(Math.pow(this.T, i+1)/this.K))));
+          }else if(this.Z != 1){
+            result.push(Math.ceil(this.levels[i]/(Math.ceil(Math.pow(this.T, i+1)/this.Z))));
+          }else{
+            result.push(1);
+          }
+        }else{
+          if(i < this.X || this.Z == 1){
+            result.push(1);
+          }else{
+            result.push(Math.ceil(this.levels[i]/(Math.ceil(Math.pow(this.T, i+1)/this.K))));
+          }
+        }
+
+      }else{
+        result.push(0);
+      }
+    }
+    return result;
+
+  }
+
+  getEntriesPerLvl(){
+    return this.levels;
+  }
+
 
 }
 class LSM {
@@ -71,7 +236,13 @@ class LSM {
             this.mu = document.querySelector(`#${prefix}-input-mu`).value;
             this.phi = document.querySelector(`#${prefix}-input-phi`).value;
 			this.NTotal = this.N;
-            this.X = document.querySelector(`#osm-num-tired-level-input`).value;
+      this.PB = this.P * this.B;
+      if(this.name == "OSM"){
+        this.X = document.querySelector(`#osm-num-tired-level-input`).value;
+      }else if(this.name == "DostoevskyLSM"){
+        this.X = this._getL(this.NTotal - this.NTotal%this.PB) - 1;
+      }
+
         } else {
             this.T = this.DEFAULT.T;
             this.E = this.DEFAULT.E;
@@ -84,9 +255,11 @@ class LSM {
             this.mu = this.DEFAULT.mu;
             this.phi = this.DEFAULT.phi;
 			this.NTotal = this.N;
+            this.PB = this.P * this.B;
       this.X = this.DEFAULT.X;
         }
-        this.PB = this.P * this.B;
+
+        this.KEY_SIZE = this.E/2;
         // this.L = this._getL();
 		this.cumulativeMeta = {ratio: 0, size: 0, tail: 0, totalCompLat:0, totalCompSize:0, totalSize:0, maxLat: 0, numComp: 0};
 		this._clearCumulativeMeta();
@@ -141,12 +314,12 @@ class LSM {
         return this._phi;
     }
     get K(){
-        if(this.MP || this.name === "DostoevskyLSM" || this.name === "OSM") return this.T - 1;
+        if(this.MP || this.name === "DostoevskyLSM" || this.name === "OSM") return this.T;
         else return 1;
     }
     get Z() {
         if (!this.MP || this.name === "DostoevskyLSM" || this.name === "OSM") return 1;
-        else return this.T - 1;
+        else return this.T;
     }
     get prefix() {
         return this._prefix;
@@ -446,12 +619,11 @@ class LSM {
         this.f = document.querySelector(`#${prefix}-input-f`).value;
         this.P = convertToBytes(`#${prefix}-select-P`, document.querySelector(`#${prefix}-input-P`).value);
         this.Mbf = convertToBytes(`#${prefix}-select-Mbf`, document.querySelector(`#${prefix}-input-Mbf`).value);
-        this.s = document.querySelector(`#${prefix}-input-s`).value;
+        this.s = parseFloat(document.querySelector(`#${prefix}-input-s`).value);
         this.mu = document.querySelector(`#${prefix}-input-mu`).value;
         this.phi = document.querySelector(`#${prefix}-input-phi`).value;
         this.PB = this.P * this.B;
         this.L = this._getL();
-		this._prepareCumulative(); // Prepare Cumulative Data
 
         if (prefix === "cmp") {
             var percentage = document.querySelector(`#${prefix}-input-s`).value + "%";
@@ -684,26 +856,54 @@ class LSM {
         document.querySelector(`#${this.suffix}-lQ-cost`).textContent = this._getLongRangeLookUpCost().toExponential(1) +" I/O";
         document.querySelector(`#${this.suffix}-sAMP-cost`).textContent = roundTo(this._getSpaceAmpCost(), 2);
         document.querySelector(`#${this.suffix}-ingestion-cost`).textContent = roundTo(this._getUpdateCost(), 2) + " I/O";
-        document.querySelector(`#${this.suffix}-compaction-size`).textContent = this.formatBytes(this._getAvgCompSize()*1024*1024, 1);
+        document.querySelector(`#${this.suffix}-compaction-size`).textContent = this.formatBytes(this._getAvgCompSize(), 1);
         document.querySelector(`#${this.suffix}-compaction-latency`).textContent = roundTo(this._getAvgCompLat(),2) + " s";
         document.querySelector(`#${this.suffix}-tail-latency`).textContent = roundTo(this._getTailCompLat(), 2) + " s";
         document.querySelector(`#${this.suffix}-storage-cost`).textContent = this.formatBytes(this._getWorstCaseStorageSpace(), 1);
-        document.querySelector(`#${this.suffix}-mem-cost`).textContent = this.formatBytes(this._getWorstCaseStorageSpace(), 1);
+        document.querySelector(`#${this.suffix}-mem-cost`).textContent = this.formatBytes(this._getMemoryFootprint(), 1);
     }
 
     updatePlotData() {
-      // update data for level plots
-      var s = 0;
+      for(let i = 0; i < plotted_metrics.length; i++){
+        traces_for_plots[plotted_metrics[i]][this.plotIdx].x = [];
+        traces_for_plots[plotted_metrics[i]][this.plotIdx].y = [];
+      }
+
+
+      var t = 0;
       var lvl_idx = 0;
-      traces_for_plots[plotted_metrics[0]][this.plotIdx].x = [];
-      traces_for_plots[plotted_metrics[0]][this.plotIdx].y = [];
-      while(s*this.F <= this.N){
-        traces_for_plots[plotted_metrics[0]][this.plotIdx].x.push(s*this.F);
+      var t_idx = 0;
+      var tmp_array = [];
+      var tmp_value = 0;
+      while(t*this.F <= this.N){
+        traces_for_plots[plotted_metrics[0]][this.plotIdx].x.push(t*this.F);
+
+        // update data for run plots
+        tmp_array = this.cumulativeData[t].runsPerLevel;
+        tmp_value = 0;
+        for(let i = 0; i < tmp_array.length; i++){
+          tmp_value += tmp_array[i];
+        }
+        traces_for_plots[plotted_metrics[1]][this.plotIdx].y.push(tmp_value);
+        traces_for_plots[plotted_metrics[2]][this.plotIdx].y.push(this.cumulativeData[t].numComp);
+        traces_for_plots[plotted_metrics[5]][this.plotIdx].y.push(this.cumulativeData[t].avgIngestCost);
+        if(this.cumulativeData[t].numComp == 0){
+          traces_for_plots[plotted_metrics[3]][this.plotIdx].y.push(0);
+          traces_for_plots[plotted_metrics[4]][this.plotIdx].y.push(0);
+        }else{
+          traces_for_plots[plotted_metrics[3]][this.plotIdx].y.push(this.cumulativeData[t].totalCompSize*this.F*this.E / this.cumulativeData[t].numComp/1024/1024);
+          traces_for_plots[plotted_metrics[4]][this.plotIdx].y.push(this.cumulativeData[t].totalCompLat / this.cumulativeData[t].numComp);
+        }
+        t++;
+        // update data for level plots
         traces_for_plots[plotted_metrics[0]][this.plotIdx].y.push(lvl_idx+1);
-        s++;
-        if(s*this.F > this.cumulativeLevelThreshold[lvl_idx]){
+        if(t*this.F > this.cumulativeLevelThreshold[lvl_idx]){
           lvl_idx++;
         }
+      }
+
+      for(let i = 1; i < plotted_metrics.length; i++){
+        traces_for_plots[plotted_metrics[i]][this.plotIdx].x = traces_for_plots[plotted_metrics[0]][this.plotIdx].x;
       }
 
     }
@@ -716,60 +916,113 @@ class LSM {
 
     _getUpdateCost() {
         // W
-        var f1 = this.phi/(this.mu*this.B);
-        var f2;
-        if(this.L > this.X){
-           f2 = (this.T-1)/(this.K+1) * this.X + (this.L - this.X)*(this.T-1)/(this.Z+1);
-        }else{
-          f2 = (this.T-1)/(this.K+1) * (this.X - 1) + (this.T-1)/(this.Z+1)
-        }
+        // var f1 = this.phi/(this.mu*this.B);
+        // var f2;
+        // if(this.L > this.X){
+        //    f2 = (this.T-1)/this.K * this.X + (this.L - this.X)*(this.T-1)/(this.Z+1);
+        // }else{
+        //   f2 = (this.T-1)/this.K * (this.X - 1) + (this.T-1)/this.Z
+        // }
+        // return f1*f2;
+        return this.cumulativeData[Math.floor(this.N / this.F)].avgIngestCost;
 
-        return f1*f2;
     }
     _getZeroPointLookUpCost() {
         //R
-        var f1 = Math.exp(-(this.Mbf/this.N)*Math.pow(Math.log(2), 2));
-        // var f2 = Math.pow(this.Z, (this.T-1)/this.T);
-        // var f3 = Math.pow(this.K, 1/this.T);
-        // var f4 = Math.pow(this.T, this.T/(this.T-1)) / (this.T-1)
-        // return f1*f2*f3*f4;
-        var f2 = this.X*this.K + (this.L - this.X)*this.Z;
-        if(this.L <= this.X){
-          f2 = (this.X - 1)*this.K + this.Z;
+        var f1 = Math.exp(-(this.Mbf/this.NTotal)*Math.pow(Math.log(2), 2));
+        // var k = this.K;
+        // var z = this.Z;
+        // if(this.K == this.T){
+        //   k = this.K - 1;
+        // }
+        // if(this.Z == this.T){
+        //   z = this.Z - 1;
+        // }
+        // var f2 = this.X*k + (this.L - this.X)*z;
+        // if(this.L <= this.X){
+        //   f2 = (this.X - 1)*k + z;
+        // }
+        // return f1*f2;
+        var num = Math.ceil(this.N / this.F);
+        var tmp_array = this.cumulativeData[num].runsPerLevel;
+        var tmp_value = 0;
+        for(let i = 0; i < tmp_array.length; i++){
+          tmp_value += tmp_array[i]*f1;
         }
-        return f1*f2;
+        return tmp_value;
     }
     _getExistPointLookUpCost()  {
         //V = 1 + R - R/Z * (T-1)/T
-        var R = this._getZeroPointLookUpCost();
-        // uncertain
-        return 1 + R - (R/this.Z) * (this.T-1)/this.T;
+        //var R = this._getZeroPointLookUpCost();
+        if(this.N == 0) return 0;
+        var f1 = Math.exp(-(this.Mbf/this.NTotal)*Math.pow(Math.log(2), 2));
+        var num = Math.ceil(this.N / this.F);
+        var tmp_array = this.cumulativeData[num].runsPerLevel;
+        var tmp_value = 0;
+        for(let i = 0; i < tmp_array.length - 1; i++){
+          tmp_value += tmp_array[i]*f1;
+        }
+        if(tmp_array[tmp_array.length - 1] == 1){
+          return tmp_value + 1;
+        }else{
+          return tmp_value + (tmp_array[tmp_array.length - 1] - 1)/2*f1 + 1;
+        }
     }
     _getShortRangeLookUpCost(){
         //sQ
-        if(this.L <= this.X){
-          return 2*(this.K*(this.L-1) + this.Z);
-        }else{
-          return 2*(this.K*this.X + (this.L - this.X)*this.Z);
+        // if(this.L <= this.X){
+        //   return 2*(this.K*(this.L-1) + this.Z);
+        // }else{
+        //   return 2*(this.K*this.X + (this.L - this.X)*this.Z);
+        // }
+        if(this.N == 0) return 0;
+
+        var num = Math.ceil(this.N / this.F);
+        var tmp_array = this.cumulativeData[num].runsPerLevel;
+        var tmp_value = 0;
+        for(let i = 0; i < tmp_array.length ; i++){
+          tmp_value += tmp_array[i]*2;
         }
+        return tmp_value;
     }
     _getLongRangeLookUpCost(){
         //lQ
-        var f1 = this._getShortRangeLookUpCost();
         //uncertain
-        var f2 = (this.Z + this.K/this.T);
-        return (1/this.mu) * (this.s/this.B) *(f1 + f2);
+        // var f1 = this._getShortRangeLookUpCost();
+        // var f2 = (this.Z + this.K/this.T);
+        // return (1/this.mu) * (this.s/this.B) *(f1 + f2);
+        if(this.N == 0) return 0;
+
+        var num = Math.ceil(this.N / this.F);
+        var tmp_array = this.cumulativeData[num].runsPerLevel;
+        var tmp_array2 = this.cumulativeData[num].entriesPerLevel;
+        var tmp_value = 0;
+        for(let i = 0; i < tmp_array.length && i < tmp_array2.length; i++){
+          tmp_value += tmp_array[i]*2 + (this.s/this.N)*tmp_array2[i]*this.F*this.E/this._P;
+        }
+        return tmp_value;
     }
     _getSpaceAmpCost() {
         //sAMP
-      var f1 = this.Z/(this.T - 1)*(1 - Math.pow(1.0/this.T, this.L - 1 - this.X));
-      var f2 = this.K/(this.T - 1)* (Math.pow(1.0/this.T, this.L - 1 - this.X) -  Math.pow(1.0/this.T, this.L - 1));
-		return this.Z - 1 + f1*f2;
+    //   var f1 = (this.Z - 1)/(this.T - 1)*(1 - Math.pow(1.0/this.T, this.L - 1 - this.X));
+    //   var f2 = (this.K - 1)/(this.T - 1)* (Math.pow(1.0/this.T, this.L - 1 - this.X) -  Math.pow(1.0/this.T, this.L - 1));
+		// return this.Z - 1 + f1*f2;
+      if(this.N == 0) return 0;
+
+      var num = Math.ceil(this.N / this.F);
+      var tmp_array = this.cumulativeData[num].runsPerLevel;
+      var tmp_array2 = this.cumulativeData[num].entriesPerLevel;
+      var size_of_largest_run = tmp_array2[tmp_array2.length - 1]/tmp_array[tmp_array.length - 1];
+      return this.N/(size_of_largest_run*this.F) - 1;
     }
 	_getNumSortedRun() {
-    	if(this.L <= this.X)
-      	return (this.X - 1)*this.K + this.Z;
-    	return this.L*this.Z + (this.K - this.Z)*this.X
+    var num = Math.ceil(this.N / this.F);
+    var tmp_array = this.cumulativeData[num].runsPerLevel;
+    var tmp_value = 0;
+    for(let i = 0; i < tmp_array.length; i++){
+      tmp_value += tmp_array[i];
+    }
+    return tmp_value;
 	}
 
 	_getNumCompaction() {
@@ -839,8 +1092,9 @@ class LSM {
 		//console.log("n / f", this.N/this.F);
 		//console.log("size", this.cumulativeMeta.size);
     if(this.N == 0) return 0;
-		if (!this.cumulativeData[Math.floor(this.N/this.F)].totalCompSize) return 0;
-		return this.cumulativeData[Math.floor(correctDecimal(this.N / this.F))].totalCompSize * this.PB * this.E / this.N;
+    var meta = this.cumulativeData[Math.floor(correctDecimal(this.N/this.F))];
+		if (!meta.numComp) return 0;
+		return meta.totalCompSize*this.F*this.E / meta.numComp;
 	}
 
 	_calculateTotalCompSize() {
@@ -850,9 +1104,10 @@ class LSM {
 
 	_getAvgCompLat() {
     if(this.N == 0) return 0;
-		if (!this.cumulativeData[Math.floor(this.N/this.F)].totalCompLat) return 0;
-		return this.cumulativeData[Math.floor(correctDecimal(this.N / this.F))].totalCompLat*this.PB*this.E/Math.floor(correctDecimal(this.N / this.F));
-	}
+    var meta = this.cumulativeData[Math.floor(correctDecimal(this.N/this.F))];
+		if (!meta.numComp) return 0;
+		return meta.totalCompLat / meta.numComp;
+  }
 
 	_calculateTotalCompLat() {
 		this.cumulativeMeta.totalCompLat += this._calculateMovedData();
@@ -861,17 +1116,13 @@ class LSM {
 
 	_getTailCompLat() {
     if(this.N == 0) return 0;
-		return this.cumulativeData[Math.floor(correctDecimal(this.N / this.F))].maxLat * this.PB * this.E;
+		return this.cumulativeData[Math.floor(correctDecimal(this.N / this.F))].maxLat;
 	}
 
 	_calculateTailCompLat() {
 		if (this._calculateMovedData() > this.cumulativeMeta.maxLat) this.cumulativeMeta.maxLat  = this._calculateMovedData();
-		console.log("maxlat: ", this.cumulativeMeta.maxLat)
+		//console.log("maxlat: ", this.cumulativeMeta.maxLat)
 		return this.cumulativeMeta.maxLat
-	}
-
-	_getIngestionCost() {
-
 	}
 
 	_getWorstCaseStorageSpace() {
@@ -879,15 +1130,26 @@ class LSM {
 	}
 
 	_getMemoryFootprint() {
-		//var f1 = this.b * this.N / 8;
-		var f2 = this.N * this.K / this.P / this.B;
+		var f1 = (this.Mbf/this.NTotal) * this.N / 8;
+		var f2 = this.N * (this.KEY_SIZE + 8) / this._P;
 		var f3 = 2 * this.P * this.B * this.E;
-		return f2 + f3;
+		return f1 + f2 + f3;
 	}
 
 	_prepareCumulative() {
 
     this.cumulativeLevelThreshold = [];
+    var lsm = new LSM_tree(0);
+    lsm.K = this.K;
+    lsm.Z = this.Z;
+    lsm.X = this.X;
+    lsm.T = this.T;
+    lsm.F = this.F;
+    lsm.mu = this.mu;
+    lsm.phi = this.phi;
+    lsm.partial_compact = (this.name == "RocksDBLSM");
+
+
     if(this.name != "RocksDBLSM"){
       var max_L = this._getL(this.NTotal - this.NTotal%this.PB);
       for(let i = 1; i < max_L; i++){
@@ -895,6 +1157,8 @@ class LSM {
       }
     }else{
       var fileNum = Math.ceil(this.NTotal / this.F);
+      lsm.bg_compact = this.bg_merge;
+      lsm.bg_threshold = this.threshold;
       var i = 0;
       var L = 0;
       while (i < fileNum) {
@@ -906,32 +1170,53 @@ class LSM {
     }
 
 
-
-		if (this.T != this.cumulativeMeta.ratio) {
-			var s = 0;
+    var cmpct_meta = {num_compaction:0,max_io_cmpct:0,summed_read_cmpct:0,summed_write_cmpct:0};
+    var last_cumulativeData = {totalCompSize:0, numComp:0,totalCompLat:0, maxLat:0};
+    if (this.T != this.cumulativeMeta.ratio) {
+			var t = 0;
 			this.cumulativeData = [];
 			this._clearCumulativeMeta();
-			while (s * this.F <= this.NTotal) {
-				this.N = s * this.F;
-				this.cumulativeData[s] = {totalCompSize: this._calculateTotalCompSize(),
-					 						totalCompLat: this._calculateTotalCompLat(),
-											maxLat: this._calculateTailCompLat(),
-											numComp: this._calculateNumCompaction()};
+			while (t * this.F <= this.NTotal) {
+				this.N = t * this.F;
+				// this.cumulativeData[s] = {totalCompSize: this._calculateTotalCompSize(),
+				// 	 						totalCompLat: this._calculateTotalCompLat(),
+				// 							maxLat: this._calculateTailCompLat(),
+				// 							numComp: this._calculateNumCompaction(),
+        //               runsPerLevel: lsm.getRunsPerLvl(),
+        //             };
+        this.cumulativeData[t] = {totalCompSize: last_cumulativeData.totalCompSize + cmpct_meta.summed_read_cmpct + cmpct_meta.summed_write_cmpct,
+            					totalCompLat: last_cumulativeData.totalCompLat + (cmpct_meta.summed_read_cmpct/this.mu + cmpct_meta.summed_write_cmpct/this.phi)*this.F*this.E/1024/1024,
+            					maxLat: Math.max(last_cumulativeData.maxLat, cmpct_meta.max_io_cmpct*this.F*this.E/1024/1024),
+            					numComp: last_cumulativeData.numComp + cmpct_meta.num_compaction,
+                      runsPerLevel: lsm.getRunsPerLvl(),
+                      entriesPerLevel: JSON.parse(JSON.stringify(lsm.getEntriesPerLvl()))
+        };
+        if(t != 0){
+          this.cumulativeData[t].avgIngestCost = this.E/this._P + this.cumulativeData[t].totalCompSize*this.E/this._P/t;
+        }else{
+          this.cumulativeData[t].avgIngestCost = 0;
+        }
 
+        last_cumulativeData = this.cumulativeData[t];
 				//console.log(s, "s", this.cumulativeData[s]);
-				s ++;
+				t ++;
+        cmpct_meta = lsm.flush_one_buffer();
+
 
 			}
 			this.cumulativeMeta.ratio = this.T;
 			this.cumulativeMeta.size = this.cumulativeData.length;
 		} else if (Math.floor(correctDecimal(this.NTotal / this.F)) > this.cumulativeMeta.size){
-			var s = this.cumulativeMeta.size
-			while (s * this.F <= this.NTotal) {
-				this.cumulativeData[s] = {totalCompSize: this._calculateTotalCompSize(),
+			var t = this.cumulativeMeta.size
+			while (t * this.F <= this.NTotal) {
+				this.cumulativeData[t] = {totalCompSize: this._calculateTotalCompSize(),
 											totalCompLat: this._calculateTotalCompLat(),
 											maxLat: this._calculateTailCompLat(),
-											numComp: this._calculateNumCompaction()};
-				s ++;
+											numComp: this._calculateNumCompaction(),
+                      runsPerLevel: lsm.getRunsPerLvl()
+                    };
+				t ++;
+        lsm.flush_one_buffer();
 			}
 			this.cumulativeMeta.size = this.cumulativeData.length;
 		}
@@ -1257,14 +1542,6 @@ class VanillaLSM extends LSM{
         return btn_groups;
     }
 
-	_getNumSortedRun() {
-		if (this.MP == 0)
-			return this.NSortedRun;
-		else {
-			return this.NSortedRun;
-		}
-	}
-
 	_calculateNumCompaction() {
 		var num = Math.floor(this.N / this.F);
 		//var nLevels = this.L;
@@ -1289,7 +1566,7 @@ class VanillaLSM extends LSM{
 			}
 		}
 
-		console.log("nComp ", sum);
+		//console.log("nComp ", sum);
 		this.cumulativeMeta.numComp += sum;
 		return this.cumulativeMeta.numComp;
 	}
@@ -1823,7 +2100,6 @@ class DostoevskyLSM extends LSM {
         var li_cap = this._getLevelCapacity(ith);
         var isLastLevel = ith === this.L;
 		var totalNumOfPB = Math.floor(this.N / this.PB);
-		console.log("totalNumOfPB = ", totalNumOfPB);
 		var numOfRunsInLevel = 0;
 		if (ith == 1) {
 			numOfRunsInLevel = (totalNumOfPB % Math.pow(this.T, ith));
@@ -1866,11 +2142,10 @@ class DostoevskyLSM extends LSM {
         else{
           this.X = 0;
         }
+
+      this._prepareCumulative();
     }
 
-	_getNumSortedRun() {
-		return this.NSortedRun;
-	}
 
 	_calculateNumCompaction() {
 		var num = Math.floor(this.N / this.F);
@@ -1887,7 +2162,7 @@ class DostoevskyLSM extends LSM {
 			i ++;
 		}
 
-		console.log("nComp ", sum);
+		//console.log("nComp ", sum);
 		this.cumulativeMeta.numComp += sum;
 		return this.cumulativeMeta.numComp;
 	}
@@ -2011,30 +2286,27 @@ class OSM extends LSM {
 	}
 
     update(prefix) {
-        this.prefix = prefix;
-        this.T = document.querySelector(`#${prefix}-input-T`).value;
-        this.E = convertToBytes(`#${prefix}-select-E`, document.querySelector(`#${prefix}-input-E`).value);
+      this.prefix = prefix;
+      this.T = document.querySelector(`#${prefix}-input-T`).value;
+      this.E = convertToBytes(`#${prefix}-select-E`, document.querySelector(`#${prefix}-input-E`).value);
         //this.N = document.querySelector(`#${prefix}-input-N`).value;
 		//this.N = window.progressSlider.getValue();
-		if (window.focusedTree == "default")
-			this.N = window.progressSlider.getValue();
-		else
-			this.N = window.sliders[this.suffix].getValue();
-        this.M = convertToBytes(`#${prefix}-select-M`, document.querySelector(`#${prefix}-input-M`).value);
-        this.f = document.querySelector(`#${prefix}-input-f`).value;
-        this.P = convertToBytes(`#${prefix}-select-P`, document.querySelector(`#${prefix}-input-P`).value);
-        this.Mbf = convertToBytes(`#${prefix}-select-Mbf`, document.querySelector(`#${prefix}-input-Mbf`).value);
-        this.s = document.querySelector(`#${prefix}-input-s`).value;
-        this.mu = document.querySelector(`#${prefix}-input-mu`).value;
-        this.phi = document.querySelector(`#${prefix}-input-phi`).value;
-        this.X = document.querySelector(`#osm-num-tired-level-input`).value;
-        this.PB = this.P * this.B;
-        this.L = this._getL();
+		  if (window.focusedTree == "default")
+			   this.N = window.progressSlider.getValue();
+		  else
+			   this.N = window.sliders[this.suffix].getValue();
+      this.M = convertToBytes(`#${prefix}-select-M`, document.querySelector(`#${prefix}-input-M`).value);
+      this.f = document.querySelector(`#${prefix}-input-f`).value;
+      this.P = convertToBytes(`#${prefix}-select-P`, document.querySelector(`#${prefix}-input-P`).value);
+      this.Mbf = convertToBytes(`#${prefix}-select-Mbf`, document.querySelector(`#${prefix}-input-Mbf`).value);
+      this.s = document.querySelector(`#${prefix}-input-s`).value;
+      this.mu = document.querySelector(`#${prefix}-input-mu`).value;
+      this.phi = document.querySelector(`#${prefix}-input-phi`).value;
+      this.X = document.querySelector(`#osm-num-tired-level-input`).value;
+      this.PB = this.P * this.B;
+      this.L = this._getL();
+      this._prepareCumulative();
     }
-
-	_getNumSortedRun() {
-		return this.NSortedRun;
-	}
 
 	_calculateNumCompaction() {
 		var num = Math.floor(this.N / this.F);
@@ -2051,7 +2323,7 @@ class OSM extends LSM {
 			i ++;
 		}
 
-		console.log("nComp ", sum);
+		//console.log("nComp ", sum);
 		this.cumulativeMeta.numComp += sum;
 		return this.cumulativeMeta.numComp;
 	}
@@ -2175,28 +2447,43 @@ function runPlots(){
   if(!$("#show-plot-btn").attr("style").includes("display: none")){
     return;
   }
-  var p_width = $("#plot-result").width()*0.9;
+  var p_width = $("#num_level_plot").width()*0.9;
   var layout={
-      height:500,
+      height:p_width,
       width:p_width,
       title: "#Levels - #keys",
       margin: {
-          l: 50,
-          r: 50,
-          b: 40,
-          t: 40,
+          l: 25,
+          r: 5,
+          b: 30,
+          t: 30,
           pad: 0
       },
-      yaxis: {
-          title: '#Levels'
-      },
-      xaxis: {
-          title: '#keys',
-      },
+      legend: {
+    x: 0,
+    xanchor: 'left',
+    y: 1
+  },
       hovermode: false,
   };
 
-  Plotly.newPlot('plot-result', traces_for_plots["level"], layout, {displayModeBar: false});
+  Plotly.newPlot('num_level_plot', traces_for_plots["level"], layout, {displayModeBar: false});
+
+  layout.title = "#Sorted runs - #keys";
+  Plotly.newPlot('num_run_plot', traces_for_plots["run"], layout, {displayModeBar: false});
+
+  layout.title = "#compactions - #keys";
+  Plotly.newPlot('num_cmpct_plot', traces_for_plots["num_compaction"], layout, {displayModeBar: false});
+
+  layout.title = "Avg Compact Size - #keys (MBytes)";
+  Plotly.newPlot('avg_cmpct_size_plot', traces_for_plots["avg_cmpct_size"], layout, {displayModeBar: false});
+
+  layout.title = "Avg Compact Latency - #keys (s)";
+  Plotly.newPlot('avg_cmpct_lat_plot', traces_for_plots["avg_cmpct_lat"], layout, {displayModeBar: false});
+
+  layout.title = "Ingest Cost - #keys (I/Os)";
+  Plotly.newPlot('ingest_cost_plot', traces_for_plots["ingest_cost"], layout, {displayModeBar: false});
+
 }
 
 function runCmp() {
@@ -2829,12 +3116,12 @@ function startPlaying() {
 }
 
 function stopPlaying() {
-	console.log("Stopped:", this.id);
+	//console.log("Stopped:", this.id);
 	if (this.id == "vlsm-autoplay-button") {
 		this.src = "img/play_circle_outline_black_24dp.svg";
 		this.classList.remove("pause-class");
 		this.classList.add("play-class");
-		console.log("Cleared vlsm");
+		//console.log("Cleared vlsm");
 		clearInterval(window.runningIds["vlsm-progress-bar"]);
 		window.runningIds["vlsm-progress-bar"] = null;
 	} else
@@ -2842,7 +3129,7 @@ function stopPlaying() {
 		this.src = "img/play_circle_outline_black_24dp.svg";
 		this.classList.remove("pause-class");
 		this.classList.add("play-class");
-		console.log("Cleared rlsm");
+		//console.log("Cleared rlsm");
 		clearInterval(window.runningIds["rlsm-progress-bar"]);
 		window.runningIds["rlsm-progress-bar"] = null;
 	} else
@@ -2858,13 +3145,13 @@ function stopPlaying() {
 		this.src = "img/play_circle_outline_black_24dp.svg";
 		this.classList.remove("pause-class");
 		this.classList.add("play-class");
-		console.log("Cleared osm");
+		//console.log("Cleared osm");
 		clearInterval(window.runningIds["osm-progress-bar"]);
 		window.runningIds["osm-progress-bar"] = null;
 	}
 
 	else if (window.progressEventId) {
-		console.log("Cleared window");
+		//console.log("Cleared window");
 		clearInterval(window.progressEventId);
 		window.progressEventId = null;
 		//this.previousElementSibling.playing = null;
@@ -3088,12 +3375,12 @@ function setRunGradient(elem, rate1, file_num, rate2, full) {
 }
 
 function setRunGradientWrapper(button, entry_num, level_space, display_unit) {
-	console.log("entry num ", entry_num);
+	//console.log("entry num ", entry_num);
 	const width = button.style.width.slice(0, -2);
-	console.log("display unit: ", display_unit);
-	console.log("width: ", width);
-	console.log("rate: ", (display_unit * entry_num) / width);
-	console.log("level space: ", level_space);
+	//console.log("display unit: ", display_unit);
+	//console.log("width: ", width);
+	//console.log("rate: ", (display_unit * entry_num) / width);
+	//console.log("level space: ", level_space);
 	if (Math.round(width / display_unit) < level_space && width / display_unit <= entry_num + 1 && level_space > 4) {
 		const display_num = Math.ceil(width / display_unit);
 		if (entry_num < level_space) {
@@ -3104,7 +3391,7 @@ function setRunGradientWrapper(button, entry_num, level_space, display_unit) {
 			ellipsis_node.style['left'] = ((display_num - 3) * display_unit) + "px";
 			ellipsis_node.style['width'] = (width - (display_num - 2) * display_unit) + "px";
 			//ellipsis_node.style['height'] = 0.5 * button.style.height.slice(0, -2) + "px";
-			console.log("top:", ellipsis_node.style['top']);
+			//console.log("top:", ellipsis_node.style['top']);
 			//ellipsis_node.align = "center";
 			ellipsis_node.innerHTML = "+" + (entry_num - display_num + 3);
 			button.style['position'] = "relative";
@@ -3173,14 +3460,14 @@ function hideElem(query) {
 }
 
 function clear(element) {
-	console.log("clear is called");
 	clearTimeout(window.blinkingId);
     while (element.firstChild) {
 		if (element.firstChild.firstChild) {
 			var btns = element.firstChild.firstChild.childNodes;
-			console.log(btns);
+			//console.log(btns);
 			for (i in btns) {
-				$(btns[i]).tooltip('dispose');
+				//$(btns[i]).tooltip('dispose');
+        $(btns[i]).tooltip("dispose");
 			}
 		}
 		if (element.firstChild.firstChild) $(element.firstChild.firstChild).tooltip('dispose');
