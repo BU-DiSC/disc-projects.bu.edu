@@ -2,7 +2,10 @@ const level_physical_capacities = [48, 36, 27, 22, 17, 12, 9, 6, 4]
 const color_table=["#80ff8b","#80fff9","#8091ff","#b980ff","#ff8080","#ffb980","#edfa00","#00fa32","#0021fa","#8900fa","#c7041e"]
 const name_table=["Vanilla-LSM","Partial Compaction","Hybrid-Strategy","Build-Your-Own"]
 var traces_for_plots = {}
-var plotted_metrics = ["level", "run", "num_compaction","avg_cmpct_size","avg_cmpct_lat","ingest_cost"]
+var plotted_metrics = ["level", "run", "num_compaction","avg_cmpct_size",
+"avg_cmpct_lat","ingest_cost","zr_point_lookup_cost","non_zr_point_lookup_cost",
+"short_range_lookup_cost","long_range_lookup_cost","space_amplification_cost",
+"storage_space"]
 
 // Event handling
 document.addEventListener("DOMContentLoaded",
@@ -669,7 +672,7 @@ class LSM {
 		const lsmtType = this.constructor.name;
 		switch (lsmtType) {
 			case "VanillaLSM":
-				console.log("vanilla lsm");
+				//console.log("vanilla lsm");
 				var labeler = -1;
         		for (var i = 1; i <= this.L; i++) {
 					var div_wrap = document.createElement("div");
@@ -707,7 +710,7 @@ class LSM {
         		}
 				break;
 			case "RocksDBLSM":
-				console.log("rocksdb lsm");
+				//console.log("rocksdb lsm");
 				for (var i = 1; i <= this.L; i++) {
 					var div_wrap = document.createElement("div")
 					div_wrap.setAttribute("class", `row ${this.sufix}-result`);
@@ -722,7 +725,7 @@ class LSM {
 				}
 				break;
 			case "DostoevskyLSM":
-				console.log("dostoevsky lsm");
+				//console.log("dostoevsky lsm");
 				var labeler = -1;
 				for (var i = 1; i <= this.L; i++) {
 					var div_wrap = document.createElement("div");
@@ -878,22 +881,19 @@ class LSM {
       while(t*this.F <= this.N){
         traces_for_plots[plotted_metrics[0]][this.plotIdx].x.push(t*this.F);
 
-        // update data for run plots
-        tmp_array = this.cumulativeData[t].runsPerLevel;
-        tmp_value = 0;
-        for(let i = 0; i < tmp_array.length; i++){
-          tmp_value += tmp_array[i];
-        }
-        traces_for_plots[plotted_metrics[1]][this.plotIdx].y.push(tmp_value);
-        traces_for_plots[plotted_metrics[2]][this.plotIdx].y.push(this.cumulativeData[t].numComp);
-        traces_for_plots[plotted_metrics[5]][this.plotIdx].y.push(this.cumulativeData[t].avgIngestCost);
-        if(this.cumulativeData[t].numComp == 0){
-          traces_for_plots[plotted_metrics[3]][this.plotIdx].y.push(0);
-          traces_for_plots[plotted_metrics[4]][this.plotIdx].y.push(0);
-        }else{
-          traces_for_plots[plotted_metrics[3]][this.plotIdx].y.push(this.cumulativeData[t].totalCompSize*this.F*this.E / this.cumulativeData[t].numComp/1024/1024);
-          traces_for_plots[plotted_metrics[4]][this.plotIdx].y.push(this.cumulativeData[t].totalCompLat / this.cumulativeData[t].numComp);
-        }
+        // update data for plots
+        traces_for_plots[plotted_metrics[1]][this.plotIdx].y.push(this._getNumSortedRun(t*this.F));
+        traces_for_plots[plotted_metrics[2]][this.plotIdx].y.push(this._getNumCompaction(t*this.F));
+        traces_for_plots[plotted_metrics[3]][this.plotIdx].y.push(this._getAvgCompSize(t*this.F)/1024/1024);
+        traces_for_plots[plotted_metrics[4]][this.plotIdx].y.push(this._getAvgCompLat(t*this.F));
+        traces_for_plots[plotted_metrics[5]][this.plotIdx].y.push(this._getUpdateCost(t*this.F));
+        traces_for_plots[plotted_metrics[6]][this.plotIdx].y.push(this._getZeroPointLookUpCost(t*this.F));
+        traces_for_plots[plotted_metrics[7]][this.plotIdx].y.push(this._getExistPointLookUpCost(t*this.F));
+        traces_for_plots[plotted_metrics[8]][this.plotIdx].y.push(this._getShortRangeLookUpCost(t*this.F));
+        traces_for_plots[plotted_metrics[9]][this.plotIdx].y.push(this._getLongRangeLookUpCost(t*this.F));
+        traces_for_plots[plotted_metrics[10]][this.plotIdx].y.push(this._getSpaceAmpCost(t*this.F));
+        traces_for_plots[plotted_metrics[11]][this.plotIdx].y.push(this._getWorstCaseStorageSpace(t*this.F)/1024/1024);
+
         t++;
         // update data for level plots
         traces_for_plots[plotted_metrics[0]][this.plotIdx].y.push(lvl_idx+1);
@@ -914,7 +914,7 @@ class LSM {
         this.updatePlotData();
     }
 
-    _getUpdateCost() {
+    _getUpdateCost(entryNum = this.N) {
         // W
         // var f1 = this.phi/(this.mu*this.B);
         // var f2;
@@ -924,10 +924,10 @@ class LSM {
         //   f2 = (this.T-1)/this.K * (this.X - 1) + (this.T-1)/this.Z
         // }
         // return f1*f2;
-        return this.cumulativeData[Math.floor(this.N / this.F)].avgIngestCost;
+        return this.cumulativeData[Math.floor(entryNum / this.F)].avgIngestCost;
 
     }
-    _getZeroPointLookUpCost() {
+    _getZeroPointLookUpCost(entryNum = this.N) {
         //R
         var f1 = Math.exp(-(this.Mbf/this.NTotal)*Math.pow(Math.log(2), 2));
         // var k = this.K;
@@ -943,7 +943,7 @@ class LSM {
         //   f2 = (this.X - 1)*k + z;
         // }
         // return f1*f2;
-        var num = Math.ceil(this.N / this.F);
+        var num = Math.ceil(entryNum / this.F);
         var tmp_array = this.cumulativeData[num].runsPerLevel;
         var tmp_value = 0;
         for(let i = 0; i < tmp_array.length; i++){
@@ -951,12 +951,12 @@ class LSM {
         }
         return tmp_value;
     }
-    _getExistPointLookUpCost()  {
+    _getExistPointLookUpCost(entryNum = this.N)  {
         //V = 1 + R - R/Z * (T-1)/T
         //var R = this._getZeroPointLookUpCost();
-        if(this.N == 0) return 0;
+        if(entryNum == 0) return 0;
         var f1 = Math.exp(-(this.Mbf/this.NTotal)*Math.pow(Math.log(2), 2));
-        var num = Math.ceil(this.N / this.F);
+        var num = Math.ceil(entryNum / this.F);
         var tmp_array = this.cumulativeData[num].runsPerLevel;
         var tmp_value = 0;
         for(let i = 0; i < tmp_array.length - 1; i++){
@@ -968,16 +968,16 @@ class LSM {
           return tmp_value + (tmp_array[tmp_array.length - 1] - 1)/2*f1 + 1;
         }
     }
-    _getShortRangeLookUpCost(){
+    _getShortRangeLookUpCost(entryNum = this.N){
         //sQ
         // if(this.L <= this.X){
         //   return 2*(this.K*(this.L-1) + this.Z);
         // }else{
         //   return 2*(this.K*this.X + (this.L - this.X)*this.Z);
         // }
-        if(this.N == 0) return 0;
+        if(entryNum == 0) return 0;
 
-        var num = Math.ceil(this.N / this.F);
+        var num = Math.ceil(entryNum / this.F);
         var tmp_array = this.cumulativeData[num].runsPerLevel;
         var tmp_value = 0;
         for(let i = 0; i < tmp_array.length ; i++){
@@ -985,15 +985,15 @@ class LSM {
         }
         return tmp_value;
     }
-    _getLongRangeLookUpCost(){
+    _getLongRangeLookUpCost(entryNum = this.N){
         //lQ
         //uncertain
         // var f1 = this._getShortRangeLookUpCost();
         // var f2 = (this.Z + this.K/this.T);
         // return (1/this.mu) * (this.s/this.B) *(f1 + f2);
-        if(this.N == 0) return 0;
+        if(entryNum == 0) return 0;
 
-        var num = Math.ceil(this.N / this.F);
+        var num = Math.ceil(entryNum / this.F);
         var tmp_array = this.cumulativeData[num].runsPerLevel;
         var tmp_array2 = this.cumulativeData[num].entriesPerLevel;
         var tmp_value = 0;
@@ -1002,21 +1002,22 @@ class LSM {
         }
         return tmp_value;
     }
-    _getSpaceAmpCost() {
+    _getSpaceAmpCost(entryNum = this.N) {
         //sAMP
     //   var f1 = (this.Z - 1)/(this.T - 1)*(1 - Math.pow(1.0/this.T, this.L - 1 - this.X));
     //   var f2 = (this.K - 1)/(this.T - 1)* (Math.pow(1.0/this.T, this.L - 1 - this.X) -  Math.pow(1.0/this.T, this.L - 1));
 		// return this.Z - 1 + f1*f2;
-      if(this.N == 0) return 0;
+      if(entryNum == 0) return 0;
 
-      var num = Math.ceil(this.N / this.F);
+      var num = Math.ceil(entryNum / this.F);
       var tmp_array = this.cumulativeData[num].runsPerLevel;
       var tmp_array2 = this.cumulativeData[num].entriesPerLevel;
       var size_of_largest_run = tmp_array2[tmp_array2.length - 1]/tmp_array[tmp_array.length - 1];
-      return this.N/(size_of_largest_run*this.F) - 1;
+      return entryNum/(size_of_largest_run*this.F) - 1;
     }
-	_getNumSortedRun() {
-    var num = Math.ceil(this.N / this.F);
+	_getNumSortedRun(entryNum = this.N) {
+    if(entryNum == 0) return 0;
+    var num = Math.ceil(entryNum / this.F);
     var tmp_array = this.cumulativeData[num].runsPerLevel;
     var tmp_value = 0;
     for(let i = 0; i < tmp_array.length; i++){
@@ -1025,8 +1026,8 @@ class LSM {
     return tmp_value;
 	}
 
-	_getNumCompaction() {
-		return this.cumulativeData[Math.floor(this.N / this.F)].numComp;
+	_getNumCompaction(entryNum = this.N) {
+		return this.cumulativeData[Math.floor(entryNum / this.F)].numComp;
 	}
 
 	_getMovedData() {
@@ -1088,11 +1089,11 @@ class LSM {
 		return this._calculateReadData()/(1024.0*1024.0*this.mu) + this._calculateWriteData()/ (1024.0*1024.0*this.phi);
 	}
 
-	_getAvgCompSize() {
+	_getAvgCompSize(entryNum = this.N) {
 		//console.log("n / f", this.N/this.F);
 		//console.log("size", this.cumulativeMeta.size);
-    if(this.N == 0) return 0;
-    var meta = this.cumulativeData[Math.floor(correctDecimal(this.N/this.F))];
+    if(entryNum == 0) return 0;
+    var meta = this.cumulativeData[Math.floor(correctDecimal(entryNum/this.F))];
 		if (!meta.numComp) return 0;
 		return meta.totalCompSize*this.F*this.E / meta.numComp;
 	}
@@ -1102,9 +1103,9 @@ class LSM {
 		return this.cumulativeMeta.totalSize;
 	}
 
-	_getAvgCompLat() {
-    if(this.N == 0) return 0;
-    var meta = this.cumulativeData[Math.floor(correctDecimal(this.N/this.F))];
+	_getAvgCompLat(entryNum = this.N) {
+    if(entryNum == 0) return 0;
+    var meta = this.cumulativeData[Math.floor(correctDecimal(entryNum/this.F))];
 		if (!meta.numComp) return 0;
 		return meta.totalCompLat / meta.numComp;
   }
@@ -1125,8 +1126,8 @@ class LSM {
 		return this.cumulativeMeta.maxLat
 	}
 
-	_getWorstCaseStorageSpace() {
-		return this.N * this.E * (1 + this._getSpaceAmpCost());
+	_getWorstCaseStorageSpace(entryNum = this.N) {
+		return entryNum * this.E * (1 + this._getSpaceAmpCost(entryNum));
 	}
 
 	_getMemoryFootprint() {
@@ -1204,6 +1205,14 @@ class LSM {
 
 
 			}
+
+      this.cumulativeData[t] = {totalCompSize: last_cumulativeData.totalCompSize + cmpct_meta.summed_read_cmpct + cmpct_meta.summed_write_cmpct,
+                    totalCompLat: last_cumulativeData.totalCompLat + (cmpct_meta.summed_read_cmpct/this.mu + cmpct_meta.summed_write_cmpct/this.phi)*this.F*this.E/1024/1024,
+                    maxLat: Math.max(last_cumulativeData.maxLat, cmpct_meta.max_io_cmpct*this.F*this.E/1024/1024),
+                    numComp: last_cumulativeData.numComp + cmpct_meta.num_compaction,
+                    runsPerLevel: lsm.getRunsPerLvl(),
+                    entriesPerLevel: JSON.parse(JSON.stringify(lsm.getEntriesPerLvl()))
+      };
 			this.cumulativeMeta.ratio = this.T;
 			this.cumulativeMeta.size = this.cumulativeData.length;
 		} else if (Math.floor(correctDecimal(this.NTotal / this.F)) > this.cumulativeMeta.size){
@@ -1716,7 +1725,7 @@ class RocksDBLSM extends LSM {
             var client_width = Math.ceil(elem.clientWidth * 0.9) - 1;  // -1 to avoid stacking
 			const display_cap_unit = client_width / max_display_cap;
 			ret.unitsize = display_cap_unit;
-			console.log("max display cap: ",max_display_cap);
+			//console.log("max display cap: ",max_display_cap);
 
 			if (max_display_cap == 18) {
 				if (ratio == 2) {
@@ -2266,7 +2275,7 @@ class OSM extends LSM {
         var li_cap = this._getLevelCapacity(ith);
         var isTiredLevel = ith <= this.X && ith < this.L;
 		var totalNumOfPB = Math.floor(this.N / this.PB);
-		console.log("totalNumOfPB = ", totalNumOfPB);
+		//console.log("totalNumOfPB = ", totalNumOfPB);
 		var numOfRunsInLevel = 0;
 		if (ith == 1) {
 			numOfRunsInLevel = (totalNumOfPB % Math.pow(this.T, ith));
@@ -2462,27 +2471,57 @@ function runPlots(){
       legend: {
     x: 0,
     xanchor: 'left',
-    y: 1
+    y: 1,
+    font: {
+      family: 'sans-serif',
+      size: 8,
+      color: '#000'
+    },
   },
       hovermode: false,
   };
 
   Plotly.newPlot('num_level_plot', traces_for_plots["level"], layout, {displayModeBar: false});
 
-  layout.title = "#Sorted runs - #keys";
+  //layout.title = "#Sorted runs - #keys";
+  layout.title = "#Sorted runs";
   Plotly.newPlot('num_run_plot', traces_for_plots["run"], layout, {displayModeBar: false});
 
-  layout.title = "#compactions - #keys";
+  //layout.title = "#compactions - #keys";
+  layout.title = "#compactions";
   Plotly.newPlot('num_cmpct_plot', traces_for_plots["num_compaction"], layout, {displayModeBar: false});
 
-  layout.title = "Avg Compact Size - #keys (MBytes)";
+  //layout.title = "Avg Cmpct Size - #keys (MB)";
+  layout.title = "Avg Cmpct Size (MB)";
   Plotly.newPlot('avg_cmpct_size_plot', traces_for_plots["avg_cmpct_size"], layout, {displayModeBar: false});
 
-  layout.title = "Avg Compact Latency - #keys (s)";
+  //layout.title = "Avg Cmpct Lat. - #keys (s)";
+  layout.title = "Avg Cmpct Lat. (s)";
   Plotly.newPlot('avg_cmpct_lat_plot', traces_for_plots["avg_cmpct_lat"], layout, {displayModeBar: false});
 
-  layout.title = "Ingest Cost - #keys (I/Os)";
+  //layout.title = "Ingest Cost - #keys (I/Os)";
+  layout.title = "Ingest (I/Os)";
   Plotly.newPlot('ingest_cost_plot', traces_for_plots["ingest_cost"], layout, {displayModeBar: false});
+
+  //layout.title = "ZR-point lookup Cost - #keys (I/Os)";
+  layout.title = "ZR-point lookup (I/Os)";
+  Plotly.newPlot('zr_point_lookup_plot', traces_for_plots["zr_point_lookup_cost"], layout, {displayModeBar: false});
+
+  //layout.title = "NZR-point lookup Cost - #keys (I/Os)";
+  layout.title = "NZR-point lookup (I/Os)";
+  Plotly.newPlot('non_zr_point_lookup_plot', traces_for_plots["non_zr_point_lookup_cost"], layout, {displayModeBar: false});
+
+  layout.title = "(S) range lookup (I/Os)";
+  Plotly.newPlot('short_range_lookup_plot', traces_for_plots["short_range_lookup_cost"], layout, {displayModeBar: false});
+
+  layout.title = "(L) range lookup (I/Os)";
+  Plotly.newPlot('long_range_lookup_plot', traces_for_plots["long_range_lookup_cost"], layout, {displayModeBar: false});
+
+  layout.title = "Wc Space Amp";
+  Plotly.newPlot('space_amplification_plot', traces_for_plots["space_amplification_cost"], layout, {displayModeBar: false});
+
+  layout.title = "Wc Stroage Space (MB)";
+  Plotly.newPlot('storage_space_plot', traces_for_plots["storage_space"], layout, {displayModeBar: false});
 
 }
 
@@ -3349,7 +3388,7 @@ function setRunGradient(elem, rate1, file_num, rate2, full) {
 				coloring = coloring + `${color3} ${stop}%,0,`;
 			}
 		}
-		console.log("Coloring: ", coloring);
+		//console.log("Coloring: ", coloring);
 		return coloring;
 	}
 	//var omission_width = unit_width * 2;
