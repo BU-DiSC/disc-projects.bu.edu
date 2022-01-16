@@ -267,7 +267,7 @@ class LSM {
 		this.cumulativeMeta = {ratio: 0, size: 0, tail: 0, totalCompLat:0, totalCompSize:0, totalSize:0, maxLat: 0, numComp: 0};
 		this._clearCumulativeMeta();
 		this.cumulativeData = [];
-    this.cumulativeLevelThreshold = [];
+    this.cumulativeLevelThreshold = [0];
 		this._prepareCumulative();
     }
 
@@ -893,10 +893,9 @@ class LSM {
         traces_for_plots[plotted_metrics[9]][this.plotIdx].y.push(this._getLongRangeLookUpCost(t*this.F));
         traces_for_plots[plotted_metrics[10]][this.plotIdx].y.push(this._getSpaceAmpCost(t*this.F));
         traces_for_plots[plotted_metrics[11]][this.plotIdx].y.push(this._getWorstCaseStorageSpace(t*this.F)/1024/1024);
-
+        traces_for_plots[plotted_metrics[0]][this.plotIdx].y.push(lvl_idx);
         t++;
         // update data for level plots
-        traces_for_plots[plotted_metrics[0]][this.plotIdx].y.push(lvl_idx+1);
         if(t*this.F > this.cumulativeLevelThreshold[lvl_idx]){
           lvl_idx++;
         }
@@ -1013,6 +1012,11 @@ class LSM {
       var tmp_array = this.cumulativeData[num].runsPerLevel;
       var tmp_array2 = this.cumulativeData[num].entriesPerLevel;
       var size_of_largest_run = tmp_array2[tmp_array2.length - 1]/tmp_array[tmp_array.length - 1];
+      for(var i = 0; i < tmp_array2.length - 1; i++){
+        if(size_of_largest_run < tmp_array2[i]/tmp_array[i]){
+          size_of_largest_run = tmp_array2[i]/tmp_array[i];
+        }
+      }
       return entryNum/(size_of_largest_run*this.F) - 1;
     }
 	_getNumSortedRun(entryNum = this.N) {
@@ -1139,7 +1143,7 @@ class LSM {
 
 	_prepareCumulative() {
 
-    this.cumulativeLevelThreshold = [];
+    this.cumulativeLevelThreshold = [0];
     var lsm = new LSM_tree(0);
     lsm.K = this.K;
     lsm.Z = this.Z;
@@ -2345,7 +2349,7 @@ function initPlot(){
       traces_for_plots[plotted_metrics[i]].push({
         x: [],
         y: [],
-        marker: {size: 7, opacity: 0.9, symbol: 'circle', color:color_table[j%color_table.length],"line": { "width": 2, color: "#999999"}},
+        marker: {size: 5, opacity: 0.9, symbol: 'circle', color:color_table[j%color_table.length],"line": { "width": 2, color: color_table[j%color_table.length]}},
         mode: 'lines+markers',
         line: {color:color_table[j%color_table.length], width: 3},
         showlegend: true,
@@ -2462,22 +2466,23 @@ function runPlots(){
       width:p_width,
       title: "#Levels - #keys",
       margin: {
-          l: 25,
-          r: 5,
+          l: 33,
+          r: 0,
           b: 30,
           t: 30,
           pad: 0
       },
-      legend: {
-    x: 0,
-    xanchor: 'left',
-    y: 1,
-    font: {
-      family: 'sans-serif',
-      size: 8,
-      color: '#000'
-    },
-  },
+      showlegend: false,
+  //     legend: {
+  //   x: 0,
+  //   xanchor: 'left',
+  //   y: 1,
+  //   font: {
+  //     family: 'sans-serif',
+  //     size: 8,
+  //     color: '#000'
+  //   },
+  // },
       hovermode: false,
   };
 
