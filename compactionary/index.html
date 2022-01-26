@@ -270,7 +270,12 @@
         This allows us to create the taxonomy of the universe of LSM compaction strategies, including all the classical as well as new ones.
         For example, AsterixDB has a <strong>leveled</strong>-based LSM-tree <i>(data layout)</i> that compacts <strong>whole levels</strong> at a time <i>(granularity)</i> once a <strong>level reaches a nominal size</strong> <i>(trigger)</i>.
         This design does not implement partial compactions, and thus it does not need a data movement policy.
-        In our demo,  users can better understand how each compaction happens through the compaction animation, and they can also examine the internal trade-off across different metrics (e.g., ingest, point lookup and range lookup). </p>
+      </p>
+        <p>
+        A more complex example is RocksDB which applies <strong>1-leveling</strong> (tiering for level 1 and leveling for others) <i>(data layout)</i> and compactions are performed at the
+granularity of <strong>one or more files</strong> <i>(granularity)</i> according to <strong>the level saturation, file staleness and spalce amplification</strong> <i>(trigger)</i>. RocksDB supports various <i>data movement policy</i> including <strong>Least Overlapping, Coldest, Oldest and Tombstone Density</strong>.
+</p>
+        <p>In our demo,  users can better understand how each compaction happens through the compaction animation, and they can also examine the internal trade-off across different metrics (e.g., ingest, point lookup and range lookup). </p>
         </div>
 
       </div>
@@ -2295,7 +2300,7 @@
                                 <div class="team-image-wrapper rotateTopReveal">
 
                                     <a target="_blank" href="http://subhadeepsarkar.bitbucket.io">
-                                        <img src="./img/people/subjadeep.jpeg" alt="Subhadeep Sarkar" class="img-responsive rounded-circle team-member-img text-center image-people-toggle-faculty image-shown">
+                                        <img src="./img/people/subjadeep.jpeg" alt="Subhadeep Sarkar" class="img-fluid rounded-circle team-member-img text-center image-people-toggle-faculty image-shown">
                                     </a>
                                 </div>
                                 <h3> <a target="_blank" href="http://subhadeepsarkar.bitbucket.io"><font color="#000"> Subhadeep Sarkar</font></a></h3>
@@ -2307,36 +2312,34 @@
                             <div class="team-member-box-2">
                                 <div class="team-image-wrapper rotateTopReveal">
 
-                                    <a target="_blank" href="http://cs-people.bu.edu/dstara/">
-                                        <img src="./img/people/dimitris.jpg" alt="Dimitris Staratzis" class="img-responsive rounded-circle team-member-img text-center image-people-toggle-faculty image-shown">
-                                    </a>
-                                </div>
-                                <h3><a target="_blank" href="http://cs-people.bu.edu/dstara/"><font color="#000"> Dimitris Staratzis</font></a></h3>
-                                <p style="text-align:center">PhD Researcher</p>
-                            </div>
-                        </div>
-
-                    <div class="col-md-3 col-lg-3 text-center topReveal">
-                            <div class="team-member-box-2">
-                                <div class="team-image-wrapper rotateTopReveal">
-
                                     <a target="_blank" href="https://cs-people.bu.edu/zczhu/">
-                                        <img src="./img/people/zichen.jpg" alt="Tarikul Islam Papon" class="img-responsive rounded-circle team-member-img text-center image-people-toggle-faculty image-shown">
+                                        <img src="./img/people/zichen.jpg" alt="Zichen Zhu" class="img-fluid rounded-circle team-member-img text-center image-people-toggle-faculty image-shown">
                                     </a>
                                 </div>
                                 <h3><a target="_blank" href="https://cs-people.bu.edu/zczhu/"><font color="#000"> Zichen Zhu </font></a></h3>
                                 <p style="text-align:center">PhD Researcher</p>
                             </div>
-                        </div>
+                      </div>
 
+                      <div class="col-md-3 col-lg-3 text-center topReveal">
+                                <div class="team-member-box-2">
+                                    <div class="team-image-wrapper rotateTopReveal">
 
+                                        <a target="_blank" href="#">
+                                            <img src="./img/people/kaijie.jpg" alt="Kaijie Chen" class="img-fluid rounded-circle team-member-img text-center image-people-toggle-faculty image-shown">
+                                        </a>
+                                    </div>
+                                    <h3><a target="_blank" href="#"><font color="#000"> Kaijie Chen </font></a></h3>
+                                    <p style="text-align:center">MS Researcher</p>
+                                </div>
+                      </div>
 
                         <div class="col-md-3 col-lg-3 text-center topReveal">
                             <div class="team-member-box-2">
                                 <div class="team-image-wrapper rotateTopReveal">
 
                                     <a target="_blank" href="https://cs-people.bu.edu/mathan/">
-                                        <img src="./img/people/manos.jpg" alt="Manos Athanassoulis" class="img-responsive rounded-circle team-member-img text-center image-people-toggle-faculty image-shown">
+                                        <img src="./img/people/manos.jpg" alt="Manos Athanassoulis" class="img-fluid rounded-circle team-member-img text-center image-people-toggle-faculty image-shown">
                                     </a>
                                 </div>
                                 <h3><a target="_blank" href="https://cs-people.bu.edu/mathan/"><font color="#000"> Manos Athanassoulis</font></a></h3>
