@@ -136,7 +136,7 @@ class LSM_tree {
         // merge into the next level
         if(this.levels[cur_lvl+1] != 0){
           var run_capacity = Math.ceil(Math.pow(this.T, cur_lvl+2)/this.K);
-          if(cur_lvl + 1>= this.X || cur_lvl + 1 == this.levels.length - 1){
+          if(cur_lvl + 1> this.X || cur_lvl + 1 == this.levels.length - 1){
             run_capacity = Math.ceil(Math.pow(this.T, cur_lvl+2)/this.Z);
           }
           var extra_num = this.levels[cur_lvl+1]%run_capacity;
@@ -2223,8 +2223,13 @@ class OSM extends LSM {
                 coef = Math.pow(client_width / l1_width, 1 / (level - 1)) / tmp_max_runs;
                 m  = l1_width;
             }
-            if (i > X) return (m * Math.pow(coef * tmp_max_runs, i - 1) - margin) + "px";
-            else return (m - margin) / tmp_max_runs + "px";
+            if(i == 1){
+              return (m - margin)/tmp_max_runs + "px";
+            }else if(i <= X){
+              return (m * Math.pow(coef * tmp_max_runs, i - 1) - margin)/ tmp_max_runs + "px";
+            }else{
+              return (m * Math.pow(coef * tmp_max_runs, i - 1) - margin) + "px";
+            }
         }
 
         for (var i = 1; i <= level; i++) {
