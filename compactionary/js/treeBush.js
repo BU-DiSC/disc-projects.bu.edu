@@ -1,5 +1,5 @@
 const level_physical_capacities = [48, 36, 27, 22, 17, 12, 9, 6, 4]
-const color_table=["#80ff8b","#80fff9","#8091ff","#b980ff","#ff8080","#ffb980","#edfa00","#00fa32","#0021fa","#8900fa","#c7041e"]
+const color_table=["#F5B041","#52BE80","#2E86C1","#EC7063","#ff8080","#ffb980","#edfa00","#00fa32","#0021fa","#8900fa","#c7041e"]
 const name_table=["Vanilla-LSM","Partial Compaction","Hybrid-Strategy","Build-Your-Own"]
 var traces_for_plots = {}
 var plotted_metrics = ["level", "run", "num_compaction","avg_cmpct_size",
@@ -2355,7 +2355,7 @@ function initPlot(){
         x: [],
         y: [],
         marker: {size: 5, opacity: 0.9, symbol: 'circle', color:color_table[j%color_table.length],"line": { "width": 2, color: color_table[j%color_table.length]}},
-        mode: 'lines+markers',
+        mode: 'lines',
         line: {color:color_table[j%color_table.length], width: 3},
         showlegend: true,
         name: name_table[j],

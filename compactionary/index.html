@@ -1637,7 +1637,7 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 					<div class="row">
 						<div class="metrics col-lg-7 col-md-7 col-sm-7">
 							<span class="metric-title" data-toggle="tooltip" data-placement="left"
-								title="Zero-result lookup cost: the average worst-case I/O cost performed by point lookups to a key that does NOT exist in the LSM-tree.">Levels</span>
+								title="The number of levels in the current LSM tree.">Levels</span>
 						</div>
 						<div class="cost-col col-lg-5 col-md-5 col-sm-5 text-center">
 							<span id="vlsm-W-cost" class="cost uncertain" data-toggle="tooltip" data-placement="right"
@@ -1648,7 +1648,7 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 					<div class="row">
 						<div class="metrics col-lg-7 col-md-7 col-sm-7">
 							<span class="metric-title" data-toggle="tooltip" data-placement="left"
-								title="Zero-result lookup cost: the average worst-case I/O cost performed by point lookups to a key that does NOT exist in the LSM-tree.">#sorted runs</span>
+								title="The number of sorted runs in the current LSM tree.">#sorted runs</span>
 						</div>
 						<div class="cost-col col-lg-5 col-md-5 col-sm-5 text-center">
 							<span id="vlsm-N-run" class="cost uncertain" data-toggle="tooltip" data-placement="right"
@@ -1659,7 +1659,7 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 					<div class="row">
 						<div class="metrics col-lg-7 col-md-7 col-sm-7">
 							<span class="metric-title" data-toggle="tooltip" data-placement="left"
-								title="Zero-result lookup cost: the average worst-case I/O cost performed by point lookups to a key that does NOT exist in the LSM-tree.">#compactions</span>
+								title="The total number of compactions occured so far">#compactions</span>
 						</div>
 						<div class="cost-col col-lg-5 col-md-5 col-sm-5 text-center">
 							<span id="vlsm-N-compaction" class="cost uncertain" data-toggle="tooltip" data-placement="right"
@@ -1670,7 +1670,7 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 					<div class="row">
 						<div class="metrics col-lg-7 col-md-7 col-sm-7">
 							<span class="metric-title" data-toggle="tooltip" data-placement="left"
-								title="Zero-result lookup cost: the average worst-case I/O cost performed by point lookups to a key that does NOT exist in the LSM-tree.">Avg cmpct. size</span>
+								title="The average compaction size of all the compactions occured so far">Avg cmpct. size</span>
 						</div>
 						<div class="cost-col col-lg-5 col-md-5 col-sm-5 text-center">
 							<span id="vlsm-compaction-size" class="cost uncertain">XXX</span>
@@ -1680,7 +1680,7 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 					<div class="row">
 						<div class="metrics col-lg-7 col-md-7 col-sm-7">
 							<span class="metric-title" data-toggle="tooltip" data-placement="left"
-								title="Zero-result lookup cost: the average worst-case I/O cost performed by point lookups to a key that does NOT exist in the LSM-tree.">Avg cmpct. lat.</span>
+								title="The average compaction latency of all the compactions occured so far.">Avg cmpct. lat.</span>
 						</div>
 						<div class="cost-col col-lg-5 col-md-5 col-sm-5 text-center">
 							<span id="vlsm-compaction-latency" class="cost uncertain" data-toggle="tooltip" data-placement="right"
@@ -1691,7 +1691,7 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 					<div class="row">
 						<div class="metrics col-lg-7 col-md-7 col-sm-7">
 							<span class="metric-title" data-toggle="tooltip" data-placement="left"
-								title="Zero-result lookup cost: the average worst-case I/O cost performed by point lookups to a key that does NOT exist in the LSM-tree.">Wc cmpct. lat.</span>
+								title="The worst-case compaction latnecy among all the compactions occured so far.">Wc cmpct. lat.</span>
 						</div>
 						<div class="cost-col col-lg-5 col-md-5 col-sm-5 text-center">
 							<span id="vlsm-tail-latency" class="cost uncertain" data-toggle="tooltip" data-placement="right"
@@ -1702,7 +1702,7 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 					<div class="row">
 						<div class="metrics col-lg-7 col-md-7 col-sm-7">
 							<span class="metric-title" data-toggle="tooltip" data-placement="left"
-								title="Zero-result lookup cost: the average worst-case I/O cost performed by point lookups to a key that does NOT exist in the LSM-tree.">Ingestion cost</span>
+								title="Ingestion cost: the average I/O performed by ingestion (including inserts, updates and deletes).">Ingestion cost</span>
 						</div>
 						<div class="cost-col col-lg-5 col-md-5 col-sm-5 text-center">
 							<span id="vlsm-ingestion-cost" class="cost uncertain" data-toggle="tooltip" data-placement="right"
@@ -2091,7 +2091,7 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
         <div class="row" style="border: 2px solid #666666; border-radius: 15px;border-style: dotted">
           <div class="col-lg-3">
             <div class="row">
-            <div class="col-lg-4" style="border: 2px solid #80ff8b;background-color: #80ff8b; height: 20px;margin-top:5px;">
+            <div class="col-lg-4" style="border: 2px solid #F5B041;background-color: #F5B041; height: 20px;margin-top:5px;">
             </div>
             <div class="col-lg-8" style="margin:5px auto">
               <b> Vanilla-LSM</b>
@@ -2100,7 +2100,7 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
           </div>
           <div class="col-lg-3">
             <div class="row ">
-            <div class="col-lg-4" style="border: 2px solid #80fff9;background-color: #80fff9; height: 20px;margin-top:5px;">
+            <div class="col-lg-4" style="border: 2px solid #52BE80;background-color: #52BE80; height: 20px;margin-top:5px;">
             </div>
             <div class="col-lg-8" style="margin:5px auto">
               <b> Partial Compaction</b>
@@ -2109,7 +2109,7 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
           </div>
           <div class="col-lg-3">
             <div class="row ">
-            <div class="col-lg-4" style="border: 2px solid #8091ff;background-color: #8091ff; height: 20px;margin-top:5px;">
+            <div class="col-lg-4" style="border: 2px solid #2E86C1;background-color: #2E86C1; height: 20px;margin-top:5px;">
             </div>
             <div class="col-lg-8" style="margin:5px auto">
               <b> Hybrid Strategy</b>
@@ -2118,7 +2118,7 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
           </div>
           <div class="col-lg-3">
             <div class="row ">
-            <div class="col-lg-4" style="border: 2px solid #b980ff;background-color: #b980ff; height: 20px;margin-top:5px;">
+            <div class="col-lg-4" style="border: 2px solid #EC7063;background-color: #EC7063; height: 20px;margin-top:5px;">
             </div>
             <div class="col-lg-8" style="margin:5px auto">
               <b> Build-Your-Own</b>
