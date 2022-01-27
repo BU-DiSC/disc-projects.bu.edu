@@ -241,7 +241,7 @@ class LSM {
 			this.NTotal = this.N;
       this.PB = this.P * this.B;
       if(this.name == "OSM"){
-        this.X = document.querySelector(`#osm-num-tired-level-input`).value;
+        this.X = document.querySelector(`#${prefix}-num-tired-level-input`).value;
       }else if(this.name == "DostoevskyLSM"){
         this.X = this._getL(this.NTotal - this.NTotal%this.PB) - 1;
       }
@@ -2190,7 +2190,7 @@ class OSM extends LSM {
         this.DEFAULT.MP = 1;
         this.preMP = 1;
         // the number of tiered levels
-        this.X = document.querySelector(`#osm-num-tired-level-input`).value;
+        this.X = document.querySelector(`#${this.prefix}-num-tired-level-input`).value;
         this.plotIdx = 3;
     }
 
@@ -2322,7 +2322,7 @@ class OSM extends LSM {
       this.s = document.querySelector(`#${prefix}-input-s`).value;
       this.mu = document.querySelector(`#${prefix}-input-mu`).value;
       this.phi = document.querySelector(`#${prefix}-input-phi`).value;
-      this.X = document.querySelector(`#osm-num-tired-level-input`).value;
+      this.X = document.querySelector(`#${prefix}-num-tired-level-input`).value;
       this.PB = this.P * this.B;
       this.L = this._getL();
       this._prepareCumulative();
@@ -3671,6 +3671,8 @@ document.querySelector("#cmp-increase-mu").onclick = increaseInput;
 document.querySelector("#cmp-decrease-mu").onclick = decreaseInput;
 document.querySelector("#cmp-increase-phi").onclick = increaseInput;
 document.querySelector("#cmp-decrease-phi").onclick = decreaseInput;
+document.querySelector("#cmp-increase-num-tired-levels").onclick = increaseInput;
+document.querySelector("#cmp-decrease-num-tired-levels").onclick = decreaseInput;
 document.querySelector("#vlsm-increase-T").onclick = increaseInput;
 document.querySelector("#vlsm-decrease-T").onclick = decreaseInput;
 document.querySelector("#vlsm-increase-E").onclick = increaseInput;

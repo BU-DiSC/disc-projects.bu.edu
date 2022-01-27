@@ -995,7 +995,7 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 							<div class="input-group-prepend">
 								<label class="input-group-text">Buffer size</label>
 							</div>
-							<input id="dlsm-input-M" value="1" min="1" type="number" data-preval="1" class="dlsm-input form-control"
+							<input id="dlsm-input-M" value="16" min="1" type="number" data-preval="1" class="dlsm-input form-control"
 								aria-label="Buffer Capacity">
 							<div class="input-group-append incrementer">
 								<button id="dlsm-increase-M" class="increase"></button>
@@ -1149,9 +1149,17 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 					</div>
 
 					<div class="row osm-conf-row mb-2">
-						<div class="mp-btn-group btn-group" role="group" aria-label="LSM Merge Policy">
-							<button id="osm-leveling" type="button" class="osm-input btn btn-custom btn-active">Leveling</button>
-						</div>
+            <div class="input-group input-group-sm mb-2" aria-label="LSM Merge Policy">
+              <div class="input-group-prepend">
+                <label class="input-group-text">Tiered #Levels</label>
+              </div>
+              <input id="osm-num-tired-level-input" value="1" min="1" step="1" type="number" data-preval="2"
+                  class="cmp-input form-control">
+              <div class="input-group-append incrementer">
+                <button id="osm-increase-num-tired-levels" class="increase"></button>
+                <button id="osm-decrease-num-tired-levels" class="decrease"></button>
+              </div>
+            </div>
 					</div>
 
 					<div class="row osm-conf-row">
@@ -1193,7 +1201,7 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 							<div class="input-group-prepend">
 								<label class="input-group-text">Buffer size</label>
 							</div>
-							<input id="osm-input-M" value="1" min="1" type="number" data-preval="1" class="osm-input form-control"
+							<input id="osm-input-M" value="16" min="1" type="number" data-preval="1" class="osm-input form-control"
 								aria-label="Buffer Capacity">
 							<div class="input-group-append incrementer">
 								<button id="osm-increase-M" class="increase"></button>
@@ -1577,11 +1585,11 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
               <div class="input-group-prepend">
                 <label class="input-group-text">Tiered #Levels</label>
               </div>
-              <input id="osm-num-tired-level-input" value="1" min="1" step="1" type="number" data-preval="2"
+              <input id="cmp-num-tired-level-input" value="1" min="1" step="1" type="number" data-preval="2"
                   class="cmp-input form-control">
               <div class="input-group-append incrementer">
-                <button id="osm-increase-num-tired-levels" class="increase"></button>
-                <button id="osm-decrease-num-tired-levels" class="decrease"></button>
+                <button id="cmp-increase-num-tired-levels" class="increase"></button>
+                <button id="cmp-decrease-num-tired-levels" class="decrease"></button>
               </div>
             </div>
 
