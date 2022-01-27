@@ -305,7 +305,7 @@ class LSM {
         return this._f;
     }
     get F() {
-        return Math.floor(correctDecimal(this._M*this._f / this._E));
+        return Math.floor(this._M*this._f / this._E);
     }
     get s() {
         return this._s;
@@ -1234,7 +1234,9 @@ class LSM {
 			this.cumulativeMeta.size = this.cumulativeData.length;
 		}
 
-
+    for(var member in lsm){
+      delete lsm[member];
+    }
 	}
 
 	_calculateNumCompaction() {

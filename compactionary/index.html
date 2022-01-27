@@ -547,7 +547,7 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 							<div class="input-group-prepend">
 								<label class="input-group-text"># Entries</label>
 							</div>
-							<input id="vlsm-input-N" value="1" type="number" step="1" min="1" data-preval="1"
+							<input id="vlsm-input-N" value="10000000" type="number" step="1" min="1" data-preval="1"
 								class="vlsm-input form-control" aria-label="#Entries">
 							<div class="input-group-append incrementer">
 								<button id="vlsm-increase-N" class="increase"></button>
@@ -561,16 +561,16 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 							<div class="input-group-prepend">
 								<label class="input-group-text">Entry size</label>
 							</div>
-							<input id="vlsm-input-E" value="1" type="number" min="1" data-preval="1" class="vlsm-input form-control"
+							<input id="vlsm-input-E" value="128" type="number" min="1" data-preval="1" class="vlsm-input form-control"
 								aria-label="Entry Size">
 							<div class="input-group-append incrementer">
 								<button id="vlsm-increase-E" class="increase"></button>
 								<button id="vlsm-decrease-E" class="decrease"></button>
 							</div>
 							<select id="vlsm-select-E" class="input-group-append custom-select vlsm-input" data-preunit="2">
-								<option value="0">B</option>
+								<option value="0" selected>B</option>
 								<option value="1">KB</option>
-								<option value="2" selected>MB</option>
+								<option value="2">MB</option>
 								<option value="3">GB</option>
 							</select>
 						</div>
@@ -581,7 +581,7 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 							<div class="input-group-prepend">
 								<label class="input-group-text">Buffer size</label>
 							</div>
-							<input id="vlsm-input-M" value="1" type="number" min="1" data-preval="1" class="vlsm-input form-control"
+							<input id="vlsm-input-M" value="16" type="number" min="1" data-preval="1" class="vlsm-input form-control"
 								aria-label="Buffer Capacity">
 							<div class="input-group-append incrementer">
 								<button id="vlsm-increase-M" class="increase"></button>
@@ -600,7 +600,7 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 							<div class="input-group-prepend">
 								<label class="input-group-text">Bloom filters</label>
 							</div>
-							<input id="vlsm-input-Mbf" value="1024" min="0" type="number" data-preval="1024"
+							<input id="vlsm-input-Mbf" value="10" min="0" type="number" data-preval="1024"
 								class="vlsm-input form-control" aria-label="Bloom filters size">
 							<div class="input-group-append incrementer">
 								<button id="vlsm-increase-Mbf" class="increase"></button>
@@ -614,7 +614,7 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 							</select>
 						</div>
 					</div>
-					<div class="row vlsm-conf-row">
+					<!-- <div class="row vlsm-conf-row">
 						<div class="input-group input-group-sm mb-2">
 							<div class="input-group-prepend">
 								<label class="input-group-text">Fence pointers</label>
@@ -632,7 +632,7 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 								<option value="3">GB</option>
 							</select>
 						</div>
-					</div>
+					</div> -->
 					<div class="row vlsm-conf-row">
 						<div class="input-group input-group-sm mb-2">
 							<div class="input-group-prepend">
@@ -649,9 +649,9 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 					<div class="row vlsm-conf-row">
 						<div class="input-group input-group-sm mb-2">
 							<div class="input-group-prepend">
-								<label class="input-group-text">Page Size</label>
+								<label class="input-group-text">Page size</label>
 							</div>
-							<input id="vlsm-input-P" value="1" min="1" type="number" data-preval="1" class="vlsm-input form-control"
+							<input id="vlsm-input-P" value="4" min="1" type="number" data-preval="1" class="vlsm-input form-control"
 								aria-label="Page size">
 							<div class="input-group-append incrementer">
 								<button id="vlsm-increase-P" class="increase"></button>
@@ -659,8 +659,8 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 							</div>
 							<select id="vlsm-select-P" class="input-group-append custom-select vlsm-input" data-preunit="2">
 								<option value="0">B</option>
-								<option value="1">KB</option>
-								<option value="2" selected>MB</option>
+								<option value="1" selected>KB</option>
+								<option value="2">MB</option>
 								<option value="3">GB</option>
 							</select>
 						</div>
@@ -670,7 +670,7 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 							<div class="input-group-prepend">
 								<label class="input-group-text">Ratio</label>
 							</div>
-							<input id="vlsm-input-T" value="2" min="2" type="number" step="1" data-preval="2"
+							<input id="vlsm-input-T" value="4" min="2" type="number" step="1" data-preval="2"
 								class="vlsm-input form-control" aria-label="Ratio">
 							<div class="input-group-append incrementer">
 								<button id="vlsm-increase-T" class="increase"></button>
@@ -751,7 +751,7 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 							<div class="input-group-prepend">
 								<label class="input-group-text"># Entries</label>
 							</div>
-							<input id="rlsm-input-N" value="1" min="1" type="number" step="1" data-preval="1"
+							<input id="rlsm-input-N" value="10000000" min="1" type="number" step="1" data-preval="1"
 								class="rlsm-input form-control" aria-label="#Entries">
 							<div class="input-group-append incrementer">
 								<button id="rlsm-increase-N" class="increase"></button>
@@ -765,16 +765,16 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 							<div class="input-group-prepend">
 								<label class="input-group-text">Entry size</label>
 							</div>
-							<input id="rlsm-input-E" value="1" min="1" type="number" data-preval="1" class="rlsm-input form-control"
+							<input id="rlsm-input-E" value="128" min="1" type="number" data-preval="1" class="rlsm-input form-control"
 								aria-label="Entry Size">
 							<div class="input-group-append incrementer">
 								<button id="rlsm-increase-E" class="increase"></button>
 								<button id="rlsm-decrease-E" class="decrease"></button>
 							</div>
 							<select id="rlsm-select-E" class="input-group-append custom-select rlsm-input" data-preunit="2">
-								<option value="0">B</option>
+								<option value="0" selected>B</option>
 								<option value="1">KB</option>
-								<option value="2" selected>MB</option>
+								<option value="2">MB</option>
 								<option value="3">GB</option>
 							</select>
 						</div>
@@ -785,7 +785,7 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 							<div class="input-group-prepend">
 								<label class="input-group-text">Buffer size</label>
 							</div>
-							<input id="rlsm-input-M" value="1" min="1" type="number" data-preval="1" class="rlsm-input form-control"
+							<input id="rlsm-input-M" value="16" min="1" type="number" data-preval="1" class="rlsm-input form-control"
 								aria-label="Buffer Capacity">
 							<div class="input-group-append incrementer">
 								<button id="rlsm-increase-M" class="increase"></button>
@@ -804,7 +804,7 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 							<div class="input-group-prepend">
 								<label class="input-group-text">Bloom filters</label>
 							</div>
-							<input id="rlsm-input-Mbf" value="1024" min="0" type="number" data-preval="1024"
+							<input id="rlsm-input-Mbf" value="10" min="0" type="number" data-preval="1024"
 								class="rlsm-input form-control" aria-label="Bloom filters size">
 							<div class="input-group-append incrementer">
 								<button id="rlsm-increase-Mbf" class="increase"></button>
@@ -818,7 +818,7 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 							</select>
 						</div>
 					</div>
-					<div class="row rlsm-conf-row">
+					<!-- <div class="row rlsm-conf-row">
 						<div class="input-group input-group-sm mb-2">
 							<div class="input-group-prepend">
 								<label class="input-group-text">Fence pointers</label>
@@ -836,7 +836,7 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 								<option value="3">GB</option>
 							</select>
 						</div>
-					</div>
+					</div> -->
 					<div class="row rlsm-conf-row">
 						<div class="input-group input-group-sm mb-2">
 							<div class="input-group-prepend">
@@ -853,9 +853,9 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 					<div class="row rlsm-conf-row">
 						<div class="input-group input-group-sm mb-2">
 							<div class="input-group-prepend">
-								<label class="input-group-text">Page Size</label>
+								<label class="input-group-text">Page size</label>
 							</div>
-							<input id="rlsm-input-P" value="1" min="1" type="number" data-preval="1" class="rlsm-input form-control"
+							<input id="rlsm-input-P" value="4" min="1" type="number" data-preval="1" class="rlsm-input form-control"
 								aria-label="Page size">
 							<div class="input-group-append incrementer">
 								<button id="rlsm-increase-P" class="increase"></button>
@@ -863,8 +863,8 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 							</div>
 							<select id="rlsm-select-P" class="input-group-append custom-select rlsm-input" data-preunit="2">
 								<option value="0">B</option>
-								<option value="1">KB</option>
-								<option value="2" selected>MB</option>
+								<option value="1" selected>KB</option>
+								<option value="2">MB</option>
 								<option value="3">GB</option>
 							</select>
 						</div>
@@ -875,7 +875,7 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 							<div class="input-group-prepend">
 								<label class="input-group-text">Ratio</label>
 							</div>
-							<input id="rlsm-input-T" value="2" min="2" type="number" step="1" data-preval="2"
+							<input id="rlsm-input-T" value="4" min="2" type="number" step="1" data-preval="2"
 								class="rlsm-input form-control" aria-label="Ratio">
 							<div class="input-group-append incrementer">
 								<button id="rlsm-increase-T" class="increase"></button>
@@ -961,7 +961,7 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 							<div class="input-group-prepend">
 								<label class="input-group-text"># Entries</label>
 							</div>
-							<input id="dlsm-input-N" value="1" min="1" type="number" step="1" data-preval="1"
+							<input id="dlsm-input-N" value="10000000" min="1" type="number" step="1" data-preval="1"
 								class="dlsm-input form-control" aria-label="#Entries">
 							<div class="input-group-append incrementer">
 								<button id="dlsm-increase-N" class="increase"></button>
@@ -975,16 +975,16 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 							<div class="input-group-prepend">
 								<label class="input-group-text">Entry size</label>
 							</div>
-							<input id="dlsm-input-E" value="1" min="1" type="number" data-preval="1" class="dlsm-input form-control"
+							<input id="dlsm-input-E" value="128" min="1" type="number" data-preval="1" class="dlsm-input form-control"
 								aria-label="Entry Size">
 							<div class="input-group-append incrementer">
 								<button id="dlsm-increase-E" class="increase"></button>
 								<button id="dlsm-decrease-E" class="decrease"></button>
 							</div>
 							<select id="dlsm-select-E" class="input-group-append custom-select dlsm-input" data-preunit="2">
-								<option value="0">B</option>
+								<option value="0" selected>B</option>
 								<option value="1">KB</option>
-								<option value="2" selected>MB</option>
+								<option value="2">MB</option>
 								<option value="3">GB</option>
 							</select>
 						</div>
@@ -1014,7 +1014,7 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 							<div class="input-group-prepend">
 								<label class="input-group-text">Bloom filters</label>
 							</div>
-							<input id="dlsm-input-Mbf" value="1024" min="0" type="number" data-preval="1024"
+							<input id="dlsm-input-Mbf" value="10" min="0" type="number" data-preval="1024"
 								class="dlsm-input form-control" aria-label="Bloom filters size">
 							<div class="input-group-append incrementer">
 								<button id="dlsm-increase-Mbf" class="increase"></button>
@@ -1028,7 +1028,7 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 							</select>
 						</div>
 					</div>
-					<div class="row dlsm-conf-row">
+					<!-- <div class="row dlsm-conf-row">
 						<div class="input-group input-group-sm mb-2">
 							<div class="input-group-prepend">
 								<label class="input-group-text">Fence pointers</label>
@@ -1046,7 +1046,7 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 								<option value="3">GB</option>
 							</select>
 						</div>
-					</div>
+					</div> -->
 					<div class="row dlsm-conf-row">
 						<div class="input-group input-group-sm mb-2">
 							<div class="input-group-prepend">
@@ -1063,9 +1063,9 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 					<div class="row dlsm-conf-row">
 						<div class="input-group input-group-sm mb-2">
 							<div class="input-group-prepend">
-								<label class="input-group-text">Page Size</label>
+								<label class="input-group-text">Page size</label>
 							</div>
-							<input id="dlsm-input-P" value="1" min="1" type="number" data-preval="1" class="dlsm-input form-control"
+							<input id="dlsm-input-P" value="4" min="1" type="number" data-preval="1" class="dlsm-input form-control"
 								aria-label="Page size">
 							<div class="input-group-append incrementer">
 								<button id="dlsm-increase-P" class="increase"></button>
@@ -1073,8 +1073,8 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 							</div>
 							<select id="dlsm-select-P" class="custom-select dlsm-input" data-preunit="2">
 								<option value="0">B</option>
-								<option value="1">KB</option>
-								<option value="2" selected>MB</option>
+								<option value="1" selected>KB</option>
+								<option value="2">MB</option>
 								<option value="3">GB</option>
 							</select>
 						</div>
@@ -1085,7 +1085,7 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 							<div class="input-group-prepend">
 								<label class="input-group-text">Ratio</label>
 							</div>
-							<input id="dlsm-input-T" value="2" min="2" step="1" type="number" step="1" data-preval="2"
+							<input id="dlsm-input-T" value="4" min="2" step="1" type="number" step="1" data-preval="2"
 								class="dlsm-input form-control" aria-label="Ratio">
 							<div class="input-group-append incrementer">
 								<button id="dlsm-increase-T" class="increase"></button>
@@ -1159,7 +1159,7 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 							<div class="input-group-prepend">
 								<label class="input-group-text"># Entries</label>
 							</div>
-							<input id="osm-input-N" value="1" min="1" type="number" step="1" data-preval="1"
+							<input id="osm-input-N" value="10000000" min="1" type="number" step="1" data-preval="1"
 								class="osm-input form-control" aria-label="#Entries">
 							<div class="input-group-append incrementer">
 								<button id="osm-increase-N" class="increase"></button>
@@ -1173,16 +1173,16 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 							<div class="input-group-prepend">
 								<label class="input-group-text">Entry size</label>
 							</div>
-							<input id="osm-input-E" value="1" min="1" type="number" data-preval="1" class="osm-input form-control"
+							<input id="osm-input-E" value="128" min="1" type="number" data-preval="1" class="osm-input form-control"
 								aria-label="Entry Size">
 							<div class="input-group-append incrementer">
 								<button id="osm-increase-E" class="increase"></button>
 								<button id="osm-decrease-E" class="decrease"></button>
 							</div>
 							<select id="osm-select-E" class="input-group-append custom-select osm-input" data-preunit="2">
-								<option value="0">B</option>
+								<option value="0" selected>B</option>
 								<option value="1">KB</option>
-								<option value="2" selected>MB</option>
+								<option value="2">MB</option>
 								<option value="3">GB</option>
 							</select>
 						</div>
@@ -1212,21 +1212,21 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 							<div class="input-group-prepend">
 								<label class="input-group-text">Bloom filters</label>
 							</div>
-							<input id="osm-input-Mbf" value="1024" min="0" type="number" data-preval="1024"
+							<input id="osm-input-Mbf" value="10" min="0" type="number" data-preval="1024"
 								class="osm-input form-control" aria-label="Bloom filters size">
 							<div class="input-group-append incrementer">
 								<button id="osm-increase-Mbf" class="increase"></button>
 								<button id="osm-decrease-Mbf" class="decrease"></button>
 							</div>
 							<select id="osm-select-Mbf" class="input-group-append custom-select osm-input" data-preunit="0">
-								<option value="0" selected>B</option>
+								<option value="0">B</option>
 								<option value="1">KB</option>
-								<option value="2">MB</option>
+								<option value="2" selected>MB</option>
 								<option value="3">GB</option>
 							</select>
 						</div>
 					</div>
-					<div class="row osm-conf-row">
+					<!-- <div class="row osm-conf-row">
 						<div class="input-group input-group-sm mb-2">
 							<div class="input-group-prepend">
 								<label class="input-group-text">Fence pointers</label>
@@ -1244,7 +1244,7 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 								<option value="3">GB</option>
 							</select>
 						</div>
-					</div>
+					</div> -->
 					<div class="row osm-conf-row">
 						<div class="input-group input-group-sm mb-2">
 							<div class="input-group-prepend">
@@ -1261,9 +1261,9 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 					<div class="row osm-conf-row">
 						<div class="input-group input-group-sm mb-2">
 							<div class="input-group-prepend">
-								<label class="input-group-text">Page Size</label>
+								<label class="input-group-text">Page size</label>
 							</div>
-							<input id="osm-input-P" value="1" min="1" type="number" data-preval="1" class="osm-input form-control"
+							<input id="osm-input-P" value="4" min="1" type="number" data-preval="1" class="osm-input form-control"
 								aria-label="Page size">
 							<div class="input-group-append incrementer">
 								<button id="osm-increase-P" class="increase"></button>
@@ -1271,8 +1271,8 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 							</div>
 							<select id="osm-select-P" class="input-group-append custom-select osm-input" data-preunit="2">
 								<option value="0">B</option>
-								<option value="1">KB</option>
-								<option value="2" selected>MB</option>
+								<option value="1" selected>KB</option>
+								<option value="2">MB</option>
 								<option value="3">GB</option>
 							</select>
 						</div>
@@ -1283,7 +1283,7 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 							<div class="input-group-prepend">
 								<label class="input-group-text">Ratio</label>
 							</div>
-							<input id="osm-input-T" value="2" min="2" type="number" step="1" data-preval="2"
+							<input id="osm-input-T" value="4" min="2" type="number" step="1" data-preval="2"
 								class="osm-input form-control" aria-label="Ratio">
 							<div class="input-group-append incrementer">
 								<button id="osm-increase-T" class="increase"></button>
@@ -1458,9 +1458,9 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 						<image id="rlsm-autoplay-button" class="play-class" src="img/play_circle_outline_black_24dp.svg"/>
 						<input id="rlsm-progress-bar" data-slider-id='ex1Slider' class="cmp-input" type="text" data-slider-min="0"
 								data-slider-max="100" data-slider-step="1" data-slider-value="0" />
-						<div class="col"><br/></div>
-					</div>
 
+					</div>
+          <div class="col"><br/></div>
 					<div id="rlsm-bush" class="bush-res">
 						<div class="row rlsm-result">
 							<div class="lsm-btn-group">
@@ -1517,8 +1517,9 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 						<image id="dlsm-autoplay-button" class="play-class" src="img/play_circle_outline_black_24dp.svg"/>
 						<input id="dlsm-progress-bar"  data-slider-id='ex1Slider' class="cmp-input" type="text" data-slider-min="0"
 								data-slider-max="100" data-slider-step="1" data-slider-value="0" />
-						<div class="col-1"><br/></div>
+
 					</div>
+          <div class="col-1"><br/></div>
 					<div id="dlsm-bush" class="bush-res">
 						<div class="row dlsm-reuslt">
 							<div class="lsm-btn-group">
@@ -1588,8 +1589,9 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 						<image id="osm-autoplay-button" class="play-class" src="img/play_circle_outline_black_24dp.svg"/>
 						<input id="osm-progress-bar" data-slider-id='ex1Slider' class="cmp-input" type="text" data-slider-min="0"
 								data-slider-max="100" data-slider-step="1" data-slider-value="0" />
-						<div class="col-1"><br/></div>
+
 					</div>
+          <div class="col-1"><br/></div>
 					<div id="osm-bush" class="bush-res">
 						<div class="row osm">
 							<div class="lsm-btn-group">
