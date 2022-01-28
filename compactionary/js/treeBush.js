@@ -637,6 +637,8 @@ class LSM {
             document.querySelector("#metric-lQ-title").textContent = "(L) range lookup";
         }
 
+        this._prepareCumulative();
+
     }
     showBush() {
         var btn_list = [];
@@ -1177,12 +1179,11 @@ class LSM {
 
     var cmpct_meta = {num_compaction:0,max_io_cmpct:0,summed_read_cmpct:0,summed_write_cmpct:0};
     var last_cumulativeData = {totalCompSize:0, numComp:0,totalCompLat:0, maxLat:0};
-    if (this.T != this.cumulativeMeta.ratio) {
+
 			var t = 0;
 			this.cumulativeData = [];
 			this._clearCumulativeMeta();
 			while (t * this.F <= this.NTotal) {
-				this.N = t * this.F;
 				// this.cumulativeData[s] = {totalCompSize: this._calculateTotalCompSize(),
 				// 	 						totalCompLat: this._calculateTotalCompLat(),
 				// 							maxLat: this._calculateTailCompLat(),
@@ -1219,20 +1220,6 @@ class LSM {
       };
 			this.cumulativeMeta.ratio = this.T;
 			this.cumulativeMeta.size = this.cumulativeData.length;
-		} else if (Math.floor(correctDecimal(this.NTotal / this.F)) > this.cumulativeMeta.size){
-			var t = this.cumulativeMeta.size
-			while (t * this.F <= this.NTotal) {
-				this.cumulativeData[t] = {totalCompSize: this._calculateTotalCompSize(),
-											totalCompLat: this._calculateTotalCompLat(),
-											maxLat: this._calculateTailCompLat(),
-											numComp: this._calculateNumCompaction(),
-                      runsPerLevel: lsm.getRunsPerLvl()
-                    };
-				t ++;
-        lsm.flush_one_buffer();
-			}
-			this.cumulativeMeta.size = this.cumulativeData.length;
-		}
 
     for(var member in lsm){
       delete lsm[member];
@@ -2464,7 +2451,7 @@ function changeProgressBar(slider, newVal) {
 }
 
 function runPlots(){
-  if(!$("#show-plot-btn").attr("style").includes("display: none")){
+  if($("#show-plot-btn").offsetWidth <= 0 || $("#show-plot-btn").offsetHeight <= 0){
     return;
   }
   var p_width = $("#num_level_plot").width()*0.9;
@@ -2537,6 +2524,22 @@ function runPlots(){
 
 }
 
+
+function getInput(target){
+  var input_T = getInputValbyId(`#${target}-input-T`);
+  var input_E = convertToBytes(`#${target}-select-E`, getInputValbyId(`#${target}-input-E`));
+  var input_N = getInputValbyId(`#${target}-input-N`);
+  var input_M = convertToBytes(`#${target}-select-M`, getInputValbyId(`#${target}-input-M`));
+  var input_f = getInputValbyId(`#${target}-input-f`);
+  var input_F = input_M * input_f;
+  var input_P = convertToBytes(`#${target}-select-P`, getInputValbyId(`#${target}-input-P`));
+  var input_Mbf = convertToBytes(`#${target}-select-Mbf`, getInputValbyId(`#${target}-input-Mbf`));
+  var input_s = getInputValbyId(`#${target}-input-s`);
+  var input_mu = getInputValbyId(`#${target}-input-mu`);
+  var input_phi = getInputValbyId(`#${target}-input-phi`);
+  return {T: input_T, E: input_E, N: input_N, M: input_M, f: input_f, F: input_F, P: input_P, Mbf: input_Mbf, s: input_s, mu: input_mu, phi: input_phi};
+}
+
 function runCmp() {
 	console.log("ID:", this.id);
 	var input_N = 0;
@@ -2576,24 +2579,21 @@ function runCmp() {
 			break;
 	}
 	console.log("The Value Is", input_N);
-    var target = "cmp";
-    var input_T = getInputValbyId("#cmp-input-T");
-    var input_E = convertToBytes("#cmp-select-E", getInputValbyId("#cmp-input-E"));
-	//var input_E = convertToBytes()
-	//var input_N = getInputValbyId("#cmp-input-N");
-	console.log(input_N);
-    var input_M = convertToBytes("#cmp-select-M", getInputValbyId("#cmp-input-M"));
-    var input_f = getInputValbyId("#cmp-input-f");
-    var input_F = input_M * input_f;
-    var input_P = convertToBytes("#cmp-select-P", getInputValbyId("#cmp-input-P"));
-    var input_Mbf = convertToBytes("#cmp-select-Mbf", getInputValbyId("#cmp-input-Mbf"));
-    var input_s = getInputValbyId("#cmp-input-s");
-    var input_mu = getInputValbyId("#cmp-input-mu");
-    var input_phi = getInputValbyId("#cmp-input-phi");
+  var target = "cmp";
 
-
-    var input = {T: input_T, E: input_E, N: input_N, M: input_M, f: input_f, F: input_F, P: input_P, Mbf: input_Mbf, s: input_s, mu: input_mu, phi: input_phi};
+  if(document.getElementById("customRadio2").checked){
+    var input;
+    ts = ["vlsm","rlsm","dlsm","osm"];
+    for (var i = 0; i < 4; i++){
+      console.log(ts[i]);
+      validate({id:"adjustable-progress-bar"}, ts[i], getInput(ts[i]));
+    }
+  }else{
+    var input = getInput("cmp");
     validate(this, target, input);
+  }
+
+
 
 
     switch (this.id) {
@@ -2661,14 +2661,26 @@ function runCmp() {
             console.log("simply update all");
 			switch (window.focusedTree) {
 				case "default":
-            		vlsm.update(target);
-            		rlsm.update(target);
-            		dlsm.update(target);
-            		osm.update(target);
-            		vlsm.show();
-            		rlsm.show();
-            		dlsm.show();
-            		osm.show();
+                if(document.getElementById("customRadio2").checked){
+                  vlsm.update("vlsm");
+              		rlsm.update("rlsm");
+              		dlsm.update("dlsm");
+              		osm.update("osm");
+              		vlsm.show();
+              		rlsm.show();
+              		dlsm.show();
+              		osm.show();
+                }else{
+                  vlsm.update(target);
+              		rlsm.update(target);
+              		dlsm.update(target);
+              		osm.update(target);
+              		vlsm.show();
+              		rlsm.show();
+              		dlsm.show();
+              		osm.show();
+                }
+
 					break;
 				case "vlsm":
 					vlsm.update(target);
@@ -2696,6 +2708,7 @@ function runCmp() {
 /* General API for runing different tree bush
  * Event driven
  */
+
 function runIndiv() {
     var target = "";
     switch (this.id.charAt(0)) {
@@ -2716,18 +2729,8 @@ function runIndiv() {
             alert("Invalid: Unknown event target");
     }
     var obj = window.obj[target];
-    var input_T = getInputValbyId(`#${target}-input-T`);
-    var input_E = convertToBytes(`#${target}-select-E`, getInputValbyId(`#${target}-input-E`));
-    var input_N = getInputValbyId(`#${target}-input-N`);
-    var input_M = convertToBytes(`#${target}-select-M`, getInputValbyId(`#${target}-input-M`));
-    var input_f = getInputValbyId(`#${target}-input-f`);
-    var input_F = input_M * input_f;
-    var input_P = convertToBytes(`#${target}-select-P`, getInputValbyId(`#${target}-input-P`));
-    var input_Mbf = convertToBytes(`#${target}-select-Mbf`, getInputValbyId(`#${target}-input-Mbf`));
-    var input_s = getInputValbyId(`#${target}-input-s`);
-    var input_mu = getInputValbyId(`#${target}-input-mu`);
-    var input_phi = getInputValbyId(`#${target}-input-phi`);
-    var input = {T: input_T, E: input_E, N: input_N, M: input_M, f: input_f, F: input_F, P: input_P, Mbf: input_Mbf, s: input_s, mu: input_mu, phi: input_phi};
+
+    var input = getInput(target)
     validate(this, target, input);
 
     if (this.id.includes("leveling")) {
@@ -2747,10 +2750,10 @@ function runIndiv() {
 function validate(self, target, input) {
     // T >= 2, N, E > 1, M > 1
 	console.log("tgt=", target);
-    if (!self.classList.contains(`${target}-input`)) {
-        alert(`Invalid: Unknown ${target} configuration input`);
-        return;
-    }
+    // if (!self.classList.contains(`${target}-input`)) {
+    //     alert(`Invalid: Unknown ${target} configuration input`);
+    //     return;
+    // }
     switch (self.id) {
         case `${target}-input-T`:
             if (input.T < 2 || !Number.isInteger(input.T)) {
