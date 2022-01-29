@@ -1410,10 +1410,10 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 							<label id="progress-percentage-label" class="progress-label">0%</label>
 						</div>
 					</div>-->
-						<div class="lsm-title">
+						<div id="cmp-vlsm-title" class="lsm-title">
 							<span>Vanilla-LSM</span>
 						</div>
-						<div class="mp-btn-group btn-group mb-2" role="group" aria-label="LSM Merge Policy">
+						<div id="cmp-vlsm-layout" class="mp-btn-group btn-group mb-2" role="group" aria-label="LSM Merge Policy">
 							<button id="cmp-vlsm-leveling" type="button"
 								class="cmp-input btn-active leveler btn btn-custom">Leveling</button>
 							<button id="cmp-vlsm-tiering" type="button" class="cmp-input tier btn btn-custom">Tiering</button>
@@ -1450,7 +1450,7 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 								<button id="rlsm-finish-button" type="button" class="btn btn-danger">Finish</button>
 							</div>
 						</div>-->
-						<div class="lsm-title">
+						<div id="cmp-rlsm-title" class="lsm-title">
 							<span>Partial Compaction</span>
 							<div class="custom-control custom-switch">
 								<input id="cmp-bg-merging" type="checkbox" class="custom-control-input cmp-input">
@@ -1458,7 +1458,7 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 									data-original-title="Background merging OFF"></label>
 							</div>
 						</div>
-						<div class="mp-btn-group btn-group mb-2" role="group" aria-label="LSM Merge Policy">
+						<div id="cmp-rlsm-layout" class="mp-btn-group btn-group mb-2" role="group" aria-label="LSM Merge Policy">
 							<button id="cmp-rlsm-leveling" type="button" class="cmp-input btn-active leveler btn btn-custom"
 								autofocus>Leveled Compaction</button>
 						</div>
@@ -1514,10 +1514,10 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 								<button id="dlsm-finish-button" type="button" class="btn btn-danger">Finish</button>
 							</div>
 						</div>-->
-						<div class="lsm-title">
+						<div id="cmp-dlsm-title" class="lsm-title">
 							<span>Hybrid Strategy</span>
 						</div>
-						<div class="mp-btn-group btn-group mb-2" role="group" aria-label="LSM Merge Policy">
+						<div id="cmp-dlsm-layout" class="mp-btn-group btn-group mb-2" role="group" aria-label="LSM Merge Policy">
 							<button id="cmp-dlsm-lazylevel" type="button" class="cmp-input btn btn-custom btn-active">Lazy
 								Leveling</button>
 						</div>
@@ -1575,13 +1575,13 @@ granularity of <strong>one or more files</strong> <i>(granularity)</i> according
 								<button id="osm-finish-button" type="button" class="btn btn-danger">Finish</button>
 							</div>
 						</div>-->
-						<div class="lsm-title">
+						<div id="cmp-osm-title" class="lsm-title">
 							<span>Build-Your-Own</span>
 						</div>
 						<!-- <div class="mp-btn-group btn-group mb-2" role="group" aria-label="LSM Merge Policy">
 							<button id="cmp-osm-leveling" type="button" class="cmp-input btn btn-custom btn-active">Leveling</button>
 						</div> -->
-            <div class="input-group input-group-sm mb-2" aria-label="LSM Merge Policy">
+            <div id="cmp-osm-layout" class="input-group input-group-sm mb-2" aria-label="LSM Merge Policy">
               <div class="input-group-prepend">
                 <label class="input-group-text">Tiered #Levels</label>
               </div>

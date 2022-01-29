@@ -2396,11 +2396,21 @@ function display() {
         case "customRadio1":
             hideElem("#indiv-conf-row");
             showElem("#cmp-conf-row");
-            showElem(".cmp-indiv-mp");
+            //showElem(".cmp-indiv-mp");
+            ts = ["vlsm","rlsm","dlsm","osm"];
+            for (var i = 0; i < 4; i++){
+              $(`#cmp-${ts[i]}-title`).show();
+              $(`#cmp-${ts[i]}-layout`).show();
+            }
             switchContext("cmp");
             break;
         case "customRadio2":
-            hideElem(".cmp-indiv-mp");
+            //hideElem(".cmp-indiv-mp");
+            ts = ["vlsm","rlsm","dlsm","osm"];
+            for (var i = 0; i < 4; i++){
+              $(`#cmp-${ts[i]}-title`).hide();
+              $(`#cmp-${ts[i]}-layout`).hide();
+            }
             hideElem("#cmp-conf-row");
             showElem("#indiv-conf-row");
             switchContext("");
@@ -3115,9 +3125,22 @@ function startPlaying() {
 			if (window.progressEventId && currentVal < window.progressSlider.getAttribute("max")) {
 				//changeProgressBar(currentVal + 1);
 				console.log("currentVal : ", currentVal);
-    			const input_E = convertToBytes("#cmp-select-E", getInputValbyId("#cmp-input-E"));
-				const input_M = convertToBytes("#cmp-select-M", getInputValbyId("#cmp-input-M"));
-				const coeff = Math.floor(input_M / input_E);
+        var input_E = convertToBytes("#cmp-select-E", getInputValbyId("#cmp-input-E"));
+				var input_M = convertToBytes("#cmp-select-M", getInputValbyId("#cmp-input-M"));
+				var coeff = Math.floor(input_M / input_E);
+        if(document.getElementById("customRadio2").checked){
+          var min_coeff = Number.MAX_SAFE_INTEGER;
+          var tmp_coeff;
+          var ts = ["vlsm","rlsm","dlsm","osm"];
+          for (var i = 0; i < 4; i++){
+            tmp_coeff = Math.floor(convertToBytes(`#${ts[i]}-select-M`, getInputValbyId(`#${ts[i]}-input-M`))/convertToBytes(`#${ts[i]}-select-E`, getInputValbyId(`#${ts[i]}-input-E`)));
+            if(tmp_coeff < min_coeff){
+              min_coeff = tmp_coeff;
+            }
+          }
+          coeff = min_coeff;
+        }
+
 				const unit = coeff * window.granularity;
 				console.log("coeff:" + coeff);
 				const newVal = (Math.floor(currentVal / unit) + 1) * unit;
