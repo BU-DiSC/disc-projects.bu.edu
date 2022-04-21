@@ -543,7 +543,7 @@ class LSM {
             run_width = getWidth(i);
             button = createBtn(run_width);
             level_space = this._getLevelSpace(i);
-			console.log("level cap:", level_space);
+			//console.log("level cap:", level_space);
             context = this._getTipText(i, level_space, 0, 0);   // jth run = 0;
             setToolTip(button, "left", context);
             setRunGradient(button, 0);
@@ -753,7 +753,7 @@ class LSM {
 				}
 				break;
 			case "OSM":
-				console.log("osm");
+				//console.log("osm");
 				for (var i = 1; i <= this.L; i++) {
           var div_wrap = document.createElement("div");
 					div_wrap.setAttribute("class", `row ${this.sufix}-result`);
@@ -1129,11 +1129,21 @@ class LSM {
 	_calculateTailCompLat() {
 		if (this._calculateMovedData() > this.cumulativeMeta.maxLat) this.cumulativeMeta.maxLat  = this._calculateMovedData();
 		//console.log("maxlat: ", this.cumulativeMeta.maxLat)
-		return this.cumulativeMeta.maxLat
+		return this.cumulativeMeta.maxLat;
 	}
 
 	_getWorstCaseStorageSpace(entryNum = this.N) {
-		return entryNum * this.E * (1 + this._getSpaceAmpCost(entryNum));
+    if(entryNum == 0) return 0;
+
+    var num = Math.ceil(entryNum / this.F);
+    var tmp_array = this.cumulativeData[num].runsPerLevel;
+    var tmp_array2 = this.cumulativeData[num].entriesPerLevel;
+    var tmp_value = 0;
+    for(let i = 0; i < tmp_array.length && i < tmp_array2.length; i++){
+      tmp_value += tmp_array2[i]*this.F*this.E + tmp_array2[i]*this.F/(Math.floor(this.P/this.E))*(this.KEY_SIZE + 8);
+    }
+    return tmp_value + this.Mbf;
+		//return entryNum * this.E * (1 + this._getSpaceAmpCost(entryNum));
 	}
 
 	_getMemoryFootprint() {
@@ -1293,7 +1303,7 @@ class VanillaLSM extends LSM{
             entry_num = this._getEntryNum(n + super._getExtraEntries(), level_cap);
             rate = entry_num / level_space;
             var file_num = Math.floor(correctDecimal(entry_num / this.F));
-			console.log("render level cap:", level_space);
+			//console.log("render level cap:", level_space);
             context = super._getTipText(l, level_space, entry_num, file_num);
             setToolTip(elem[l], "left", context);
             //setRunGradient(elem[l], rate, file_num, Math.min(level_cap, level_physical_capacities[8 - l]));
@@ -1310,13 +1320,13 @@ class VanillaLSM extends LSM{
             rate = entry_num / level_space;
             file_num = Math.ceil(correctDecimal(entry_num / this.F));
 			if (file_num != 0) this.NSortedRun ++;
-			console.log("render level cap:", level_space);
+			//console.log("render level cap:", level_space);
             context = super._getTipText(l, level_space, entry_num, file_num);
             n = n - entry_num;
         } else {
             entry_num = this._getOffsetFactor(n, l) * (super._sumLevelCapacity(l - 1) + this.PB);
             rate = entry_num / level_space;
-			console.log("render level cap:", level_space);
+			//console.log("render level cap:", level_space);
             file_num = Math.ceil(correctDecimal(entry_num / this.F));
 			if (file_num != 0) this.NSortedRun ++;
             context = super._getTipText(l, level_space, entry_num, file_num);
@@ -1416,7 +1426,7 @@ class VanillaLSM extends LSM{
             var client_width = Math.ceil(elem.clientWidth * 0.9) - 1;  // -1 to avoid stacking
 			const display_cap_unit = client_width / max_display_cap;
 			ret.unitsize = display_cap_unit;
-			console.log("max display cap: ",max_display_cap);
+			//console.log("max display cap: ",max_display_cap);
 
 			if (max_display_cap == 18) {
 				if (ratio == 2) {
@@ -1939,7 +1949,9 @@ class RocksDBLSM extends LSM {
 			this.N = window.progressSlider.getValue();
 		else
 			this.N = window.sliders[this.suffix].getValue();
+
 		//if (!this.N) this.N = 1;
+        this.NTotal = document.querySelector(`#${prefix}-input-N`).value;
         this.M = convertToBytes(`#${prefix}-select-M`, document.querySelector(`#${prefix}-input-M`).value);
         this.f = document.querySelector(`#${prefix}-input-f`).value;
         this.P = convertToBytes(`#${prefix}-select-P`, document.querySelector(`#${prefix}-input-P`).value);
@@ -2130,6 +2142,8 @@ class DostoevskyLSM extends LSM {
 			this.N = window.progressSlider.getValue();
 		else
 			this.N = window.sliders[this.suffix].getValue();
+
+        this.NTotal = document.querySelector(`#${prefix}-input-N`).value;
         this.M = convertToBytes(`#${prefix}-select-M`, document.querySelector(`#${prefix}-input-M`).value);
         this.f = document.querySelector(`#${prefix}-input-f`).value;
         this.P = convertToBytes(`#${prefix}-select-P`, document.querySelector(`#${prefix}-input-P`).value);
@@ -2302,6 +2316,8 @@ class OSM extends LSM {
 			   this.N = window.progressSlider.getValue();
 		  else
 			   this.N = window.sliders[this.suffix].getValue();
+
+      this.NTotal = document.querySelector(`#${prefix}-input-N`).value;
       this.M = convertToBytes(`#${prefix}-select-M`, document.querySelector(`#${prefix}-input-M`).value);
       this.f = document.querySelector(`#${prefix}-input-f`).value;
       this.P = convertToBytes(`#${prefix}-select-P`, document.querySelector(`#${prefix}-input-P`).value);
@@ -2416,7 +2432,7 @@ function display() {
             switchContext("");
             break;
         default:
-            console.log(this.id);
+            //console.log(this.id);
             alert("Invalid: Unknown anlysis model selected");
     }
 
@@ -2551,7 +2567,7 @@ function getInput(target){
 }
 
 function runCmp() {
-	console.log("ID:", this.id);
+	//console.log("ID:", this.id);
 	var input_N = 0;
 	if (this.id == "adjustable-progress-bar"){
 		stopAllIndiv();
@@ -2577,9 +2593,9 @@ function runCmp() {
 				break;
 		}
 		input_N = window.sliders[window.focusedTree].getValue();
-		console.log("inputN:", input_N);
+		//console.log("inputN:", input_N);
 	}
-	console.log("focusedTree is", window.focusedTree);
+	//console.log("focusedTree is", window.focusedTree);
 	switch (window.focusedTree) {
 		case "default":
 			input_N = window.progressSlider.getValue();
@@ -2588,14 +2604,14 @@ function runCmp() {
 			input_N = window.sliders[window.focusedTree].getValue();
 			break;
 	}
-	console.log("The Value Is", input_N);
+	//console.log("The Value Is", input_N);
   var target = "cmp";
 
   if(document.getElementById("customRadio2").checked){
     var input;
     ts = ["vlsm","rlsm","dlsm","osm"];
     for (var i = 0; i < 4; i++){
-      console.log(ts[i]);
+      //console.log(ts[i]);
       validate({id:"adjustable-progress-bar"}, ts[i], getInput(ts[i]));
     }
   }else{
@@ -2625,12 +2641,12 @@ function runCmp() {
         //     rlsm.show();
         //     break;
         case "cmp-bg-merging":
-            console.log("update rlsm background merging mode");
+            //console.log("update rlsm background merging mode");
             rlsm.update(target);
             rlsm.show();
             break;
         case "cmp-threshold":
-            console.log("update rlsm background merging threshold");
+            //console.log("update rlsm background merging threshold");
             rlsm.update(target);
             rlsm.show();
             break;
@@ -2644,7 +2660,7 @@ function runCmp() {
         //     osm.show();
         //     break;
         case "cmp-leveling":
-            console.log("update Vanilla-LSM to leveling");
+            //console.log("update Vanilla-LSM to leveling");
             vlsm.update(target, 0);
             vlsm.show();
             // currently untriggered by event, unchanged merge policy
@@ -2656,7 +2672,7 @@ function runCmp() {
             // osm.show();
             break;
         case "cmp-tiering":
-            console.log("update Vanilla-LSM to tiering");
+            //console.log("update Vanilla-LSM to tiering");
             vlsm.update(target, 1);
             vlsm.show();
             // currently untriggered by event, unchanged merge policy
@@ -2735,7 +2751,7 @@ function runIndiv() {
             target = "osm";
             break;
         default:
-            console.log(self.id);
+            //console.log(self.id);
             alert("Invalid: Unknown event target");
     }
     var obj = window.obj[target];
@@ -2744,13 +2760,13 @@ function runIndiv() {
     validate(this, target, input);
 
     if (this.id.includes("leveling")) {
-        console.log("update leveling demo");
+        //console.log("update leveling demo");
         obj.update(target, 0);
     } else if (this.id.includes("tiering")) {
-        console.log("update tiering demo");
+        //console.log("update tiering demo");
         obj.update(target, 1);
     } else {
-        console.log("simply update");
+        //console.log("simply update");
         obj.update(target);
     }
     obj.show();
@@ -2759,7 +2775,7 @@ function runIndiv() {
 /* Validate and correct the input */
 function validate(self, target, input) {
     // T >= 2, N, E > 1, M > 1
-	console.log("tgt=", target);
+	//console.log("tgt=", target);
     // if (!self.classList.contains(`${target}-input`)) {
     //     alert(`Invalid: Unknown ${target} configuration input`);
     //     return;
@@ -2983,7 +2999,7 @@ function validate(self, target, input) {
 		case "osm-progress-bar":
 			break;
         default:
-            console.log(self.id);
+            //console.log(self.id);
             alert(`Invalid: Unknown ${target} configuration input`);
     }
     return;
@@ -3120,11 +3136,11 @@ function startPlaying() {
 		//document.querySelector("#adjustable-progress-bar")["timeevent-id"] = id;
 		function progressAdvance() {
 			//const currentVal = document.querySelector("#adjustable-progress-bar")["aria-valuenow"];
-			console.log("runTime");
+			//console.log("runTime");
 			const currentVal = window.progressSlider.getValue();
 			if (window.progressEventId && currentVal < window.progressSlider.getAttribute("max")) {
 				//changeProgressBar(currentVal + 1);
-				console.log("currentVal : ", currentVal);
+				//console.log("currentVal : ", currentVal);
         var input_E = convertToBytes("#cmp-select-E", getInputValbyId("#cmp-input-E"));
 				var input_M = convertToBytes("#cmp-select-M", getInputValbyId("#cmp-input-M"));
 				var coeff = Math.floor(input_M / input_E);
@@ -3142,7 +3158,7 @@ function startPlaying() {
         }
 
 				const unit = coeff * window.granularity;
-				console.log("coeff:" + coeff);
+				//console.log("coeff:" + coeff);
 				const newVal = (Math.floor(currentVal / unit) + 1) * unit;
 				//window.progressSlider.setValue(newVal);
 				changeProgressBar(window.progressSlider, newVal);
@@ -3152,7 +3168,7 @@ function startPlaying() {
 				elem.dispatchEvent(event);
 				//document.querySelector("#adjustable-progress-bar").onchange();
 			} else {
-				console.log("Stttopppp", currentVal);
+				//console.log("Stttopppp", currentVal);
 				clearInterval(id);
 				//this.playing = null;
 			}
@@ -3164,9 +3180,9 @@ function startPlaying() {
 		function localProgressAdvance() {
 			var curProgress = window.sliders[treeName].getValue();
 			const max = getInputValbyId("#cmp-input-N");
-			if (button.id == "dlsm-autoplay-button") {
-				console.log("MAX =", max);
-			}
+			// if (button.id == "dlsm-autoplay-button") {
+			// 	console.log("MAX =", max);
+			// }
 			if (curProgress >= max) {
 				//clearInterval(window.runningIds[playingProgressBarId]);
 				stopPlaying.call(button);
@@ -3175,14 +3191,14 @@ function startPlaying() {
 				const input_M = convertToBytes("#cmp-select-M", getInputValbyId("#cmp-input-M"));
 				const coeff = Math.floor(input_M / input_E);
 				const unit = coeff * window.granularity;
-				console.log("coeff:" + coeff);
+				//console.log("coeff:" + coeff);
 				const newVal = (Math.floor(curProgress / unit) + 1) * unit;
 				//window.progressSlider.setValue(newVal);
-				console.log("treeName:", treeName);
+				//console.log("treeName:", treeName);
 				changeProgressBar(window.sliders[treeName], newVal);
 				window.individualProgress[treeName] = newVal;
 				var event = new Event('change');
-				console.log("indivprogressbar: ", "#"+playingProgressBarId);
+				//console.log("indivprogressbar: ", "#"+playingProgressBarId);
 				document.querySelector("#" + playingProgressBarId).dispatchEvent(event);
 				//document.querySelector("#" + playingProgressBarId).onchange();
 			}
@@ -3214,7 +3230,7 @@ function stopPlaying() {
 		this.src = "img/play_circle_outline_black_24dp.svg";
 		this.classList.remove("pause-class");
 		this.classList.add("play-class");
-		console.log("Cleared dlsm");
+		//console.log("Cleared dlsm");
 		clearInterval(window.runningIds["dlsm-progress-bar"]);
 		window.runningIds["dlsm-progress-bar"] = null;
 	} else
@@ -3246,7 +3262,7 @@ function finishProgress() {
 	//window.progressSlider.setValue(maxVal);
 	changeProgressBar(window.progressSlider, maxVal);
 	document.querySelector("#adjustable-progress-bar").onchange();
-	console.log("Cleared fprogress");
+	//console.log("Cleared fprogress");
 	clearInterval(window.progressEventId);
 	window.progressEventId = null;
 }
@@ -3270,7 +3286,7 @@ function clickProgressBar() {
 }
 
 function dragHandler() {
-	console.log("Drag handler called");
+	//console.log("Drag handler called");
 	stopMain();
 	stopAllIndiv();
 	var event = new Event('change');
@@ -3279,12 +3295,13 @@ function dragHandler() {
 }
 
 function changeProgressCapacity(slider) {
-	console.log("Event Triggered");
+	//console.log("Event Triggered");
 	const newVal = getInputValbyId("#cmp-input-N");
 	//window.progressSlider.setAttribute("max", newVal);
 	if (this.id == "cmp-input-N") {
 		window.progressSlider.setAttribute("max", newVal);
 		window.sliders.forEach(function(slider) {slider.setAttribute("max", newVal);});
+    //runCmp();
 	}
 }
 
@@ -3329,7 +3346,7 @@ function convertToBytes(target, input) {
         case "3":  //GB
             return input * Math.pow(2, 30);
         default:
-        console.log(value);
+        //console.log(value);
         alert(`Invalid: Unknown value of unit in ${target}`);
     }
 }
@@ -3486,7 +3503,7 @@ function setRunGradientWrapper(button, entry_num, level_space, display_unit) {
 			ellipsis_node.style['left'] = ((display_num - 3) * display_unit) + "px";
 			ellipsis_node.style['width'] = (width - (display_num - 2) * display_unit) + "px";
 			//ellipsis_node.style['height'] = 0.5 * button.style.height.slice(0 , -2) + "px";
-			console.log("top:", ellipsis_node.style['top']);
+			//console.log("top:", ellipsis_node.style['top']);
 			//ellipsis_node.align = "center";
 			ellipsis_node.innerHTML = "...";
 			button.style['position'] = "relative";
