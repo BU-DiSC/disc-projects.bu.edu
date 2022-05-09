@@ -170,9 +170,9 @@ on performance for different workloads and LSM tunings. LSM trees offer efficien
           Classically, LSM-trees support two merging policies: leveling and tiering. In leveling, each level may have at most one run, and every time a run in Level i − 1 (i ≥ 1) is moved to Level i, it is greedily sort-merged with the run from Level i, if it exists.
           With tiering, every level must accumulate T runs before they are sort-merged.
             Recently hybrid compaction policies (e.g., the hybrid compaction as follows) fuse leveling and tiering in a single tree to strike a balance between the read and write throughput based on workload specifications.
-        To amortize data movement, and thus, avoid latency spikes, state-of-the-art LSM-engines organize data into smaller files, and perform compactions at the granularity of files instead of levels (<b>Partial Compaction</b>).
+        To amortize data movement, and thus, avoid latency spikes, state-of-the-art LSM-engines organize data into smaller files, and perform compactions at the granularity of files instead of levels.
           If Level i grows beyond a threshold, a compaction is triggered and one file (or a subset of files) from Level i is chosen to be compacted with files from Level i + 1 that have an overlapping key-range.
-          This process is known as partial compaction.
+          This process is known as <b>partial compaction</b>.
           </p>
       </div>
 
@@ -182,12 +182,12 @@ on performance for different workloads and LSM tunings. LSM trees offer efficien
   <section id="research" style="margin:0 10px">
     <div class="container">
       <div class="row text-center">
-        <h2> Compaction Designing Space: 4 Primitives </h2>
+        <h2> Compaction Designing Space: Four Primitives </h2>
       </div>
       <div class="row text-center">
         <div>
           <p> We introduce a set of four design primitives that can formally define any compaction strategy: (i) the compaction trigger, (ii) the data
-    layout, (iii) the compaction granularity, and (iv) the data movementpolicy. </p>
+    layout, (iii) the compaction granularity, and (iv) the data movement policy. </p>
         </div>
 
       </div>
@@ -197,7 +197,7 @@ on performance for different workloads and LSM tunings. LSM trees offer efficien
       <tr>
         <th scope="col">Dimension</th>
         <th scope="col">Explanation</th>
-        <th scope="col">Example</th>
+        <th scope="col">Sample Options</th>
       </tr>
     </thead>
     <tbody>
@@ -225,14 +225,14 @@ on performance for different workloads and LSM tunings. LSM trees offer efficien
   </table>
       <div class="row text-center">
         <div>
-          <p> The above 4 design primitives provide a structured decomposition of arbitrary compaction strategies.
+          <p> The above four design primitives provide a structured decomposition of arbitrary compaction strategies.
         This allows us to create the taxonomy of the universe of LSM compaction strategies, including all the classical as well as new ones.
         For example, AsterixDB has a <strong>leveled</strong>-based LSM-tree <i>(data layout)</i> that compacts <strong>whole levels</strong> at a time <i>(granularity)</i> once a <strong>level reaches a nominal size</strong> <i>(trigger)</i>.
         This design does not implement partial compactions, and thus it does not need a data movement policy.
       </p>
         <p>
         A more complex example is RocksDB which applies <strong>1-leveling</strong> (tiering for level 1 and leveling for others) <i>(data layout)</i> and compactions are performed at the
-granularity of <strong>one or more files</strong> <i>(granularity)</i> according to <strong>the level saturation, file staleness and spalce amplification</strong> <i>(trigger)</i>. RocksDB supports various <i>data movement policy</i> including <strong>Least Overlapping, Coldest, Oldest and Tombstone Density</strong>.
+granularity of <strong>one or more files</strong> <i>(granularity)</i> according to <strong>the level saturation, file staleness and spalce amplification </strong> <i>(trigger)</i>. RocksDB supports various <i>data movement policy</i> including <strong>Least Overlapping, Coldest, Oldest and Tombstone Density</strong>.
 </p>
         <p>To demonstrate the operational flow of a family of state-of-the-art LSM compaction strategies, we introduce <i><b>Compactionary</b></i>. In our demo, users can better understand how each compaction happens through the compaction animation, and they can also examine the internal trade-off across different metrics (e.g., ingest, point lookup and range lookup). </p>
         </div>
