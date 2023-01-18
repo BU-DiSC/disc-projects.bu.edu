@@ -7,14 +7,16 @@ const rgb_gradients = [
 ];
 const flush_interval = 3000;
 const scaled_entries_per_file = 128;
-const name_table=["Lethe", "MinOverlappingRatio", "Round-Robin"]
+const name_table=["FADE", "MinOverlappingRatio", "Round-Robin"]
+const name_table2=["FADE (1)", "FADE (2)", "FADE (3)"]
 var traces_for_plots = {}
 var plotted_metrics = ["num_deletes", "num_existing_tombstones",
   "num_expired_tombstones", "max_obsolete_age", "num_compactions",
   "avg_cmpct_lat","avg_cmpct_size","wc_compaction_lat","avg_ingest_cost",
-  "write_amp", "storage_space", "memory_footprint"]
+    "write_amp", "storage_space", "memory_footprint"]
+var default_value_for_metrics = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 var global_workload_array = [new Array(), new Array(),new Array(),new Array()];
-
+var in_progress_flag = false;
 function intersection(x, y) {
   result = new Set();
   for(const i of x){
@@ -76,6 +78,7 @@ class RocksDBLSM {
       this.plotIdx = picking_policy - 1;
       this.prepared_flag = true;
       this.picking_policy = picking_policy;
+      this.dpt_conf_prefix = "";
       if(prefix) {
           this.T = document.querySelector(`#${prefix}-input-T`).value;
           this.KeySize = convertToBytes(`#${prefix}-select-KeySize`,
@@ -84,20 +87,21 @@ class RocksDBLSM {
             document.querySelector(`#${prefix}-input-E`).value);
           this.N = document.querySelector(`#${prefix}-input-N`).value;
           this.M = convertToBytes(`#${prefix}-select-M`,
-            document.querySelector(`#${prefix}-input-M`).value);
+            document.querySelector(`#${prefix}-input-M`).value)
           this.P = convertToBytes(`#${prefix}-select-P`,
-            document.querySelector(`#${prefix}-input-P`).value);
+            document.querySelector(`#${prefix}-input-P`).value)
           this.bpk = parseFloat(
-            document.querySelector(`#${prefix}-input-bpk`).value);
+            document.querySelector(`#${prefix}-input-bpk`).value)
           //this.s = document.querySelector(`#${prefix}-input-s`).value;
           this.mu = convertToMilliSeconds(`#${prefix}-select-mu`,
-            document.querySelector(`#${prefix}-input-mu`).value);
+            document.querySelector(`#${prefix}-input-mu`).value)
           this.phi = convertToMilliSeconds(`#${prefix}-select-phi`,
-            document.querySelector(`#${prefix}-input-phi`).value);
+            document.querySelector(`#${prefix}-input-phi`).value)
           this.Deletes =
-            document.querySelector(`#${prefix}-input-Deletes`).value;
-          this.DPT = convertToMilliSeconds(`#${prefix}-select-DPT`,
-            getInputValbyId(`#${prefix}-input-DPT`));
+            document.querySelector(`#${prefix}-input-Deletes`).value
+          this.DPT = convertToMilliSeconds(
+            `#${prefix}-select` + this.dpt_conf_prefix +`-DPT`,
+            getInputValbyId(`#${prefix}-input` + this.dpt_conf_prefix + `-DPT`))
       } else {
           this.T = this.DEFAULT.T;
           this.E = this.DEFAULT.E;
@@ -183,11 +187,12 @@ class RocksDBLSM {
     this.phi = convertToMilliSeconds(`#${prefix}-select-phi`,
       document.querySelector(`#${prefix}-input-phi`).value);
 
-    this.DPT = convertToMilliSeconds(`#${prefix}-select-DPT`,
-      getInputValbyId(`#${prefix}-input-DPT`));
+    this.DPT = convertToMilliSeconds(
+      `#${prefix}-select` + this.dpt_conf_prefix + `-DPT`,
+      getInputValbyId(`#${prefix}-input` + this.dpt_conf_prefix +`-DPT`));
     this.PB = this.P * this.B;
 
-    if (!this.prepared_flag) {
+    if (!this.prepared_flag && in_progress_flag) {
       this._prepareCumulative(workload_idx);
       this.prepared_flag = true;
     }
@@ -401,12 +406,12 @@ class RocksDBLSM {
         }
 
         if (i == compaction_start_level) {
-          div_wrap.appendChild(createGlowBulb());
+          div_wrap.appendChild(createGlowBulb())
         } else {
-          div_wrap.appendChild(createDarkBulb());
+          div_wrap.appendChild(createDarkBulb())
         }
       }
-      parent.appendChild(div_wrap);
+      parent.appendChild(div_wrap)
     }
 
     const blinkingId = setTimeout(blinkFunc, 350);
@@ -460,7 +465,7 @@ class RocksDBLSM {
       .textContent = cumulativeMetaTmp["num_compactions"];
     if (cumulativeMetaTmp["num_compactions"] == 0) {
       document.querySelector(`#${this.suffix}-compaction-size`)
-        .textContent = 0;
+        .textContent = "0 Bytes";
       document.querySelector(`#${this.suffix}-compaction-latency`)
         .textContent = 0;
     } else {
@@ -489,6 +494,32 @@ class RocksDBLSM {
       .textContent = this.formatBytes(cumulativeMetaTmp["memory_footprint"], 3);
   }
 
+  showDefaultCost() {
+    document.querySelector(`#${this.suffix}-num-deletes`).textContent = 0
+    document.querySelector(`#${this.suffix}-num-existing-tombstones`)
+      .textContent = 0
+    document.querySelector(`#${this.suffix}-num-expired-tombstones`)
+      .textContent = 0
+    document.querySelector(`#${this.suffix}-max-obsolete-age`).textContent = 0
+    document.querySelector(`#${this.suffix}-num-compaction`).textContent = 0
+    document.querySelector(`#${this.suffix}-compaction-size`)
+      .textContent = "0 Bytes"
+    document.querySelector(`#${this.suffix}-compaction-latency`)
+      .textContent = 0
+    document.querySelector(`#${this.suffix}-tail-compaction-latency`)
+      .textContent = 0
+    document.querySelector(`#${this.suffix}-ingestion-cost`).textContent = 0
+    document.querySelector(`#${this.suffix}-write-amp`).textContent = 0
+    document.querySelector(`#${this.suffix}-storage-cost`)
+      .textContent = "0 Bytes"
+    document.querySelector(`#${this.suffix}-mem-cost`).textContent = "0 Bytes"
+
+    for(let i = 0; i < plotted_metrics.length; i++){
+      traces_for_plots[plotted_metrics[i]][this.plotIdx].x = [];
+      traces_for_plots[plotted_metrics[i]][this.plotIdx].y = [];
+    }
+
+  }
   updatePlotData() {
     var cumulativeMetaTmp = {};
     var sync_point_idx = 0;
@@ -1082,11 +1113,11 @@ class RocksDBLSM {
                 var base_level_wise_dpt = this.DPT*(this.T-1)/
                   (Math.pow(this.T, new_tree_structure.length-2) - 1);
                 var dpt_curr_level;
-                for (var lvl = new_tree_structure.length - 2; lvl > 1 ; lvl--) {
+                for (var lvl = new_tree_structure.length - 2; lvl >= 1 ; lvl--) {
                   dpt_curr_level = base_level_wise_dpt*Math.pow(this.T, lvl-1);
                   for (var k = 0; k < new_tree_structure[lvl].length; k++) {
                     if (new_tree_structure[lvl][k].oldest_tombstone_timestamp <
-                      curr_time - dpt_curr_level) {
+                      curr_time + tmp_time - dpt_curr_level) {
                         output_level = lvl + 1;
                         found_expired_file = true;
                         break;
@@ -1182,7 +1213,7 @@ class RocksDBLSM {
               }
             }
             tmp_max_obsolete_age = Math.max(tmp_max_obsolete_age,
-              new_tree_structure[lvl][k].oldest_tombstone_timestamp);
+              curr_time - new_tree_structure[lvl][k].oldest_tombstone_timestamp);
           }
           tmp_num_entries_per_file =
             new_tree_structure[lvl][k].tombstones.size +
@@ -1216,7 +1247,34 @@ class RocksDBLSM {
   }
 }
 
+function progressAdvance() {
+	//const currentVal = document.querySelector("#adjustable-progress-bar")["aria-valuenow"];
+	//console.log("runTime");
+    const currentVal = window.progressSlider.getValue();
+    if (!in_progress_flag) {
+         in_progress_flag = true;
+        document.querySelector("#adjustable-progress-bar").dispatchEvent(new Event('change'));
+    } else if (window.progressEventId && currentVal < window.progressSlider.getAttribute("max")) {
+	    //changeProgressBar(currentVal + 1);
+	    const newVal = currentVal  + 1;
+	    //window.progressSlider.setValue(newVal);
+	    changeProgressBar(window.progressSlider, newVal);
+		var event = new Event('change');
+		// var input_elem = document.querySelector("#cmp-input-N");
+		var elem = document.querySelector("#adjustable-progress-bar");
+		elem.dispatchEvent(event);
+				//document.querySelector("#adjustable-progress-bar").onchange();
+    } else {
+		//console.log("Stttopppp", currentVal);
+        clearInterval(window.progressEventId);
+	}
+}
+
 function initPlot(){
+  var local_name_table = name_table;
+  if (document.getElementById("customRadio2").checked) {
+    local_name_table = name_table2;
+  }
   for(let i = 0; i < plotted_metrics.length; i++){
     traces_for_plots[plotted_metrics[i]] = [];
     for(let j = 0; j < 3; j++){
@@ -1243,7 +1301,9 @@ function initCmp() {
   var lsmCmpctPP1 = new RocksDBLSM("cmp", "lsm-cmpct-pp-1", 1);
   var lsmCmpctPP2 = new RocksDBLSM("cmp", "lsm-cmpct-pp-2", 2);
   var lsmCmpctPP3 = new RocksDBLSM("cmp", "lsm-cmpct-pp-3", 3);
-
+  lsmCmpctPP1.showDefaultCost();
+  lsmCmpctPP2.showDefaultCost();
+  lsmCmpctPP3.showDefaultCost();
   genWorkload(lsmCmpctPP1.NTotalApproximate, lsmCmpctPP1.Deletes, 0);
   global_workload_array[1] = global_workload_array[0];
   global_workload_array[2] = global_workload_array[0];
@@ -1288,32 +1348,32 @@ function initGradientBar() {
     "font-style:italic;margin:0px 0px'>" +
     "Max-Tombstone-Age &nbsp;<span " +
     "style='margin-top:15px;position:absolute;font-size:0.9em;margin-left:5px'>" +
-    "(%):</span></div>");
+    "(%):</span></div>")
   $('#gradient-show-ttl-2')
     .append("<div class='col-lg-2' " +
     "style='text-align: center;padding-top:5px;font-size:0.9em;" +
     "font-style:italic;margin:-3px 0px;text-decoration-line: overline;" +
     "-webkit-text-decoration-line: overline;'>" +
-    "Persistence Threshold</div>");
+    "Persistence Threshold</div>")
   $('#gradient-show-overlapping-ratio')
     .append("<div class='col-lg-2' " +
     "style='text-align: center;padding-top:5px;font-size:medium;" +
     "font-style:italic;margin:0px 0px'>" +
-    "Overlapping Ratio (%):</div>");
+    "Overlapping Ratio (%):</div>")
 
   for(var i = 0; i < 10; i++) {
-    var tombstone_color = getColor((i+1)/10.0, 0);
+    var tombstone_color = getColor((i+1)/10.0, 0)
     if (i == 9) {
       $('#gradient-show-ttl-1')
         .append("<div class='col-lg-1' " +
         "style='margin-top:20px;margin-bottom: -13px;color:#FFF;font-weight:500;background-color:"+
-        tombstone_color+"'></div>");
+        tombstone_color+"'></div>")
     } else {
       $('#gradient-show-ttl-1')
         .append("<div class='col-lg-1' " +
         "style='margin-top:20px;margin-bottom: -13px;color:#00F;font-weight:500;background: " +
         "repeating-linear-gradient(45deg, #fff, #fff 2px,"+
-        tombstone_color+" 2px," + tombstone_color + " 6px)'></div>");
+        tombstone_color+" 2px," + tombstone_color + " 6px)'></div>")
     }
     $('#gradient-show-ttl-2')
       .append("<div class='col-lg-1' " +
@@ -1322,65 +1382,64 @@ function initGradientBar() {
     $('#gradient-show-overlapping-ratio')
       .append("<div class='col-lg-1' " +
       "style='margin:5px 0px;color:#FFF;font-weight:500;background-color:"+
-      getColor((i+1)/10.0, 1)+"'> "+(i+1)*10+"%</div>");
+      getColor((i+1)/10.0, 1)+"'> "+(i+1)*10+"%</div>")
   }
 }
 /* Display one of analysis mode according to
  * it's corresponding button triggers onlick event
  */
 function display() {
+  stopAllIndiv()
+  changeProgressBar(window.progressSlider, 0);
+  document.querySelector("#adjustable-progress-bar").onchange();
+  clearInterval(window.progressEventId);
+	window.progressEventId = null;
+  in_progress_flag = false;
+
     switch (this.id) {
         case "customRadio1":
-            hideElem("#indiv-conf-row");
-            showElem("#cmp-conf-row");
-
-            //showElem(".cmp-indiv-mp");
-            ts = ["lsm-cmpct-pp-1","lsm-cmpct-pp-2","lsm-cmpct-pp-3"];
+            ts = ["lsm-cmpct-pp-1","lsm-cmpct-pp-2","lsm-cmpct-pp-3"]
             for (var i = 0; i < 3; i++){
-              $(`#cmp-${ts[i]}-title`).show();
-              $(`#cmp-${ts[i]}-layout`).show();
+              $(`#cmp-${ts[i]}-title`).html(
+                "<span>"+name_table[i]+"</span>")
+              $(`#${ts[i]}-legend`).html(
+                "<b>"+name_table[i]+"</b>")
+              $(`#cmp-${ts[i]}-dpt`).hide()
             }
-            switchContext("cmp");
+            // lsmCmpctPP1, lsmCmpctPP2, lsmCmpctPP3 are stored as value in
+            // window.obj
+            for (var key in window.obj) {
+              var obj = window.obj[key]
+              obj.picking_policy = parseInt(obj.suffix[obj.suffix.length - 1])
+              obj.dpt_conf_prefix = ""
+              obj.showDefaultCost()
+            }
+            $(`#shared-dpt-title`).show()
+            $(`#shared-dpt-conf`).show()
             break;
         case "customRadio2":
-            //hideElem(".cmp-indiv-mp");
-            ts = ["lsm-cmpct-pp-1","lsm-cmpct-pp-2","lsm-cmpct-pp-3"];
+            ts = ["lsm-cmpct-pp-1","lsm-cmpct-pp-2","lsm-cmpct-pp-3"]
             for (var i = 0; i < 3; i++){
-              $(`#cmp-${ts[i]}-title`).hide();
-              $(`#cmp-${ts[i]}-layout`).hide();
+              $(`#cmp-${ts[i]}-title`).html(
+                "<span>"+name_table2[i]+"</span>")
+              $(`#cmp-${ts[i]}-dpt`).show()
+              $(`#${ts[i]}-legend`).html(
+                "<b>"+name_table2[i]+"</b>")
             }
-            hideElem("#cmp-conf-row");
-            showElem("#indiv-conf-row");
-            switchContext("");
+            for (var key in window.obj) {
+              var obj = window.obj[key]
+              obj.picking_policy = 1
+              obj.dpt_conf_prefix = "-" + obj.suffix[obj.suffix.length - 1]
+              obj.showDefaultCost()
+            }
+            $(`#shared-dpt-title`).hide()
+            $(`#shared-dpt-conf`).hide()
             break;
         default:
-            //console.log(this.id);
-            alert("Invalid: Unknown anlysis model selected");
+            alert("Invalid: Unknown anlysis model selected")
     }
+    runPlots()
 
-    function switchContext(target = "cmp") {
-        if (target === "cmp") {
-            // scenario1: jump to comparative analysis
-            // For each, store current MP as tmpMP
-            // restore preMP as current MP
-            // store tmpMP as preMP
-            // update("cmp") and show
-            for (var key in window.obj) {
-                var obj = window.obj[key];
-                var tmpMP = obj.MP;
-                obj.MP = obj.preMP;
-                obj.preMP = tmpMP;
-                obj.update("cmp");
-                obj.show();
-            }
-        } else {    // ... update(indiv)
-            for (var key in window.obj) {
-                var obj = window.obj[key];
-                obj.update(obj.prefix);
-                obj.show();
-            }
-        }
-    }
 }
 
 function changeProgressBar(slider, newVal) {
@@ -1395,7 +1454,7 @@ function runPlots(){
   var layout={
       height:p_width,
       width:p_width,
-      title: "#Deletes - Flushed Data",
+      title: "#Deletes",
       margin: {
           l: 33,
           r: 0,
@@ -1422,7 +1481,7 @@ function runPlots(){
     layout, {displayModeBar: false});
 
   //layout.title = "#Existing tombstones - Flushed Data";
-  layout.title = "#Existing tombstones";
+  layout.title = "#Tombstones";
   Plotly.newPlot('num_existing_tombstones_plot',
     traces_for_plots["num_existing_tombstones"],
     layout, {displayModeBar: false});
@@ -1434,7 +1493,7 @@ function runPlots(){
     layout, {displayModeBar: false});
 
   //layout.title = "Max Obsolete Age (s) - Flushed Data";
-  layout.title = "Max Obsolete Age";
+  layout.title = "Age of oldest tombstones";
   Plotly.newPlot('max_obsolete_age_plot',
     traces_for_plots["max_obsolete_age"],
     layout, {displayModeBar: false});
@@ -1552,6 +1611,16 @@ function sync_cumulative_data(cumulativeDataList) {
 }
 
 function runCmp() {
+  if (this.id.startsWith("cmp-input") && in_progress_flag) {
+      clearInterval(window.progressEventId);
+      window.progressEventId = null;
+      $("#loader").show();
+
+      lsmCmpctPP1.prepared_flag = false;
+      lsmCmpctPP2.prepared_flag = false;
+      lsmCmpctPP3.prepared_flag = false;
+
+  }
 	//console.log("ID:", this.id);
 	var input_N = 0;
   var maxVal = 100;
@@ -1567,179 +1636,199 @@ function runCmp() {
 	} else if (["lsm-cmpct-pp-1-progress-bar", "lsm-cmpct-pp-2-progress-bar", "lsm-cmpct-pp-3-progress-bar"].indexOf(this.id) != -1){
 		switch (this.id) {
 			case "lsm-cmpct-pp-1-progress-bar":
-				window.focusedTree = "lsm-cmpct-pp-1";
-				break;
+				window.focusedTree = "lsm-cmpct-pp-1"
+				break
 			case "lsm-cmpct-pp-2-progress-bar":
 				window.focusedTree = "lsm-cmpct-pp-2";
-				break;
+				break
 			case "lsm-cmpct-pp-3-progress-bar":
-				window.focusedTree = "lsm-cmpct-pp-3";
-				break;
+				window.focusedTree = "lsm-cmpct-pp-3"
+				break
 		}
-		progress_percentage = window.sliders[window.focusedTree].getValue();
-		//console.log("inputN:", input_N);
+		progress_percentage = window.sliders[window.focusedTree].getValue()
+
 	}
-	//console.log("focusedTree is", window.focusedTree);
-	switch (window.focusedTree) {
-		case "default":
-			progress_percentage = window.progressSlider.getValue();
-			break;
-		default:
-			progress_percentage = window.sliders[window.focusedTree].getValue();
-			break;
-	}
-	//console.log("The Value Is", input_N);
-  var target = "cmp";
 
-  if(document.getElementById("customRadio2").checked){
-    var input;
-    ts = ["lsm-cmpct-pp-1","lsm-cmpct-pp-2","lsm-cmpct-pp-3"];
-    for (var i = 0; i < 3; i++){
-      //console.log(ts[i]);
-      var input = getInput(ts[i]);
-      validate({id:"adjustable-progress-bar"}, ts[i], input);
-    }
-  }else{
-    var input = getInput("cmp");
-    validate(this, target, input);
-  }
+  var target = "cmp"
 
-  switch (window.focusedTree) {
-    case "default":
+  var input = getInput("cmp")
+  validate(this, target, input)
 
-      if(document.getElementById("customRadio2").checked){
+  if (in_progress_flag) {
+    switch (window.focusedTree) {
+      case "default":
         lsmCmpctPP1.update(target);
         lsmCmpctPP2.update(target);
         lsmCmpctPP3.update(target);
+
         sync_cumulative_data([lsmCmpctPP1.cumulativeData,
-          lsmCmpctPP2.cumulativeData,
-          lsmCmpctPP3.cumulativeData]);
-
-
+        lsmCmpctPP2.cumulativeData,
+        lsmCmpctPP3.cumulativeData]);
         if (document.getElementById("switch-for-update-granularity").checked) {
-          maxVal = Math.max(
-            lsmCmpctPP1
-              .cumulativeData[lsmCmpctPP1.cumulativeData.length - 1]["sync_point"],
-            lsmCmpctPP2
-              .cumulativeData[lsmCmpctPP2.cumulativeData.length - 1]["sync_point"],
-            lsmCmpctPP3
-              .cumulativeData[lsmCmpctPP3.cumulativeData.length - 1]["sync_point"],
-          ) + 1;
-        } else {
-          maxVal = Math.max(
-            lsmCmpctPP1.cumulativeData.length,
-            lsmCmpctPP2.cumulativeData.length,
-            lsmCmpctPP3.cumulativeData.length
-          );
-        }
-        window.progressSlider.setAttribute('max', maxVal - 1);
-
-        lsmCmpctPP1.show();
-        lsmCmpctPP2.show();
-        lsmCmpctPP3.show();
-      }else{
-        lsmCmpctPP1.update(target);
-        lsmCmpctPP2.update(target);
-        lsmCmpctPP3.update(target);
-
-        sync_cumulative_data([lsmCmpctPP1.cumulativeData,
-          lsmCmpctPP2.cumulativeData,
-          lsmCmpctPP3.cumulativeData]);
-          if (document.getElementById("switch-for-update-granularity").checked) {
             maxVal = Math.max(
-              lsmCmpctPP1
-                .cumulativeData[lsmCmpctPP1.cumulativeData.length - 1]["sync_point"],
-              lsmCmpctPP2
-                .cumulativeData[lsmCmpctPP2.cumulativeData.length - 1]["sync_point"],
-              lsmCmpctPP3
-                .cumulativeData[lsmCmpctPP3.cumulativeData.length - 1]["sync_point"],
+                lsmCmpctPP1
+                    .cumulativeData[lsmCmpctPP1.cumulativeData.length - 1]["sync_point"],
+                lsmCmpctPP2
+                    .cumulativeData[lsmCmpctPP2.cumulativeData.length - 1]["sync_point"],
+                lsmCmpctPP3
+                    .cumulativeData[lsmCmpctPP3.cumulativeData.length - 1]["sync_point"],
             ) + 1;
+
+            if (this.id == "switch-for-update-granularity") {
+              var old_progress_val = window.progressSlider.getValue();
+              var next_progress_val = 0;
+              var index = old_progress_val;
+              while (!lsmCmpctPP1.cumulativeData[index]
+                .hasOwnProperty('sync_point')) index++;
+              next_progress_val = lsmCmpctPP1.cumulativeData[index]["sync_point"];
+              index = old_progress_val;
+              while (!lsmCmpctPP2.cumulativeData[index]
+                .hasOwnProperty('sync_point')) index++;
+              next_progress_val = Math.min(next_progress_val,
+                lsmCmpctPP2.cumulativeData[index]["sync_point"]);
+              index = old_progress_val;
+              while (!lsmCmpctPP3.cumulativeData[index]
+                .hasOwnProperty('sync_point')) index++;
+              next_progress_val = Math.min(next_progress_val,
+                lsmCmpctPP3.cumulativeData[index]["sync_point"]);
+              changeProgressBar(window.progressSlider,
+                next_progress_val);
+              window.progressSlider.progress_percentage =
+                next_progress_val;
+              lsmCmpctPP1.progress_percentage = next_progress_val;
+              lsmCmpctPP2.progress_percentage = next_progress_val;
+              lsmCmpctPP3.progress_percentage = next_progress_val;
+            }
+            window.progressSlider.setAttribute('max', maxVal - 1);
           } else {
             maxVal = Math.max(
-              lsmCmpctPP1.cumulativeData.length,
-              lsmCmpctPP2.cumulativeData.length,
-              lsmCmpctPP3.cumulativeData.length
+                lsmCmpctPP1.cumulativeData.length,
+                lsmCmpctPP2.cumulativeData.length,
+                lsmCmpctPP3.cumulativeData.length
             );
-          }
-        window.progressSlider.setAttribute('max', maxVal - 1);
+            window.progressSlider.setAttribute('max', maxVal - 1);
+            if (this.id == "switch-for-update-granularity") {
+              var old_progress_val = window.progressSlider.getValue();
+              var index = 0;
+              while(index < lsmCmpctPP1.cumulativeData.length &&
+                index < lsmCmpctPP2.cumulativeData.length &&
+                index < lsmCmpctPP3.cumulativeData.length) {
+                if (!lsmCmpctPP1.cumulativeData[index]
+                  .hasOwnProperty('sync_point')){
+                  index++;
+                  continue;
+                }
+                if (lsmCmpctPP1.cumulativeData[index]['sync_point']
+                   < old_progress_val) {
+                  index++;
+                  continue;
+                }
 
+                if (!lsmCmpctPP1.cumulativeData[index]
+                  .hasOwnProperty('sync_point')){
+                  index++;
+                  continue;
+                }
+                if (lsmCmpctPP2.cumulativeData[index]['sync_point']
+                   < old_progress_val) {
+                  index++;
+                  continue;
+                }
+
+                if (!lsmCmpctPP3.cumulativeData[index]
+                  .hasOwnProperty('sync_point')){
+                  index++
+                  continue
+                }
+                if (lsmCmpctPP3.cumulativeData[index]['sync_point']
+                   < old_progress_val) {
+                  index++
+                  continue
+                }
+
+                break
+              }
+              changeProgressBar(window.progressSlider,
+                index)
+              lsmCmpctPP1.progress_percentage = index
+              lsmCmpctPP2.progress_percentage = index
+              lsmCmpctPP3.progress_percentage = index
+            }
+
+        }
+
+
+
+        lsmCmpctPP1.show()
+        lsmCmpctPP2.show()
+        lsmCmpctPP3.show()
+        break
+      case "lsm-cmpct-pp-1":
+        lsmCmpctPP1.update(target);
+        if (document.getElementById("switch-for-update-granularity").checked) {
+            window.sliders["lsm-cmpct-pp-1"]
+                .setAttribute('max', lsmCmpctPP1
+                    .cumulativeData[lsmCmpctPP1.cumulativeData.length - 1]["sync_point"]);
+        } else {
+            window.sliders["lsm-cmpct-pp-1"]
+                .setAttribute('max', lsmCmpctPP1.cumulativeData.length);
+        }
+
+        sync_cumulative_data([lsmCmpctPP1.cumulativeData,
+        lsmCmpctPP2.cumulativeData,
+        lsmCmpctPP3.cumulativeData]);
         lsmCmpctPP1.show();
-        lsmCmpctPP2.show();
-        lsmCmpctPP3.show();
-      }
-
-      break;
-    case "lsm-cmpct-pp-1":
-      lsmCmpctPP1.update(target);
-      if (document.getElementById("switch-for-update-granularity").checked) {
-        window.sliders["lsm-cmpct-pp-1"]
-          .setAttribute('max', lsmCmpctPP1
-          .cumulativeData[lsmCmpctPP1.cumulativeData.length - 1]["sync_point"]);
-      } else {
-        window.sliders["lsm-cmpct-pp-1"]
-          .setAttribute('max', lsmCmpctPP1.cumulativeData.length);
-      }
-
-      sync_cumulative_data([lsmCmpctPP1.cumulativeData,
-        lsmCmpctPP2.cumulativeData,
-        lsmCmpctPP3.cumulativeData]);
-      lsmCmpctPP1.show();
-      break;
+        break;
     case "lsm-cmpct-pp-2":
-      lsmCmpctPP2.update(target);
-      if (document.getElementById("switch-for-update-granularity").checked) {
-        window.sliders["lsm-cmpct-pp-2"]
-          .setAttribute('max', lsmCmpctPP2
-          .cumulativeData[lsmCmpctPP2.cumulativeData.length - 1]["sync_point"]);
-      } else {
-        window.sliders["lsm-cmpct-pp-2"]
-          .setAttribute('max', lsmCmpctPP2.cumulativeData.length);
-      }
-      sync_cumulative_data([lsmCmpctPP1.cumulativeData,
+        lsmCmpctPP2.update(target);
+        if (document.getElementById("switch-for-update-granularity").checked) {
+            window.sliders["lsm-cmpct-pp-2"]
+                .setAttribute('max', lsmCmpctPP2
+                    .cumulativeData[lsmCmpctPP2.cumulativeData.length - 1]["sync_point"]);
+        } else {
+            window.sliders["lsm-cmpct-pp-2"]
+                .setAttribute('max', lsmCmpctPP2.cumulativeData.length);
+        }
+        sync_cumulative_data([lsmCmpctPP1.cumulativeData,
         lsmCmpctPP2.cumulativeData,
         lsmCmpctPP3.cumulativeData]);
-      lsmCmpctPP2.show();
-      break;
+        lsmCmpctPP2.show();
+        break;
     case "lsm-cmpct-pp-3":
-      lsmCmpctPP3.update(target);
-      if (document.getElementById("switch-for-update-granularity").checked) {
-        window.sliders["lsm-cmpct-pp-3"]
-          .setAttribute('max', lsmCmpctPP3
-          .cumulativeData[lsmCmpctPP3.cumulativeData.length - 1]["sync_point"]);
-      } else {
-        window.sliders["lsm-cmpct-pp-3"]
-          .setAttribute('max', lsmCmpctPP3.cumulativeData.length);
-      }
-      sync_cumulative_data([lsmCmpctPP3.cumulativeData,
+        lsmCmpctPP3.update(target);
+        if (document.getElementById("switch-for-update-granularity").checked) {
+            window.sliders["lsm-cmpct-pp-3"]
+                .setAttribute('max', lsmCmpctPP3
+                    .cumulativeData[lsmCmpctPP3.cumulativeData.length - 1]["sync_point"]);
+        } else {
+            window.sliders["lsm-cmpct-pp-3"]
+                .setAttribute('max', lsmCmpctPP3.cumulativeData.length);
+        }
+        sync_cumulative_data([lsmCmpctPP3.cumulativeData,
         lsmCmpctPP2.cumulativeData,
         lsmCmpctPP3.cumulativeData]);
-      lsmCmpctPP3.show();
-      break;
+        lsmCmpctPP3.show();
+        break;
   }
 
   runPlots()
 }
 
+
+    if (in_progress_flag) {
+        $("#loader").hide();
+        if (this.id.startsWith("cmp-input")) {
+            const id = setInterval(progressAdvance, 400);
+            window.progressEventId = id;
+        }
+    }
+
+
+}
+
 /* General API for runing different tree bush
  * Event driven
  */
-
-function runIndiv() {
-    var target = "";
-    if(this.id.charAt(4) == ("1"))
-      target = "lsm-cmpct-pp-1";
-    else if(this.id.charAt(4) == ("2"))
-      target = "lsm-cmpct-pp-2";
-    else
-      target = "lsm-cmpct-pp-3";
-
-    var obj = window.obj[target];
-
-    var input = getInput(target)
-    validate(this, target, input);
-    obj.update(target);
-    obj.show();
-}
 
 /* Validate and correct the input */
 function validate(self, target, input) {
@@ -2055,7 +2144,11 @@ function decreaseInput() {
 
 function startPlaying() {
 	//if (this.playing) return;
-	//this.playing = "playing";
+    //this.playing = "playing";
+    if (!in_progress_flag) {
+        $("#loader").show();
+    }
+
 	var playingProgressBarId = "adjustable-progress-bar";
 	var treeName = "default";
 	if (this.id == "lsm-cmpct-pp-1-autoplay-button") {
@@ -2093,26 +2186,6 @@ function startPlaying() {
 		const id = setInterval(progressAdvance, 400);
 		window.progressEventId = id;
 		//document.querySelector("#adjustable-progress-bar")["timeevent-id"] = id;
-		function progressAdvance() {
-			//const currentVal = document.querySelector("#adjustable-progress-bar")["aria-valuenow"];
-			//console.log("runTime");
-			const currentVal = window.progressSlider.getValue();
-			if (window.progressEventId && currentVal < window.progressSlider.getAttribute("max")) {
-				//changeProgressBar(currentVal + 1);
-				const newVal = currentVal  + 1;
-				//window.progressSlider.setValue(newVal);
-				changeProgressBar(window.progressSlider, newVal);
-				var event = new Event('change');
-				// var input_elem = document.querySelector("#cmp-input-N");
-				var elem = document.querySelector("#adjustable-progress-bar");
-				elem.dispatchEvent(event);
-				//document.querySelector("#adjustable-progress-bar").onchange();
-			} else {
-				//console.log("Stttopppp", currentVal);
-				clearInterval(id);
-				//this.playing = null;
-			}
-		}
 	}else {
 		stopMain();
 		const button = this;
@@ -2177,10 +2250,12 @@ function stopPlaying() {
 function resetProgress() {
 	stopPlaying();
 	//window.progressSlider.setValue(0);
+    in_progress_flag = false;
 	changeProgressBar(window.progressSlider, 0);
 }
 
 function finishProgress() {
+    in_progress_flag = false;
 	const maxVal = window.progressSlider.getAttribute("max");
 	//window.progressSlider.setValue(maxVal);
 	changeProgressBar(window.progressSlider, maxVal);
@@ -2933,37 +3008,6 @@ function clearGroups(element) {
 }
 
 function initSlider() {
-    window.cmpSlider = new Slider("#cmp-threshold", {
-        formatter: function(value) {
-            return value + "%";
-        },
-        value: 5,
-        precision: 20
-    });
-
-    window.lsmCmpctPP1Slider = new Slider("#lsm-cmpct-pp-1-threshold", {
-        formatter: function(value) {
-            return value + "%";
-        },
-        value: 5,
-        precision: 20
-    });
-
-    window.lsmCmpctPP2Slider = new Slider("#lsm-cmpct-pp-2-threshold", {
-        formatter: function(value) {
-            return value + "%";
-        },
-        value: 5,
-        precision: 20
-    });
-
-    window.lsmCmpctPP3Slider = new Slider("#lsm-cmpct-pp-3-threshold", {
-        formatter: function(value) {
-            return value + "%";
-        },
-        value: 5,
-        precision: 20
-    });
 
 	window.progressSlider = new Slider("#adjustable-progress-bar", {
 		formatter: function(value) {
@@ -3065,73 +3109,13 @@ document.querySelector("#cmp-increase-Deletes").onclick = increaseInput;
 document.querySelector("#cmp-decrease-Deletes").onclick = decreaseInput;
 document.querySelector("#cmp-increase-DPT").onclick = increaseInput;
 document.querySelector("#cmp-decrease-DPT").onclick = decreaseInput;
-document.querySelector("#lsm-cmpct-pp-1-increase-T").onclick = increaseInput;
-document.querySelector("#lsm-cmpct-pp-1-decrease-T").onclick = decreaseInput;
-document.querySelector("#lsm-cmpct-pp-1-increase-E").onclick = increaseInput;
-document.querySelector("#lsm-cmpct-pp-1-decrease-E").onclick = decreaseInput;
-document.querySelector("#lsm-cmpct-pp-1-increase-N").onclick = increaseInput;
-document.querySelector("#lsm-cmpct-pp-1-decrease-N").onclick = decreaseInput;
-document.querySelector("#lsm-cmpct-pp-1-increase-M").onclick = increaseInput;
-document.querySelector("#lsm-cmpct-pp-1-decrease-M").onclick = decreaseInput;
-document.querySelector("#lsm-cmpct-pp-1-increase-P").onclick = increaseInput;
-document.querySelector("#lsm-cmpct-pp-1-decrease-P").onclick = decreaseInput;
-document.querySelector("#lsm-cmpct-pp-1-increase-bpk").onclick = increaseInput;
-document.querySelector("#lsm-cmpct-pp-1-decrease-bpk").onclick = decreaseInput;
-//document.querySelector("#lsm-cmpct-pp-1-increase-s").onclick = increaseInput;
-//document.querySelector("#lsm-cmpct-pp-1-decrease-s").onclick = decreaseInput;
-//document.querySelector("#lsm-cmpct-pp-1-increase-mu").onclick = increaseInput;
-//document.querySelector("#lsm-cmpct-pp-1-decrease-mu").onclick = decreaseInput;
-document.querySelector("#lsm-cmpct-pp-1-increase-phi").onclick = increaseInput;
-document.querySelector("#lsm-cmpct-pp-1-decrease-phi").onclick = decreaseInput;
-document.querySelector("#lsm-cmpct-pp-1-increase-Deletes").onclick = increaseInput;
-document.querySelector("#lsm-cmpct-pp-1-decrease-Deletes").onclick = decreaseInput;
-document.querySelector("#lsm-cmpct-pp-1-increase-DPT").onclick = increaseInput;
-document.querySelector("#lsm-cmpct-pp-1-decrease-DPT").onclick = decreaseInput;
-document.querySelector("#lsm-cmpct-pp-2-increase-T").onclick = increaseInput;
-document.querySelector("#lsm-cmpct-pp-2-decrease-T").onclick = decreaseInput;
-document.querySelector("#lsm-cmpct-pp-2-increase-E").onclick = increaseInput;
-document.querySelector("#lsm-cmpct-pp-2-decrease-E").onclick = decreaseInput;
-document.querySelector("#lsm-cmpct-pp-2-increase-N").onclick = increaseInput;
-document.querySelector("#lsm-cmpct-pp-2-decrease-N").onclick = decreaseInput;
-document.querySelector("#lsm-cmpct-pp-2-increase-M").onclick = increaseInput;
-document.querySelector("#lsm-cmpct-pp-2-decrease-M").onclick = decreaseInput;
-document.querySelector("#lsm-cmpct-pp-2-increase-P").onclick = increaseInput;
-document.querySelector("#lsm-cmpct-pp-2-decrease-P").onclick = decreaseInput;
-document.querySelector("#lsm-cmpct-pp-2-increase-bpk").onclick = increaseInput;
-document.querySelector("#lsm-cmpct-pp-2-decrease-bpk").onclick = decreaseInput;
-//document.querySelector("#lsm-cmpct-pp-2-increase-s").onclick = increaseInput;
-//document.querySelector("#lsm-cmpct-pp-2-decrease-s").onclick = decreaseInput;
-//document.querySelector("#lsm-cmpct-pp-2-increase-mu").onclick = increaseInput;
-//document.querySelector("#lsm-cmpct-pp-2-decrease-mu").onclick = decreaseInput;
-document.querySelector("#lsm-cmpct-pp-2-increase-phi").onclick = increaseInput;
-document.querySelector("#lsm-cmpct-pp-2-decrease-phi").onclick = decreaseInput;
-document.querySelector("#lsm-cmpct-pp-2-increase-Deletes").onclick = increaseInput;
-document.querySelector("#lsm-cmpct-pp-2-decrease-Deletes").onclick = decreaseInput;
-document.querySelector("#lsm-cmpct-pp-2-increase-DPT").onclick = increaseInput;
-document.querySelector("#lsm-cmpct-pp-2-decrease-DPT").onclick = decreaseInput;
-document.querySelector("#lsm-cmpct-pp-3-increase-T").onclick = increaseInput;
-document.querySelector("#lsm-cmpct-pp-3-decrease-T").onclick = decreaseInput;
-document.querySelector("#lsm-cmpct-pp-3-increase-E").onclick = increaseInput;
-document.querySelector("#lsm-cmpct-pp-3-decrease-E").onclick = decreaseInput;
-document.querySelector("#lsm-cmpct-pp-3-increase-N").onclick = increaseInput;
-document.querySelector("#lsm-cmpct-pp-3-decrease-N").onclick = decreaseInput;
-document.querySelector("#lsm-cmpct-pp-3-increase-M").onclick = increaseInput;
-document.querySelector("#lsm-cmpct-pp-3-decrease-M").onclick = decreaseInput;
-
-document.querySelector("#lsm-cmpct-pp-3-increase-P").onclick = increaseInput;
-document.querySelector("#lsm-cmpct-pp-3-decrease-P").onclick = decreaseInput;
-document.querySelector("#lsm-cmpct-pp-3-increase-bpk").onclick = increaseInput;
-document.querySelector("#lsm-cmpct-pp-3-decrease-bpk").onclick = decreaseInput;
-//document.querySelector("#lsm-cmpct-pp-3-increase-s").onclick = increaseInput;
-//document.querySelector("#lsm-cmpct-pp-3-decrease-s").onclick = decreaseInput;
-//document.querySelector("#lsm-cmpct-pp-3-increase-mu").onclick = increaseInput;
-//document.querySelector("#lsm-cmpct-pp-3-decrease-mu").onclick = decreaseInput;
-document.querySelector("#lsm-cmpct-pp-3-increase-phi").onclick = increaseInput;
-document.querySelector("#lsm-cmpct-pp-3-decrease-phi").onclick = decreaseInput;
-document.querySelector("#lsm-cmpct-pp-3-increase-Deletes").onclick = increaseInput;
-document.querySelector("#lsm-cmpct-pp-3-decrease-Deletes").onclick = decreaseInput;
-document.querySelector("#lsm-cmpct-pp-3-increase-DPT").onclick = increaseInput;
-document.querySelector("#lsm-cmpct-pp-3-decrease-DPT").onclick = decreaseInput;
+document.querySelector("#cmp-decrease-DPT").onclick = decreaseInput;
+document.querySelector("#cmp-increase-1-DPT").onclick = increaseInput;
+document.querySelector("#cmp-decrease-1-DPT").onclick = decreaseInput;
+document.querySelector("#cmp-increase-2-DPT").onclick = increaseInput;
+document.querySelector("#cmp-decrease-2-DPT").onclick = decreaseInput;
+document.querySelector("#cmp-increase-3-DPT").onclick = increaseInput;
+document.querySelector("#cmp-decrease-3-DPT").onclick = decreaseInput;
 
 document.querySelector("#autoplay-button").onclick = startPlaying;
 
@@ -3174,88 +3158,7 @@ document.querySelector("#cmp-input-DPT").onwheel = runCmp;
 document.querySelector("#cmp-select-M").onchange = runCmp;
 document.querySelector("#cmp-select-E").onchange = runCmp;
 document.querySelector("#cmp-select-P").onchange = runCmp;
-document.querySelector("#cmp-bg-merging").onchange = runCmp;
-document.querySelector("#cmp-threshold").onchange = runCmp;
-//document.querySelector("#granularity-input").onchange = runCmp;
-//document.querySelector("#adjustable-progress-bar").onchange = runCmp;
-// document.querySelector("#cmp-rlsm3-tiering").onclick = runCmp;
-// Individual LSM analysis event trigger
-document.querySelector("#lsm-cmpct-pp-1-input-T").onchange = runIndiv;
-document.querySelector("#lsm-cmpct-pp-1-input-T").onwheel = runIndiv;
-document.querySelector("#lsm-cmpct-pp-1-input-E").onchange = runIndiv;
-document.querySelector("#lsm-cmpct-pp-1-input-E").onwheel = runIndiv;
-document.querySelector("#lsm-cmpct-pp-1-input-N").onchange = runIndiv;
-document.querySelector("#lsm-cmpct-pp-1-input-N").onwheel = runIndiv;
-document.querySelector("#lsm-cmpct-pp-1-input-M").onchange = runIndiv;
-document.querySelector("#lsm-cmpct-pp-1-input-M").onwheel = runIndiv;
-document.querySelector("#lsm-cmpct-pp-1-input-P").onchange = runIndiv;
-document.querySelector("#lsm-cmpct-pp-1-input-P").onwheel = runIndiv;
-document.querySelector("#lsm-cmpct-pp-1-input-bpk").onchange = runIndiv;
-document.querySelector("#lsm-cmpct-pp-1-input-bpk").onwheel = runIndiv;
-//document.querySelector("#lsm-cmpct-pp-1-input-s").onchange = runIndiv;
-//document.querySelector("#lsm-cmpct-pp-1-input-s").onwheel = runIndiv;
-//document.querySelector("#lsm-cmpct-pp-1-input-mu").onchange = runIndiv;
-//document.querySelector("#lsm-cmpct-pp-1-input-mu").onwheel = runIndiv;
-document.querySelector("#lsm-cmpct-pp-1-input-phi").onchange = runIndiv;
-document.querySelector("#lsm-cmpct-pp-1-input-phi").onwheel = runIndiv;
-document.querySelector("#lsm-cmpct-pp-1-input-Deletes").onchange = runIndiv;
-document.querySelector("#lsm-cmpct-pp-1-input-Deletes").onwheel = runIndiv;
-document.querySelector("#lsm-cmpct-pp-1-input-DPT").onchange = runIndiv;
-document.querySelector("#lsm-cmpct-pp-1-input-DPT").onwheel = runIndiv;
 
-document.querySelector("#lsm-cmpct-pp-1-select-M").onchange = runIndiv;
-document.querySelector("#lsm-cmpct-pp-1-select-E").onchange = runIndiv;
-document.querySelector("#lsm-cmpct-pp-1-select-P").onchange = runIndiv;
-document.querySelector("#lsm-cmpct-pp-2-input-T").onchange = runIndiv
-document.querySelector("#lsm-cmpct-pp-2-input-T").onwheel = runIndiv;
-document.querySelector("#lsm-cmpct-pp-2-input-E").onchange = runIndiv;
-document.querySelector("#lsm-cmpct-pp-2-input-E").onwheel = runIndiv;
-document.querySelector("#lsm-cmpct-pp-2-input-N").onchange = runIndiv;
-document.querySelector("#lsm-cmpct-pp-2-input-N").onwheel = runIndiv;
-document.querySelector("#lsm-cmpct-pp-2-input-M").onchange = runIndiv;
-document.querySelector("#lsm-cmpct-pp-2-input-M").onwheel = runIndiv;
-
-document.querySelector("#lsm-cmpct-pp-2-input-P").onchange = runIndiv;
-document.querySelector("#lsm-cmpct-pp-2-input-P").onwheel = runIndiv;
-document.querySelector("#lsm-cmpct-pp-2-input-bpk").onchange = runIndiv;
-document.querySelector("#lsm-cmpct-pp-2-input-bpk").onwheel = runIndiv;
-//document.querySelector("#lsm-cmpct-pp-2-input-s").onchange = runIndiv;
-//document.querySelector("#lsm-cmpct-pp-2-input-s").onwheel = runIndiv;
-//document.querySelector("#lsm-cmpct-pp-2-input-mu").onchange = runIndiv;
-//document.querySelector("#lsm-cmpct-pp-2-input-mu").onwheel = runIndiv;
-document.querySelector("#lsm-cmpct-pp-2-input-phi").onchange = runIndiv;
-document.querySelector("#lsm-cmpct-pp-2-input-phi").onwheel = runIndiv;
-
-document.querySelector("#lsm-cmpct-pp-2-select-M").onchange = runIndiv;
-document.querySelector("#lsm-cmpct-pp-2-select-E").onchange = runIndiv;
-document.querySelector("#lsm-cmpct-pp-2-select-P").onchange = runIndiv;
-document.querySelector("#lsm-cmpct-pp-2-threshold").onchange = runIndiv;
-document.querySelector("#lsm-cmpct-pp-3-input-T").onchange = runIndiv
-document.querySelector("#lsm-cmpct-pp-3-input-T").onwheel = runIndiv;
-document.querySelector("#lsm-cmpct-pp-3-input-E").onchange = runIndiv;
-document.querySelector("#lsm-cmpct-pp-3-input-E").onwheel = runIndiv;
-document.querySelector("#lsm-cmpct-pp-3-input-N").onchange = runIndiv;
-document.querySelector("#lsm-cmpct-pp-3-input-N").onwheel = runIndiv;
-document.querySelector("#lsm-cmpct-pp-3-input-M").onchange = runIndiv;
-document.querySelector("#lsm-cmpct-pp-3-input-M").onwheel = runIndiv;
-
-document.querySelector("#lsm-cmpct-pp-3-input-P").onchange = runIndiv;
-document.querySelector("#lsm-cmpct-pp-3-input-P").onwheel = runIndiv;
-document.querySelector("#lsm-cmpct-pp-3-input-bpk").onchange = runIndiv;
-document.querySelector("#lsm-cmpct-pp-3-input-bpk").onwheel = runIndiv;
-//document.querySelector("#lsm-cmpct-pp-3-input-s").onchange = runIndiv;
-//document.querySelector("#lsm-cmpct-pp-3-input-s").onwheel = runIndiv;
-//document.querySelector("#lsm-cmpct-pp-3-input-mu").onchange = runIndiv;
-//document.querySelector("#lsm-cmpct-pp-3-input-mu").onwheel = runIndiv;
-document.querySelector("#lsm-cmpct-pp-3-input-phi").onchange = runIndiv;
-document.querySelector("#lsm-cmpct-pp-3-input-phi").onwheel = runIndiv;
-document.querySelector("#lsm-cmpct-pp-3-input-Deletes").onchange = runIndiv;
-document.querySelector("#lsm-cmpct-pp-3-input-Deletes").onwheel = runIndiv;
-document.querySelector("#lsm-cmpct-pp-3-input-DPT").onchange = runIndiv;
-document.querySelector("#lsm-cmpct-pp-3-input-DPT").onwheel = runIndiv;
-document.querySelector("#lsm-cmpct-pp-3-select-M").onchange = runIndiv;
-document.querySelector("#lsm-cmpct-pp-3-select-E").onchange = runIndiv;
-document.querySelector("#lsm-cmpct-pp-3-select-P").onchange = runIndiv;
 
 document.querySelector("#show-stats-btn").onclick = function(){
   $("#show-stats-btn").hide();

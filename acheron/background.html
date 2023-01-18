@@ -5,7 +5,7 @@
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>LSM-Tree Compaction Visualization</title>
+	<title>Acheron : Persisting Deletes in LSM Engines</title>
 	<!-- Bootswatch CSS based on Bootstrao -->
 	<!-- Theme: http://bootswatch.com/flatly/ -->
 	<link rel="stylesheet" href="css/bootstrap.min.css">
@@ -37,7 +37,7 @@
 	<header id="page-top">
 		<nav class="navbar navbar-expand-lg navbar-dark navbar-fixed-top bg-dark fixed-top">
 			<div class="container">
-				<a class="navbar-brand" href="#page-top">FADE<span class="sr-only">(current)</span></a></a>
+				<a class="navbar-brand" href="#page-top">Acheron<span class="sr-only">(current)</span></a></a>
 				<button id="navbarToggle" class="navbar-toggler" type="button" data-toggle="collapse"
 					data-target="#collapsable-nav" aria-controls="collapsable-nav" aria-expanded="false"
 					aria-label="Toggle navigation">
@@ -93,7 +93,7 @@
                 </div>
                 <div class="rcorners-3" style="background-color:8288B4">
                         <a href="research.html#problem"><span class="rcorners-click"></span></a>
-                        <div class="rcorners-text-3"><a href="research.html" style="text-decoration:none; color: rgba(255, 255, 255, 0.88)">FADE&nbsp;</a>
+                        <div class="rcorners-text-3"><a href="research.html" style="text-decoration:none; color: rgba(255, 255, 255, 0.88)">Acheron&nbsp;</a>
             			</div>
             			<img class="img-responsive img-left" src="./img/animation.gif" alt="" width="40px" />
                       </div>
@@ -102,45 +102,55 @@
 	<section id="problem" style="padding-top:100px">
 		<div class="container">
 			<div class="row section-title text-center">
-				<h2> What is Compactionary and Why do we need it? </h2>
+				<!-- <h2> What is Acheron and Why do we need it? </h2> -->
+        	<h2> What is Acheron? </h2>
 			</div>
       <div class="row">
         <p>
           <img class="img-responsive img-centered" src="./img/compactionary-lsm-everywhere.png" alt="" align="left" width=20% style="margin-left:10%;margin-right:10%" />
-
-    				<i><b>Compactionary</b></i> is a dictionary for Log-structured merge (LSM)
-compactions, that helps to visualize the implications of compactions
-on performance for different workloads and LSM tunings. LSM trees offer efficient ingestion by appending incoming data, and thus, are widely used as the storage layer of production NoSQL data stores.
-              To enable competitive read performance, LSM-trees periodically re-organize data to form a tree with levels of exponentially increasing capacity, through iterative compactions.
-              However, <b> the LSM compaction design space is vast, largely unexplored, and has not been formally defined in the literature. </b>
+          <b>Acheron</b> is a web-based system that demonstrates the performance implications of <i>out-of-place</i> deletes in Log-structured merge (LSM) trees through visualizing the life cycle of tombstones.
+          LSM trees are frequently employed as core data structures in modern NoSQL storage engines because they offer
+high ingestion rate and low latency for query processing. In LSM trees, incoming entries
+are batched in an in-memory write buffer, and once the buffer
+is full, it is flushed to storage as an immutable sorted run. When the
+number of accumulated similar-sized runs exceeds a pre-defined threshold, they are merge-sorted to form a larger immutable run.
           </p>
     		</div>
-
       <hr >
       <div class="row">
         <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 mt-3"  >
           <div class="row section-title text-center" style="border-width:5px;border-radius: 20px;
     border-style:dotted;">
-    				<h3> What are the design choices of the compaction? </h3>
+    				<h3> New Privacy Regulations </h3>
     			</div>
         </div>
         <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 mt-3">
           <div class="row section-title text-center" style="border-width:5px;border-radius: 20px;
     border-style:dotted;">
-    				<h3> How does the compaction affect performance?</h3>
+    				<h3> Performance</h3>
     			</div>
         </div>
       </div>
-      <div class="row text-center">
-        <img class="img-responsive img-centered" src="./img/compactionary-problem.png" alt="" width=70% style="margin-left:15%;margin-right:10%" />
+      <div class="row text-center" style="margin-top:-30px">
+        <img class="img-responsive img-centered" src="./img/lethe-demo-1.png" alt="" width=100% />
       </div>
 			<div class="row">
 				<div>
           <br>
           <p>
-            In this demo, we present <b>the design space of LSM-compactions, and animate the compaction process for various compaction strategies </b>.
-            Audiences are able to see how each compaction strategy behaves for a certain workload and compare their performance in terms of different metrics.
-            Users can also create their own compaction policy with specifying the number of tiering levels and the number of leveling levels.
+            As LSM trees employ the <i>out-of-place</i> paradigm , obsolete
+data cannot be removed instantly and may be retained in LSM trees
+for an arbitrarily long time.
+            Obsolete data may on the one hand, violate data privacy regulations (e.g.,
+<i>the right to be forgotten</i> in EU’s GDPR, <i>right to delete</i> in California’s
+CCPA and CPRA), and on the other hand, it hurts performance.
+            In Acheron, users can observe that
+the state of the art does not provide guarantees on when obsolete
+entries can be physically removed, and also observe that <a href="https://dl.acm.org/doi/abs/10.1145/3318464.3389757">FADE</a>
+can achieve timely persistent deletes without full tree compaction.
+            Users can further customize the workload, LSM tuning knobs,
+and disk parameters to investigate the impact of different factors
+on tombstones and the performance.
           </p>
 				</div>
 			</div>
@@ -151,29 +161,24 @@ on performance for different workloads and LSM tunings. LSM trees offer efficien
 	<section class="bg-light">
 		<div class="container">
 			<div class="row section-title text-center">
-				<h2> LSM Background </h2>
+				<h2> Deletes in LSM </h2>
 			</div>
 
       <div class="row">
         <p>
-          <img class="img-responsive img-centered" src="./img/lsm-basics.png" alt="" style="margin:0 10px" align="right" width=41%>
-          LSM-trees buffer incoming inserts, updates, and deletes (i.e., ingestion, in general) within main memory.
-            Once the memory buffer becomes full, the entries contained are sorted on the key and the buffer is flushed to the disk-component of the tree.
-            For an LSM-tree with L levels, we assume that its first level (Level 0) is an in-memory buffer and the remaining levels (Level 1 to L − 1) are disk-resident.
-            On disk, each Level i (i > 1) has a capacity that is larger than that of Level i − 1 by a factor of T , where T is the size ratio of the tree.
+          Every delete operation is
+implemented by inserting a <i>tombstone</i>, as shown in the following Figure. Within
+the memory buffer, a tombstone eagerly deletes any older matching
+entries, and it is maintained to invalidate further matching entries
+in the tree. When the memory buffer is full, all the entries (including
+tombstones) in the buffer are flushed to disk as a file with a tagged
+time stamp. As more data is ingested, this file will be involved in
+compactions, during which older entries with the same key will be
+<i>physically</i> discarded.
         </p>
-      </div>
-
-      <div class="row text-center" style="margin:20px 0">
-        <h3>Leveling and Tiering</h3>
-        <p> <img class="img-responsive img-centered" src="./img/full-partial-compaction.png"  style="margin:0 10px" alt="" align="left" width="50%" />
-          Classically, LSM-trees support two merging policies: leveling and tiering. In leveling, each level may have at most one run, and every time a run in Level i − 1 (i ≥ 1) is moved to Level i, it is greedily sort-merged with the run from Level i, if it exists.
-          With tiering, every level must accumulate T runs before they are sort-merged.
-            Recently hybrid compaction policies (e.g., the hybrid compaction as follows) fuse leveling and tiering in a single tree to strike a balance between the read and write throughput based on workload specifications.
-        To amortize data movement, and thus, avoid latency spikes, state-of-the-art LSM-engines organize data into smaller files, and perform compactions at the granularity of files instead of levels.
-          If Level i grows beyond a threshold, a compaction is triggered and one file (or a subset of files) from Level i is chosen to be compacted with files from Level i + 1 that have an overlapping key-range.
-          This process is known as <b>partial compaction</b>.
-          </p>
+        <br>
+        <img class="img-responsive img-centered" src="./img/intro.png" alt="" width="1000px">
+        <br>
       </div>
 
 		</div>
@@ -182,63 +187,42 @@ on performance for different workloads and LSM tunings. LSM trees offer efficien
   <section id="research" style="margin:0 10px">
     <div class="container">
       <div class="row text-center">
-        <h2> Compaction Designing Space: Four Primitives </h2>
-      </div>
-      <div class="row text-center">
-        <div>
-          <p> We introduce a set of four design primitives that can formally define any compaction strategy: (i) the compaction trigger, (ii) the data
-    layout, (iii) the compaction granularity, and (iv) the data movement policy. </p>
-        </div>
-
+        <h2> FADE : FAst DEletes </h2>
       </div>
       <div class="row">
-        <table class="table table-striped table-bordered">
-    <thead>
-      <tr>
-        <th scope="col">Dimension</th>
-        <th scope="col">Explanation</th>
-        <th scope="col">Sample Options</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <th scope="row"><strong>Data Layout</strong></th>
-        <td><b>How</b> to organize the data on device?</td>
-        <td>Leveling/Tiering/1-Leveling/Hybrid</td>
-      </tr>
-      <tr>
-        <th scope="row"><strong>Compaction granularity</strong></th>
-        <td><b>How much</b> data to move at-a-time?</td>
-        <td>Level/Sorted run/Sorted file(s)</td>
-      </tr>
-      <tr>
-        <th scope="row"><strong>Data movement policy</strong></th>
-        <td><b>Which</b> block of data to be moved?</td>
-        <td>Round-robin/Least overlap/Oldest/Coldest</td>
-      </tr>
-      <tr>
-        <th scope="row"><strong>Trigger</strong></th>
-        <td><b>When</b> to re-organize the data layout?</td>
-          <td>Level saturation/#Sorted runs/Timestamp/Space amplification</td>
-      </tr>
-    </tbody>
-  </table>
-      <div class="row text-center">
-        <div>
-          <p> The above four design primitives provide a structured decomposition of arbitrary compaction strategies.
-        This allows us to create the taxonomy of the universe of LSM compaction strategies, including all the classical as well as new ones.
-        For example, AsterixDB has a <strong>leveled</strong>-based LSM-tree <i>(data layout)</i> that compacts <strong>whole levels</strong> at a time <i>(granularity)</i> once a <strong>level reaches a nominal size</strong> <i>(trigger)</i>.
-        This design does not implement partial compactions, and thus it does not need a data movement policy.
-      </p>
-        <p>
-        A more complex example is RocksDB which applies <strong>1-leveling</strong> (tiering for level 1 and leveling for others) <i>(data layout)</i> and compactions are performed at the
-granularity of <strong>one or more files</strong> <i>(granularity)</i> according to <strong>the level saturation, file staleness and spalce amplification </strong> <i>(trigger)</i>. RocksDB supports various <i>data movement policy</i> including <strong>Least Overlapping, Coldest, Oldest and Tombstone Density</strong>.
-</p>
-        <p>To demonstrate the operational flow of a family of state-of-the-art LSM compaction strategies, we introduce <i><b>Compactionary</b></i>. In our demo, users can better understand how each compaction happens through the compaction animation, and they can also examine the internal trade-off across different metrics (e.g., ingest, point lookup and range lookup). </p>
-        </div>
-
-      </div>
-    </div>
+                <div class="col-lg-12">
+                    <p> To enable timely persistent deletes, in <a href="https://dl.acm.org/doi/abs/10.1145/3318464.3389757">prior work</a>, we introduced
+<b>FADE</b>, a new family of delete-aware compaction policies. FADE
+(short for <i>FAst DEletes</i>) piggybacks the task of timely delete persistence
+to the LSM-tree’s compaction routine while retaining the
+LSM tree’s benefit of amortized merging cost and predictable performance.
+Acheron taps into the key design of FADE and presents
+an interactive framework highlighting how one can navigate the
+performance-privacy trade-off between the delete persistence and a
+target performance.
+                    </p>
+                    <br>
+                </div>
+            </div>
+            <div class="col-lg-12 text-center">
+                      <img class="img-responsive img-centered" src="./img/effacingcompaction.png" alt="" width="850px">
+                  </div>
+                  <div class="row">
+                      <div class="col-lg-12">
+                          <br>
+                          <p> Note that, this compaction trigger is completely orthogonal
+                              to the saturation-based trigger, and is driven
+                              by the <i>age of the oldest tombstone contained in a
+                              file</i>. This way, FADE ensures timely delete
+                              persistence, and by removing the invalidated entries
+                              timely and persistently from the tree, FADE also
+                              improves the overall performance of the storage
+                              engine in presence of deletes. The figure above shows
+                              step-wise how FADE guarantees timely delete persistence
+                              by setting earlier deadlines for future compaction jobs.
+                          </p>
+                      </div>
+                  </div>
     </div>
 
 	</section>
