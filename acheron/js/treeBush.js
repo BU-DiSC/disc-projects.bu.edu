@@ -240,81 +240,79 @@ class RocksDBLSM {
         if (i >= 3 && i < tree_structure.length - 2) continue;
         if (tree_structure.length >= 5 && i == tree_structure.length - 2) {
           var btn_group = document.createElement("div")
-          btn_group.setAttribute("class", `row lsm-btn-group`);
-          btn_group.appendChild(createDots(client_width - width));
-          btn_list.push(btn_group);
-          continue;
+          btn_group.setAttribute("class", `row lsm-btn-group`)
+          btn_group.appendChild(createDots(client_width - width))
+          btn_list.push(btn_group)
+          continue
         }
         if (tree_structure[i].length > 0) {
           var btn_group = document.createElement("div")
-          btn_group.setAttribute("class", `row lsm-btn-group`);
+          btn_group.setAttribute("class", `row lsm-btn-group`)
           if (i < 3 || (tree_structure[i].length <= Math.pow(rocksdb_lsm_data.T, 2) - 1 &&
             i == tree_structure.length - 1)) {
             if (i == tree_structure.length - 1) {
               // draw all buttons without next level files
               for (var j = 0; j < tree_structure[i].length; j++){
                 var btn = createBtn(width, rocksdb_lsm_data.entries_per_file,
-                  tree_structure[i][j], [], local_time, dpt);
-                btn_group.appendChild(btn);
+                  tree_structure[i][j], [], local_time, dpt)
+                btn_group.appendChild(btn)
               }
             } else {
               // draw all buttons with next-level files in the last level
               for (var j = 0; j < tree_structure[i].length; j++){
                 var btn = createBtn(width, rocksdb_lsm_data.entries_per_file,
-                  tree_structure[i][j], tree_structure[i+1], local_time, dpt);
-                btn_group.appendChild(btn);
+                  tree_structure[i][j], tree_structure[i+1], local_time, dpt)
+                btn_group.appendChild(btn)
               }
             }
           } else if (i == tree_structure.length - 1) {
-            var tmp_width = 0;
+            var tmp_width = 0
             // draw a few buttons, dots and the last button in the last level
             for (var j = 0; j < Math.min(Math.pow(rocksdb_lsm_data.T, 2) - 1, 4); j++){
               var btn = createBtn(width, rocksdb_lsm_data.entries_per_file,
-                tree_structure[i][j], [], local_time, dpt);
-              btn_group.appendChild(btn);
-              tmp_width += parseFloat(btn.style['width']);
+                tree_structure[i][j], [], local_time, dpt)
+              btn_group.appendChild(btn)
+              tmp_width += parseFloat(btn.style['width'])
             }
             var last_btn = createBtn(width, rocksdb_lsm_data.entries_per_file,
               tree_structure[i][tree_structure[i].length - 1], [],
-              local_time, dpt);
-            tmp_width += parseFloat(last_btn.style['width']);
-            var dots = createDots(client_width - tmp_width - width);
-            btn_group.appendChild(dots);
-            btn_group.appendChild(last_btn);
+              local_time, dpt)
+            tmp_width += parseFloat(last_btn.style['width'])
+            var dots = createDots(client_width - tmp_width - width)
+            btn_group.appendChild(dots)
+            btn_group.appendChild(last_btn)
           }
-          btn_list.push(btn_group);
+          btn_list.push(btn_group)
         } else if (i < 3) {
           btn_list.push(createBtn(
             Math.min(client_width*0.85, Math.pow(width, i+1)*0.8),
             rocksdb_lsm_data.entries_per_file, null, [],
-            local_time, dpt, true));
+            local_time, dpt, true))
         }
       }
       // TBD (Zichen):
       // determine if not-shown status should appear in cumulativeData
-      return btn_list;
+      return btn_list
     }
-    var parent = document.querySelector(`#${this.suffix}-bush`);
+    var parent = document.querySelector(`#${this.suffix}-bush`)
 
-    var client_width = Math.ceil(parent.clientWidth * 0.9) - 1;
-    var btn_list = [];
-    var tree_structure;
-    var local_time;
-    var compaction_start_level = -1;
-    var rendering_nodes = new Map();
+    var client_width = Math.ceil(parent.clientWidth * 0.9) - 1
+    var btn_list = []
+    var tree_structure = []
+    var local_time = -1
+    var compaction_start_level = -1
+    var rendering_nodes = new Map()
     // level -> [[node idx1, node idx2, ..., node idxn],
     //        [style_map1, style_mape2, ..., style_mapN]]
     if (!document.getElementById("switch-for-update-granularity").checked) {
       if (this.progress_percentage >= this.cumulativeData.length) return;
-      if (this.cumulativeData[this.progress_percentage]
-        .hasOwnProperty('sync_point')) return;
-      clear(parent);
+
       if (this.cumulativeData[this.progress_percentage]
         .hasOwnProperty('picked_file_idx')) {
-        tree_structure = this.cumulativeData[this.progress_percentage - 1][1];
-        local_time = this.cumulativeData[this.progress_percentage - 1][0];
-        var picking_file_info = this.cumulativeData[this.progress_percentage];
-        compaction_start_level = picking_file_info['output_level'] - 1;
+        tree_structure = this.cumulativeData[this.progress_percentage - 1][1]
+        local_time = this.cumulativeData[this.progress_percentage - 1][0]
+        var picking_file_info = this.cumulativeData[this.progress_percentage]
+        compaction_start_level = picking_file_info['output_level'] - 1
         rendering_nodes.clear();
         if (compaction_start_level <= 2) {
           rendering_nodes[compaction_start_level] = [new Array(), new Array()];
@@ -342,70 +340,88 @@ class RocksDBLSM {
 
       } else if (this.cumulativeData[this.progress_percentage].
         hasOwnProperty('new_file_start_idx')) {
-        tree_structure = this.cumulativeData[this.progress_percentage + 1][1];
-        local_time = this.cumulativeData[this.progress_percentage + 1][0];
-        var new_files_info = this.cumulativeData[this.progress_percentage];
-        rendering_nodes.clear();
+        tree_structure = this.cumulativeData[this.progress_percentage + 1][1]
+        local_time = this.cumulativeData[this.progress_percentage + 1][0]
+        var new_files_info = this.cumulativeData[this.progress_percentage]
+        rendering_nodes.clear()
         if (new_files_info['output_level'] <= 2 ||
           (new_files_info['output_level'] == tree_structure.length - 1)) {
           rendering_nodes[new_files_info['output_level']] =
-            [new Array(), new Array()];
+            [new Array(), new Array()]
           for(var t = new_files_info['new_file_start_idx'];
             t < new_files_info['new_file_end_idx']; t++){
 
-            rendering_nodes[new_files_info['output_level']][0].push(t);
+            rendering_nodes[new_files_info['output_level']][0].push(t)
             rendering_nodes[new_files_info['output_level']][1].push(new Map([
               ['border-style','solid'],
               ['border-width','thick'],
               ['border-color','#33FF33']
-            ]));
+            ]))
           }
         }
+      } else if (this.cumulativeData[this.progress_percentage]
+        .hasOwnProperty('sync_point')) {
+          for (var i = this.progress_percentage - 1; i >= 0; i--){
+            if (!this.cumulativeData[i].hasOwnProperty('sync_point')) {
+              tree_structure = this.cumulativeData[i][1]
+              local_time = this.cumulativeData[i][0]
+              break
+            }
+          }
       } else {
-        tree_structure = this.cumulativeData[this.progress_percentage][1];
-        local_time = this.cumulativeData[this.progress_percentage][0];
+        tree_structure = this.cumulativeData[this.progress_percentage][1]
+        local_time = this.cumulativeData[this.progress_percentage][0]
       }
     } else {
       if (this.progress_percentage == 0) {
-        clear(parent);
-        tree_structure = this.cumulativeData[this.progress_percentage][1];
-        local_time = this.cumulativeData[this.progress_percentage][0];
+        tree_structure = this.cumulativeData[this.progress_percentage][1]
+        local_time = this.cumulativeData[this.progress_percentage][0]
       } else {
         for (var i = 1; i < this.cumulativeData.length; i++){
           if (this.cumulativeData[i].hasOwnProperty('sync_point')) {
             if (this.cumulativeData[i]['sync_point'] ==
               this.progress_percentage - 1) {
-                clear(parent);
-                tree_structure = this.cumulativeData[i-1][1];
-                local_time = this.cumulativeData[i-1][0];
-                break;
+                tree_structure = this.cumulativeData[i-1][1]
+                local_time = this.cumulativeData[i-1][0]
+                break
             }
           }
         }
       }
     }
-
-
+    if (local_time == -1) {
+      // cannot find tree structure to draw
+      return
+    }
+    clear(parent)
     btn_list = getBtns(client_width, this, tree_structure,
-      local_time, this.DPT);
+      local_time, this.DPT)
     for (var i = 0; i < btn_list.length; i++) {
       var div_wrap = document.createElement("div")
-      div_wrap.setAttribute("class", `row`);
-      div_wrap.appendChild(btn_list[i]);
+      div_wrap.setAttribute("class", `row`)
+      div_wrap.appendChild(btn_list[i])
       if (!(i == 3 && btn_list.length == 5)) {
         if (rendering_nodes.hasOwnProperty(i)) {
-          var childNodes = btn_list[i].childNodes;
+          var childNodes = btn_list[i].childNodes
           for(var j = 0; j < rendering_nodes[i][0].length; j++){
-            var btn_idx = rendering_nodes[i][0][j];
+            var btn_idx = rendering_nodes[i][0][j]
             if (i != btn_list.length - 1 || btn_idx <= 2){
               for (const [key, value] of rendering_nodes[i][1][j]) {
-                childNodes[btn_idx].style[key] = value;
+                childNodes[btn_idx].style[key] = value
               }
             }
           }
         }
 
-        if (i == compaction_start_level) {
+        if (i == compaction_start_level &&
+          (i <= 3)) {
+          div_wrap.appendChild(createGlowBulb())
+        } else {
+          div_wrap.appendChild(createDarkBulb())
+        }
+      } else {
+        if (compaction_start_level >= 3 &&
+          compaction_start_level < tree_structure.length - 2) {
           div_wrap.appendChild(createGlowBulb())
         } else {
           div_wrap.appendChild(createDarkBulb())
@@ -429,69 +445,66 @@ class RocksDBLSM {
   }
 
   showCost() {
-    var cumulativeMetaTmp = {};
-    var sync_point_idx = 0;
-    if (this.progress_percentage == 0) return;
+    var cumulativeMetaTmp = {}
+    var sync_point_idx = 0
+    if (this.progress_percentage == 0) return
     if (!document.getElementById("switch-for-update-granularity").checked) {
-      if (this.progress_percentage >= this.cumulativeData.length) return;
-      var found_sync_point = false;
+      if (this.progress_percentage >= this.cumulativeData.length) return
+      var found_sync_point = false
       for (var i = this.progress_percentage; i >= 0; i--) {
-        if (this.cumulativeData[this.progress_percentage]
-          .hasOwnProperty('sync_point')) {
-          found_sync_point = true;
-          sync_point_idx = this.cumulativeData[this.progress_percentage][
-            'sync_point'
-          ];
-          cumulativeMetaTmp = this.cumulativeMeta[sync_point_idx];
-          break;
+        if (this.cumulativeData[i].hasOwnProperty('sync_point')) {
+          found_sync_point = true
+          sync_point_idx = this.cumulativeData[i]['sync_point']
+          cumulativeMetaTmp = this.cumulativeMeta[sync_point_idx]
+          break
         }
       }
-      if (!found_sync_point) return;
+      if (!found_sync_point) return
     } else {
-      if (this.progress_percentage >= this.cumulativeMeta.length + 1) return;
-      sync_point_idx = this.progress_percentage - 1;
-      cumulativeMetaTmp = this.cumulativeMeta[this.progress_percentage - 1];
+      if (this.progress_percentage >= this.cumulativeMeta.length + 1) return
+      sync_point_idx = this.progress_percentage - 1
+      cumulativeMetaTmp = this.cumulativeMeta[this.progress_percentage - 1]
     }
 
     document.querySelector(`#${this.suffix}-num-deletes`)
-      .textContent = cumulativeMetaTmp["num_deletes"];
+      .textContent = cumulativeMetaTmp["num_deletes"]
     document.querySelector(`#${this.suffix}-num-existing-tombstones`)
-      .textContent = cumulativeMetaTmp["num_existing_tombstones"];
+      .textContent = cumulativeMetaTmp["num_existing_tombstones"]
     document.querySelector(`#${this.suffix}-num-expired-tombstones`)
-      .textContent = cumulativeMetaTmp["num_expired_tombstones"];
+      .textContent = cumulativeMetaTmp["num_expired_tombstones"]
     document.querySelector(`#${this.suffix}-max-obsolete-age`)
-      .textContent = (cumulativeMetaTmp["max_obsolete_age"]/1000).toFixed(2) + " s";
+      .textContent = (cumulativeMetaTmp["max_obsolete_age"]/1000).toFixed(2) + " s"
     document.querySelector(`#${this.suffix}-num-compaction`)
-      .textContent = cumulativeMetaTmp["num_compactions"];
+      .textContent = cumulativeMetaTmp["num_compactions"]
     if (cumulativeMetaTmp["num_compactions"] == 0) {
       document.querySelector(`#${this.suffix}-compaction-size`)
-        .textContent = "0 Bytes";
+        .textContent = "0 Bytes"
       document.querySelector(`#${this.suffix}-compaction-latency`)
-        .textContent = 0;
+        .textContent = 0
     } else {
       document.querySelector(`#${this.suffix}-compaction-size`)
         .textContent = this.formatBytes(cumulativeMetaTmp["total_cmpct_size"]
-          /cumulativeMetaTmp["num_compactions"]*this.P, 2);
+          /cumulativeMetaTmp["num_compactions"]*this.P, 2)
       document.querySelector(`#${this.suffix}-compaction-latency`)
         .textContent = (cumulativeMetaTmp["total_cmpct_lat"]
-          /cumulativeMetaTmp["num_compactions"]).toFixed(2) + " ms";
+          /cumulativeMetaTmp["num_compactions"]).toFixed(2) + " ms"
     }
 
     document.querySelector(`#${this.suffix}-tail-compaction-latency`)
-      .textContent = cumulativeMetaTmp["max_cmpct_lat"].toFixed(2) + " ms";
+      .textContent = cumulativeMetaTmp["max_cmpct_lat"].toFixed(2) + " ms"
     document.querySelector(`#${this.suffix}-ingestion-cost`)
       .textContent = ((cumulativeMetaTmp["total_cmpct_lat"] +
       cumulativeMetaTmp["total_flush_lat"])*1000/(
         (sync_point_idx + 1)*this.M/this.E
-      )).toFixed(2) + " \u03BCs";
+      )).toFixed(2) + " \u03BCs"
     document.querySelector(`#${this.suffix}-write-amp`)
       .textContent = (cumulativeMetaTmp["total_write"]*this.P/(
         (sync_point_idx + 1)*this.M
-      )).toFixed(2);
+      )).toFixed(2)
     document.querySelector(`#${this.suffix}-storage-cost`)
-      .textContent = this.formatBytes(cumulativeMetaTmp["storage_space"], 3);
+      .textContent = this.formatBytes(cumulativeMetaTmp["storage_space"], 3)
     document.querySelector(`#${this.suffix}-mem-cost`)
-      .textContent = this.formatBytes(cumulativeMetaTmp["memory_footprint"], 3);
+      .textContent = this.formatBytes(cumulativeMetaTmp["memory_footprint"], 3)
   }
 
   showDefaultCost() {
@@ -522,25 +535,22 @@ class RocksDBLSM {
   }
   updatePlotData() {
     var cumulativeMetaTmp = {};
-    var sync_point_idx = 0;
-    if (this.progress_percentage == 0) return;
+    var sync_point_idx = 0
+    if (this.progress_percentage == 0) return
     if (!document.getElementById("switch-for-update-granularity").checked) {
       if (this.progress_percentage >= this.cumulativeData.length) return;
-      var found_sync_point = false;
+      var found_sync_point = false
       for (var i = this.progress_percentage; i >= 0; i--) {
-        if (this.cumulativeData[this.progress_percentage]
-          .hasOwnProperty('sync_point')) {
-          found_sync_point = true;
-          sync_point_idx = this.cumulativeData[this.progress_percentage][
-            'sync_point'
-          ];
-          break;
+        if (this.cumulativeData[i].hasOwnProperty('sync_point')) {
+          found_sync_point = true
+          sync_point_idx = this.cumulativeData[i]['sync_point']
+          break
         }
       }
-      if (!found_sync_point) return;
+      if (!found_sync_point) return
     } else {
-      if (this.progress_percentage >= this.cumulativeMeta.length + 1) return;
-      sync_point_idx = this.progress_percentage - 1;
+      if (this.progress_percentage >= this.cumulativeMeta.length + 1) return
+      sync_point_idx = this.progress_percentage - 1
     }
 
     for(let i = 0; i < plotted_metrics.length; i++){
@@ -819,7 +829,7 @@ class RocksDBLSM {
         var output_level = 1;
         var new_tree_structure;
         while(true){
-          found_expired_file = false;
+          found_expired_file = false
           new_tree_structure = structuredClone(last_tree_structure);
           if (output_level == 1) {
             picked_file_idx = 0;
@@ -1107,33 +1117,6 @@ class RocksDBLSM {
             this.cumulativeData.push([
               tmp_time + curr_time,
               new_tree_structure]);
-            if (new_tree_structure[output_level].length <=
-              Math.pow(this.T, output_level)) {
-              if (this.picking_policy == 1 && new_tree_structure.length > 2) {
-                var base_level_wise_dpt = this.DPT*(this.T-1)/
-                  (Math.pow(this.T, new_tree_structure.length-2) - 1);
-                var dpt_curr_level;
-                for (var lvl = new_tree_structure.length - 2; lvl >= 1 ; lvl--) {
-                  dpt_curr_level = base_level_wise_dpt*Math.pow(this.T, lvl-1);
-                  for (var k = 0; k < new_tree_structure[lvl].length; k++) {
-                    if (new_tree_structure[lvl][k].oldest_tombstone_timestamp <
-                      curr_time + tmp_time - dpt_curr_level) {
-                        output_level = lvl + 1;
-                        found_expired_file = true;
-                        break;
-                    }
-                  }
-                  if (found_expired_file) {
-                    break;
-                  }
-                }
-                if (!found_expired_file) {
-                  break;
-                }
-              } else {
-                break;
-              }
-            }
 
           } else if (output_level == last_tree_structure.length) {
             // clear tombstones in the last level
@@ -1155,7 +1138,7 @@ class RocksDBLSM {
             cumulativeMetaTmp["max_cmpct_lat"] = Math.max(
               cumulativeMetaTmp["max_cmpct_lat"], tmp_time_cmpct
             );
-            tmp_time = tmp_time_cmpct;
+            tmp_time += tmp_time_cmpct;
             new_tree_structure.push([picked_file]);
             this.cumulativeData.push({
               "picked_file_idx":picked_file_idx,
@@ -1170,72 +1153,115 @@ class RocksDBLSM {
             });
             this.cumulativeData.push(
               [tmp_time + curr_time, new_tree_structure]);
-            break;
+            //break;
           } else {
             break;
           }
+
+          if (new_tree_structure[output_level].length <=
+            Math.pow(this.T, output_level)) {
+
+            if (this.picking_policy == 1 && new_tree_structure.length > 2) {
+              var base_level_wise_dpt = this.DPT*(this.T-1)/
+                (Math.pow(this.T, new_tree_structure.length-2) - 1);
+              var dpt_curr_level = this.DPT;
+              for (var lvl = new_tree_structure.length - 2; lvl >= 1 ; lvl--) {
+
+                for (var k = 0; k < new_tree_structure[lvl].length; k++) {
+                  if (new_tree_structure[lvl][k].oldest_tombstone_timestamp <
+                    curr_time + tmp_time - dpt_curr_level) {
+                      output_level = lvl + 1
+                      found_expired_file = true
+                      break
+                  }
+                }
+                dpt_curr_level = dpt_curr_level -
+                  base_level_wise_dpt*Math.pow(this.T, lvl-1)
+                if (found_expired_file) {
+                  // at least found one expired file, no need to check other
+                  // files, break the for loop to initiate the next compaction
+                  break
+                }
+              }
+              if (!found_expired_file) {
+                // not found expired files, stop the compaction to output level
+                break
+              }
+            } else {
+              // picking policy does not enforce additional timstamp-based
+              // check or 2-level does not have any out-dated tombstone
+              break;
+            }
+          }
           last_tree_structure = new_tree_structure;
           if (!found_expired_file) {
+            // continue the compaction to next output level from nominal
+            // capacity-based compaction
             output_level++;
           }
+          // continue the compaction with specified output level
+        }
+      }
+
+
+
+      // collect meta data
+      var tmp_num_existing_tombstones = 0
+      var tmp_num_expired_tombstones = 0
+      var tmp_max_obsolete_age = 0
+      var expired_time = curr_time + tmp_time - this.DPT
+      var tmp_storage_cost = 0
+      var tmp_num_entries_per_file = 0
+      var tmp_mem_cost = 0
+      if (new_tree_structure == undefined) {
+        new_tree_structure = last_tree_structure
+      }
+      for (var lvl = 1; lvl < new_tree_structure.length; lvl++) {
+        for (var k = 0; k < new_tree_structure[lvl].length; k++) {
+          if (new_tree_structure[lvl][k].tombstones.size > 0) {
+            tmp_num_existing_tombstones +=
+              new_tree_structure[lvl][k].tombstones.size
+            if (expired_time >
+              new_tree_structure[lvl][k].oldest_tombstone_timestamp) {
+              for (const tmp_timestamp of
+                new_tree_structure[lvl][k].tombstones.values()) {
+                if (expired_time >= tmp_timestamp) {
+                  tmp_num_expired_tombstones += 1
+                }
+              }
+            }
+            tmp_max_obsolete_age = Math.max(tmp_max_obsolete_age,
+              curr_time + tmp_time - new_tree_structure[lvl][k].oldest_tombstone_timestamp)
+          }
+          tmp_num_entries_per_file =
+            new_tree_structure[lvl][k].tombstones.size +
+            new_tree_structure[lvl][k].entries.length
+          tmp_storage_cost += tmp_num_entries_per_file*this.E*scale_factor
+          // BFs
+          tmp_storage_cost += tmp_num_entries_per_file*scale_factor*this.bpk/8
+          // Indexes (4 bytes as offset)
+          tmp_storage_cost += tmp_num_entries_per_file*this.E*scale_factor/this.P*(this.KeySize + 4)
+          tmp_mem_cost += tmp_num_entries_per_file*scale_factor*this.bpk/8
+          tmp_mem_cost += tmp_num_entries_per_file*this.E*scale_factor/this.P*(this.KeySize + 4)
+
         }
       }
 
       // we do not visualize concurrent flushes and compactions.
       // If flush_interval is less than the flush+recursive compactions, forcely
       // put off flushing
-      curr_time += Math.max(tmp_time, flush_interval);
-      this.cumulativeData.push({"sync_point":sync_point_idx});
+      // curr_time += Math.max(tmp_time, flush_interval)
+      curr_time += tmp_time
+      this.cumulativeData.push({"sync_point":sync_point_idx})
 
-      // collect meta data
-      var tmp_num_existing_tombstones = 0;
-      var tmp_num_expired_tombstones = 0;
-      var tmp_max_obsolete_age = 0;
-      var expired_time = curr_time - this.DPT;
-      var tmp_storage_cost = 0;
-      var tmp_num_entries_per_file = 0;
-      var tmp_mem_cost = 0;
-      if (new_tree_structure == undefined) {
-        new_tree_structure = last_tree_structure;
-      }
-      for (var lvl = 0; lvl < new_tree_structure.length; lvl++) {
-        for (var k = 0; k < new_tree_structure[lvl].length; k++) {
-          if (new_tree_structure[lvl][k].tombstones.size > 0) {
-            tmp_num_existing_tombstones +=
-              new_tree_structure[lvl][k].tombstones.size;
-            if (expired_time >
-              new_tree_structure[lvl][k].oldest_tombstone_timestamp) {
-              for (const tmp_timestamp of
-                new_tree_structure[lvl][k].tombstones.values()) {
-                if (expired_time >= tmp_timestamp) {
-                  tmp_num_expired_tombstones += 1;
-                }
-              }
-            }
-            tmp_max_obsolete_age = Math.max(tmp_max_obsolete_age,
-              curr_time - new_tree_structure[lvl][k].oldest_tombstone_timestamp);
-          }
-          tmp_num_entries_per_file =
-            new_tree_structure[lvl][k].tombstones.size +
-            new_tree_structure[lvl][k].entries.length;
-          tmp_storage_cost += tmp_num_entries_per_file*this.E*scale_factor;
-          // BFs
-          tmp_storage_cost += tmp_num_entries_per_file*scale_factor*this.bpk/8;
-          // Indexes (4 bytes as offset)
-          tmp_storage_cost += tmp_num_entries_per_file*this.E*scale_factor/this.P*(this.KeySize + 4);
-          tmp_mem_cost += tmp_num_entries_per_file*scale_factor*this.bpk/8;
-          tmp_mem_cost += tmp_num_entries_per_file*this.E*scale_factor/this.P*(this.KeySize + 4);
-
-        }
-      }
-      cumulativeMetaTmp["max_obsolete_age"] = tmp_max_obsolete_age;
+      cumulativeMetaTmp["max_obsolete_age"] = tmp_max_obsolete_age
       cumulativeMetaTmp["num_existing_tombstones"] =
-        tmp_num_existing_tombstones;
-      cumulativeMetaTmp["max_obsolete_age"] = tmp_max_obsolete_age;
-      cumulativeMetaTmp["num_expired_tombstones"] = tmp_num_expired_tombstones;
-      cumulativeMetaTmp["storage_space"] = tmp_storage_cost;
-      cumulativeMetaTmp["memory_footprint"] = tmp_mem_cost;
-      this.cumulativeMeta.push(structuredClone(cumulativeMetaTmp));
+        tmp_num_existing_tombstones
+      cumulativeMetaTmp["max_obsolete_age"] = tmp_max_obsolete_age
+      cumulativeMetaTmp["num_expired_tombstones"] = tmp_num_expired_tombstones
+      cumulativeMetaTmp["storage_space"] = tmp_storage_cost
+      cumulativeMetaTmp["memory_footprint"] = tmp_mem_cost
+      this.cumulativeMeta.push(structuredClone(cumulativeMetaTmp))
       sync_point_idx++;
       if (end == global_workload_array[workload_idx].length) break;
       i = end;
@@ -1443,18 +1469,26 @@ function display() {
 }
 
 function changeProgressBar(slider, newVal) {
-	slider.setValue(newVal);
+	slider.setValue(newVal)
 }
 
 function runPlots(){
   if($("#show-plot-btn").offsetWidth <= 0 || $("#show-plot-btn").offsetHeight <= 0){
-    return;
+    return
   }
-  var p_width = $("#num_deletes_plot").width()*0.9;
+  var p_width = $("#num_deletes_plot").width()*0.9
+  var title_template = {
+    text:'Plot Title',
+    font: {
+      //family: 'Courier New, monospace',
+      size: 15
+    },
+  }
+  title_template.text = "#Deletes"
   var layout={
       height:p_width,
       width:p_width,
-      title: "#Deletes",
+      title: title_template,
       margin: {
           l: 33,
           r: 0,
@@ -1474,74 +1508,74 @@ function runPlots(){
   //   },
   // },
       hovermode: false,
-  };
+  }
 
   Plotly.newPlot('num_deletes_plot',
     traces_for_plots["num_deletes"],
-    layout, {displayModeBar: false});
+    layout, {displayModeBar: false})
 
   //layout.title = "#Existing tombstones - Flushed Data";
-  layout.title = "#Tombstones";
+  title_template.text = "#Tombstones"
   Plotly.newPlot('num_existing_tombstones_plot',
     traces_for_plots["num_existing_tombstones"],
-    layout, {displayModeBar: false});
+    layout, {displayModeBar: false})
 
   //layout.title = "#Expired tombstones - Flushed Data";
-  layout.title = "#Expired tombstones";
+  title_template.text = "#Expired tombstones"
   Plotly.newPlot('num_expired_tombstones_plot',
     traces_for_plots["num_expired_tombstones"],
-    layout, {displayModeBar: false});
+    layout, {displayModeBar: false})
 
   //layout.title = "Max Obsolete Age (s) - Flushed Data";
-  layout.title = "Age of oldest tombstones";
+  title_template.text = "Age of oldest tombstones"
   Plotly.newPlot('max_obsolete_age_plot',
     traces_for_plots["max_obsolete_age"],
-    layout, {displayModeBar: false});
+    layout, {displayModeBar: false})
 
   //layout.title = "#compactions - Flushed Data";
-  layout.title = "#Compactions";
+  title_template.text = "#Compactions"
   Plotly.newPlot('num_compactions_plot',
     traces_for_plots["num_compactions"],
-    layout, {displayModeBar: false});
+    layout, {displayModeBar: false})
 
   //layout.title = "Avg Cmpct Size (MB) - Flushed Data";
-  layout.title = "Avg Cmpct Size (MB)";
+  title_template.text = "Avg Cmpct Size (MB)"
   Plotly.newPlot('avg_cmpct_size_plot',
     traces_for_plots["avg_cmpct_size"],
-    layout, {displayModeBar: false});
+    layout, {displayModeBar: false})
 
   //layout.title = "Avg Cmpct Lat. (s) - Flushed Data";
-  layout.title = "Avg Cmpct Lat. (s)";
+  title_template.text = "Avg Cmpct Lat. (s)"
   Plotly.newPlot('avg_cmpct_lat_plot',
     traces_for_plots["avg_cmpct_lat"],
-    layout, {displayModeBar: false});
+    layout, {displayModeBar: false})
 
   //layout.title = "Wc Cmpct Lat. (s) - Flushed Data";
-  layout.title = "Wc Cmpct Lat. (s)";
+  title_template.text = "Wc Cmpct Lat. (s)"
   Plotly.newPlot('wc_cmpct_lat_plot',
     traces_for_plots["wc_compaction_lat"],
-    layout, {displayModeBar: false});
+    layout, {displayModeBar: false})
 
   //layout.title = "Ingest Cost (I/Os) - Flushed Data";
-  layout.title = "Ingest (I/Os)";
+  title_template.text = "Ingest (I/Os)"
   Plotly.newPlot('ingest_cost_plot',
     traces_for_plots["avg_ingest_cost"],
-    layout, {displayModeBar: false});
+    layout, {displayModeBar: false})
 
-  layout.title = "Write Amp";
+  title_template.text = "Write Amp"
   Plotly.newPlot('write_amp_plot',
     traces_for_plots["write_amp"],
-    layout, {displayModeBar: false});
+    layout, {displayModeBar: false})
 
-  layout.title = "Stroage Space (GB)";
+  title_template.text = "Storage Space (GB)"
   Plotly.newPlot('storage_space_plot',
     traces_for_plots["storage_space"],
-    layout, {displayModeBar: false});
+    layout, {displayModeBar: false})
 
-  layout.title = "Memory Footprint (MB)";
+  title_template.text = "Memory Footprint (MB)"
   Plotly.newPlot('memory_footprint_plot',
     traces_for_plots["memory_footprint"],
-    layout, {displayModeBar: false});
+    layout, {displayModeBar: false})
 
 }
 
@@ -1675,31 +1709,34 @@ function runCmp() {
             ) + 1;
 
             if (this.id == "switch-for-update-granularity") {
-              var old_progress_val = window.progressSlider.getValue();
-              var next_progress_val = 0;
-              var index = old_progress_val;
+              var old_progress_val = window.progressSlider.getValue()
+              var next_progress_val = 0
+              var index = old_progress_val
               while (!lsmCmpctPP1.cumulativeData[index]
-                .hasOwnProperty('sync_point')) index++;
-              next_progress_val = lsmCmpctPP1.cumulativeData[index]["sync_point"];
-              index = old_progress_val;
+                .hasOwnProperty('sync_point')) index++
+              next_progress_val = lsmCmpctPP1.cumulativeData[index]["sync_point"]
+              index = old_progress_val
               while (!lsmCmpctPP2.cumulativeData[index]
-                .hasOwnProperty('sync_point')) index++;
+                .hasOwnProperty('sync_point')) index++
               next_progress_val = Math.min(next_progress_val,
-                lsmCmpctPP2.cumulativeData[index]["sync_point"]);
-              index = old_progress_val;
+                lsmCmpctPP2.cumulativeData[index]["sync_point"])
+              index = old_progress_val
               while (!lsmCmpctPP3.cumulativeData[index]
-                .hasOwnProperty('sync_point')) index++;
+                .hasOwnProperty('sync_point')) index++
               next_progress_val = Math.min(next_progress_val,
-                lsmCmpctPP3.cumulativeData[index]["sync_point"]);
+                lsmCmpctPP3.cumulativeData[index]["sync_point"])
+              window.progressSlider.setAttribute('max', maxVal - 1)
               changeProgressBar(window.progressSlider,
-                next_progress_val);
+                next_progress_val)
+            	document.getElementById("progress-percentage-label").innerHTML =
+                Math.floor(next_progress_val / (maxVal - 1) * 100) + "%"
               window.progressSlider.progress_percentage =
-                next_progress_val;
-              lsmCmpctPP1.progress_percentage = next_progress_val;
-              lsmCmpctPP2.progress_percentage = next_progress_val;
-              lsmCmpctPP3.progress_percentage = next_progress_val;
+                next_progress_val + 1
+              lsmCmpctPP1.progress_percentage = next_progress_val + 1
+              lsmCmpctPP2.progress_percentage = next_progress_val + 1
+              lsmCmpctPP3.progress_percentage = next_progress_val + 1
             }
-            window.progressSlider.setAttribute('max', maxVal - 1);
+
           } else {
             maxVal = Math.max(
                 lsmCmpctPP1.cumulativeData.length,
@@ -1750,6 +1787,8 @@ function runCmp() {
               }
               changeProgressBar(window.progressSlider,
                 index)
+              document.getElementById("progress-percentage-label").innerHTML =
+                Math.floor(index / (maxVal - 1) * 100) + "%"
               lsmCmpctPP1.progress_percentage = index
               lsmCmpctPP2.progress_percentage = index
               lsmCmpctPP3.progress_percentage = index
@@ -3064,9 +3103,13 @@ function stopMain() {
 }
 
 function stopAllIndiv() {
-	stopPlaying.call(document.querySelector("#lsm-cmpct-pp-1-autoplay-button"));
-	stopPlaying.call(document.querySelector("#lsm-cmpct-pp-2-autoplay-button"));
-	stopPlaying.call(document.querySelector("#lsm-cmpct-pp-3-autoplay-button"));
+
+	stopPlaying.call(document.querySelector("#lsm-cmpct-pp-1-autoplay-button"))
+	stopPlaying.call(document.querySelector("#lsm-cmpct-pp-2-autoplay-button"))
+	stopPlaying.call(document.querySelector("#lsm-cmpct-pp-3-autoplay-button"))
+  changeProgressBar(window.lsmCmpctPP1ProgressSlider, 0)
+  changeProgressBar(window.lsmCmpctPP2ProgressSlider, 0)
+  changeProgressBar(window.lsmCmpctPP3ProgressSlider, 0)
 }
 
 // var mySlider = new Slider("#cmp-threshold", {
@@ -3076,102 +3119,99 @@ function stopAllIndiv() {
 //     value: 5,
 //     precision: 20
 // });
-initPlot();
-initSlider();
-initCmp();
-initGradientBar();
+initPlot()
+initSlider()
+initCmp()
+initGradientBar()
 
 // Event attributes, trigger
 // Analysis mode selection trigger
-document.querySelector("#customRadio1").onclick = display;
-document.querySelector("#customRadio2").onclick = display;
+document.querySelector("#customRadio1").onclick = display
+document.querySelector("#customRadio2").onclick = display
 // Comparative LSM analysis event trigger
-document.querySelector("#cmp-increase-T").onclick = increaseInput;
-document.querySelector("#cmp-decrease-T").onclick = decreaseInput;
-document.querySelector("#cmp-increase-E").onclick = increaseInput;
-document.querySelector("#cmp-decrease-E").onclick = decreaseInput;
-document.querySelector("#cmp-increase-N").onclick = increaseInput;
-document.querySelector("#cmp-decrease-N").onclick = decreaseInput;
-document.querySelector("#cmp-increase-M").onclick = increaseInput;
-document.querySelector("#cmp-decrease-M").onclick = decreaseInput;
-document.querySelector("#cmp-increase-P").onclick = increaseInput;
-document.querySelector("#cmp-decrease-P").onclick = decreaseInput;
-document.querySelector("#cmp-increase-bpk").onclick = increaseInput;
-document.querySelector("#cmp-decrease-bpk").onclick = decreaseInput;
-//document.querySelector("#cmp-increase-s").onclick = increaseInput;
-//document.querySelector("#cmp-decrease-s").onclick = decreaseInput;
-//document.querySelector("#cmp-increase-mu").onclick = increaseInput;
-//ocument.querySelector("#cmp-decrease-mu").onclick = decreaseInput;
-document.querySelector("#cmp-increase-phi").onclick = increaseInput;
-document.querySelector("#cmp-decrease-phi").onclick = decreaseInput;
+document.querySelector("#cmp-increase-T").onclick = increaseInput
+document.querySelector("#cmp-decrease-T").onclick = decreaseInput
+document.querySelector("#cmp-increase-E").onclick = increaseInput
+document.querySelector("#cmp-decrease-E").onclick = decreaseInput
+document.querySelector("#cmp-increase-N").onclick = increaseInput
+document.querySelector("#cmp-decrease-N").onclick = decreaseInput
+document.querySelector("#cmp-increase-M").onclick = increaseInput
+document.querySelector("#cmp-decrease-M").onclick = decreaseInput
+document.querySelector("#cmp-increase-P").onclick = increaseInput
+document.querySelector("#cmp-decrease-P").onclick = decreaseInput
+document.querySelector("#cmp-increase-bpk").onclick = increaseInput
+document.querySelector("#cmp-decrease-bpk").onclick = decreaseInput
 
-document.querySelector("#cmp-increase-Deletes").onclick = increaseInput;
-document.querySelector("#cmp-decrease-Deletes").onclick = decreaseInput;
-document.querySelector("#cmp-increase-DPT").onclick = increaseInput;
-document.querySelector("#cmp-decrease-DPT").onclick = decreaseInput;
-document.querySelector("#cmp-decrease-DPT").onclick = decreaseInput;
-document.querySelector("#cmp-increase-1-DPT").onclick = increaseInput;
-document.querySelector("#cmp-decrease-1-DPT").onclick = decreaseInput;
-document.querySelector("#cmp-increase-2-DPT").onclick = increaseInput;
-document.querySelector("#cmp-decrease-2-DPT").onclick = decreaseInput;
-document.querySelector("#cmp-increase-3-DPT").onclick = increaseInput;
-document.querySelector("#cmp-decrease-3-DPT").onclick = decreaseInput;
+document.querySelector("#cmp-increase-mu").onclick = increaseInput
+document.querySelector("#cmp-decrease-mu").onclick = decreaseInput
+document.querySelector("#cmp-increase-phi").onclick = increaseInput
+document.querySelector("#cmp-decrease-phi").onclick = decreaseInput
 
-document.querySelector("#autoplay-button").onclick = startPlaying;
+document.querySelector("#cmp-increase-Deletes").onclick = increaseInput
+document.querySelector("#cmp-decrease-Deletes").onclick = decreaseInput
+document.querySelector("#cmp-increase-DPT").onclick = increaseInput
+document.querySelector("#cmp-decrease-DPT").onclick = decreaseInput
+document.querySelector("#cmp-decrease-DPT").onclick = decreaseInput
+document.querySelector("#cmp-increase-1-DPT").onclick = increaseInput
+document.querySelector("#cmp-decrease-1-DPT").onclick = decreaseInput
+document.querySelector("#cmp-increase-2-DPT").onclick = increaseInput
+document.querySelector("#cmp-decrease-2-DPT").onclick = decreaseInput
+document.querySelector("#cmp-increase-3-DPT").onclick = increaseInput
+document.querySelector("#cmp-decrease-3-DPT").onclick = decreaseInput
 
-document.querySelectorAll(".play-class").forEach((btn) => {btn.onclick = buttonChange;});
-document.querySelector("#stop-button").onclick = stopPlaying;
-document.querySelector("#finish-button").onclick = finishProgress;
-document.querySelector("#switch-for-update-granularity").onchange = runCmp;
-//document.querySelector("#granularity-increase").onclick = increaseInput;
-//document.querySelector("#granularity-decrease").onclick = decreaseInput;
-document.querySelector("#cmp-input-T").onchange = runCmp;
-document.querySelector("#cmp-input-T").onwheel = runCmp;
-document.querySelector("#cmp-input-E").onchange = runCmp;
-document.querySelector("#cmp-input-E").onwheel = runCmp;
-document.querySelector("#cmp-input-N").oninput = changeProgressCapacity;
-document.querySelector("#cmp-input-N").onwheel = changeProgressCapacity;
-document.querySelector("#adjustable-progress-bar").onchange = runCmp;
-document.querySelector("#adjustable-progress-bar").onclick = dragHandler;
-document.querySelector("#lsm-cmpct-pp-1-progress-bar").onchange = runCmp;
-document.querySelector("#lsm-cmpct-pp-2-progress-bar").onchange = runCmp;
-document.querySelector("#lsm-cmpct-pp-3-progress-bar").onchange = runCmp;
+document.querySelector("#autoplay-button").onclick = startPlaying
 
-document.querySelector("#cmp-input-M").onchange = runCmp;
+document.querySelectorAll(".play-class").forEach((btn) => {btn.onclick = buttonChange})
+document.querySelector("#stop-button").onclick = stopPlaying
+document.querySelector("#finish-button").onclick = finishProgress
+document.querySelector("#switch-for-update-granularity").onchange = runCmp
+
+document.querySelector("#cmp-input-T").onchange = runCmp
+document.querySelector("#cmp-input-T").onwheel = runCmp
+document.querySelector("#cmp-input-E").onchange = runCmp
+document.querySelector("#cmp-input-E").onwheel = runCmp
+document.querySelector("#cmp-input-N").oninput = changeProgressCapacity
+document.querySelector("#cmp-input-N").onwheel = changeProgressCapacity
+document.querySelector("#adjustable-progress-bar").onchange = runCmp
+document.querySelector("#adjustable-progress-bar").onclick = dragHandler
+document.querySelector("#lsm-cmpct-pp-1-progress-bar").onchange = runCmp
+document.querySelector("#lsm-cmpct-pp-2-progress-bar").onchange = runCmp
+document.querySelector("#lsm-cmpct-pp-3-progress-bar").onchange = runCmp
+
+document.querySelector("#cmp-input-M").onchange = runCmp
 document.querySelector("#cmp-input-M").onwheel = runCmp;
 
-document.querySelector("#cmp-input-P").onchange = runCmp;
-document.querySelector("#cmp-input-P").onwheel = runCmp;
-document.querySelector("#cmp-input-bpk").onchange = runCmp;
-document.querySelector("#cmp-input-bpk").onwheel = runCmp;
-//document.querySelector("#cmp-input-s").onchange = runCmp;
-//document.querySelector("#cmp-input-s").onwheel = runCmp;
-//document.querySelector("#cmp-input-mu").onchange = runCmp;
-//document.querySelector("#cmp-input-mu").onwheel = runCmp;
-document.querySelector("#cmp-input-phi").onchange = runCmp;
-document.querySelector("#cmp-input-phi").onwheel = runCmp;
-document.querySelector("#cmp-input-Deletes").onchange = runCmp;
-document.querySelector("#cmp-input-Deletes").onwheel = runCmp;
-document.querySelector("#cmp-input-DPT").onchange = runCmp;
-document.querySelector("#cmp-input-DPT").onwheel = runCmp;
+document.querySelector("#cmp-input-P").onchange = runCmp
+document.querySelector("#cmp-input-P").onwheel = runCmp
+document.querySelector("#cmp-input-bpk").onchange = runCmp
+document.querySelector("#cmp-input-bpk").onwheel = runCmp
 
-document.querySelector("#cmp-select-M").onchange = runCmp;
-document.querySelector("#cmp-select-E").onchange = runCmp;
-document.querySelector("#cmp-select-P").onchange = runCmp;
+document.querySelector("#cmp-input-mu").onchange = runCmp
+document.querySelector("#cmp-input-mu").onwheel = runCmp
+document.querySelector("#cmp-input-phi").onchange = runCmp
+document.querySelector("#cmp-input-phi").onwheel = runCmp
+document.querySelector("#cmp-input-Deletes").onchange = runCmp
+document.querySelector("#cmp-input-Deletes").onwheel = runCmp
+document.querySelector("#cmp-input-DPT").onchange = runCmp
+document.querySelector("#cmp-input-DPT").onwheel = runCmp
+
+document.querySelector("#cmp-select-M").onchange = runCmp
+document.querySelector("#cmp-select-E").onchange = runCmp
+document.querySelector("#cmp-select-P").onchange = runCmp
 
 
 document.querySelector("#show-stats-btn").onclick = function(){
-  $("#show-stats-btn").hide();
-  $("#cost-result").show();
-  $("#show-plot-btn").show();
-  $("#plot-result").hide();
-  runPlots();
+  $("#show-stats-btn").hide()
+  $("#cost-result").show()
+  $("#show-plot-btn").show()
+  $("#plot-result").hide()
+  runPlots()
 }
 document.querySelector("#show-plot-btn").onclick = function(){
-  $("#show-stats-btn").show();
-  $("#cost-result").hide();
-  $("#show-plot-btn").hide();
-  $("#plot-result").show();
-  runPlots();
+  $("#show-stats-btn").show()
+  $("#cost-result").hide()
+  $("#show-plot-btn").hide()
+  $("#plot-result").show()
+  runPlots()
 }
-});
+})
