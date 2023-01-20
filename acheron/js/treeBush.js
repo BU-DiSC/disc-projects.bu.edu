@@ -8,7 +8,7 @@ const rgb_gradients = [
 const flush_interval = 3000;
 const scaled_entries_per_file = 128;
 const name_table=["FADE", "MinOverlappingRatio", "Round-Robin"]
-const name_table2=["FADE (1)", "FADE (2)", "FADE (3)"]
+const name_table2=["FADE With DPT 1", "FADE With DPT 2", "FADE With DPT 3"]
 var traces_for_plots = {}
 var plotted_metrics = ["num_deletes", "num_existing_tombstones",
   "num_expired_tombstones", "max_obsolete_age", "num_compactions",
@@ -383,13 +383,16 @@ class RocksDBLSM {
               this.progress_percentage - 1) {
                 tree_structure = this.cumulativeData[i-1][1]
                 local_time = this.cumulativeData[i-1][0]
+                if (local_time == undefined) {
+                  console.log(i)
+                }
                 break
             }
           }
         }
       }
     }
-    if (local_time == -1) {
+    if (local_time == -1 || local_time == undefined) {
       // cannot find tree structure to draw
       return
     }
@@ -421,7 +424,7 @@ class RocksDBLSM {
         }
       } else {
         if (compaction_start_level >= 3 &&
-          compaction_start_level < tree_structure.length - 2) {
+          compaction_start_level < tree_structure.length - 1) {
           div_wrap.appendChild(createGlowBulb())
         } else {
           div_wrap.appendChild(createDarkBulb())
@@ -1103,20 +1106,20 @@ class RocksDBLSM {
               }
               cumulativeMetaTmp["total_write"] += tmp_size_cmpct;
               tmp_time_cmpct += tmp_size_cmpct*this.phi;
-              cumulativeMetaTmp["total_cmpct_lat"] += tmp_time_cmpct;
+              cumulativeMetaTmp["total_cmpct_lat"] += tmp_time_cmpct
               cumulativeMetaTmp["max_cmpct_lat"] = Math.max(
-                cumulativeMetaTmp["max_cmpct_lat"], tmp_time_cmpct);
+                cumulativeMetaTmp["max_cmpct_lat"], tmp_time_cmpct)
               this.cumulativeData.push({
                 "new_file_start_idx":insert_idx,
                 "new_file_end_idx":insert_idx + new_files.length,
                 "output_level":output_level
-              });
-              tmp_time += tmp_time_cmpct;
+              })
+              tmp_time += tmp_time_cmpct
             }
 
             this.cumulativeData.push([
               tmp_time + curr_time,
-              new_tree_structure]);
+              new_tree_structure])
 
           } else if (output_level == last_tree_structure.length) {
             // clear tombstones in the last level
@@ -1155,7 +1158,7 @@ class RocksDBLSM {
               [tmp_time + curr_time, new_tree_structure]);
             //break;
           } else {
-            break;
+            break
           }
 
           if (new_tree_structure[output_level].length <=
@@ -1166,7 +1169,6 @@ class RocksDBLSM {
                 (Math.pow(this.T, new_tree_structure.length-2) - 1);
               var dpt_curr_level = this.DPT;
               for (var lvl = new_tree_structure.length - 2; lvl >= 1 ; lvl--) {
-
                 for (var k = 0; k < new_tree_structure[lvl].length; k++) {
                   if (new_tree_structure[lvl][k].oldest_tombstone_timestamp <
                     curr_time + tmp_time - dpt_curr_level) {
@@ -1190,14 +1192,14 @@ class RocksDBLSM {
             } else {
               // picking policy does not enforce additional timstamp-based
               // check or 2-level does not have any out-dated tombstone
-              break;
+              break
             }
           }
           last_tree_structure = new_tree_structure;
           if (!found_expired_file) {
             // continue the compaction to next output level from nominal
             // capacity-based compaction
-            output_level++;
+            output_level++
           }
           // continue the compaction with specified output level
         }
@@ -2104,8 +2106,9 @@ function validate(self, target, input) {
     case `switch-for-update-granularity`:
       break;
     default:
+      break;
       //console.log(self.id);
-      alert(`Invalid: Unknown ${target} configuration input`);
+      //alert(`Invalid: Unknown ${target} configuration input`);
   }
     return;
 }
@@ -3194,6 +3197,13 @@ document.querySelector("#cmp-input-Deletes").onchange = runCmp
 document.querySelector("#cmp-input-Deletes").onwheel = runCmp
 document.querySelector("#cmp-input-DPT").onchange = runCmp
 document.querySelector("#cmp-input-DPT").onwheel = runCmp
+
+document.querySelector("#cmp-input-1-DPT").onchange = runCmp
+document.querySelector("#cmp-input-1-DPT").onwheel = runCmp
+document.querySelector("#cmp-input-2-DPT").onchange = runCmp
+document.querySelector("#cmp-input-2-DPT").onwheel = runCmp
+document.querySelector("#cmp-input-3-DPT").onchange = runCmp
+document.querySelector("#cmp-input-3-DPT").onwheel = runCmp
 
 document.querySelector("#cmp-select-M").onchange = runCmp
 document.querySelector("#cmp-select-E").onchange = runCmp
