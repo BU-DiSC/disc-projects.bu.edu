@@ -1441,6 +1441,7 @@ function display() {
               obj.picking_policy = parseInt(obj.suffix[obj.suffix.length - 1])
               obj.dpt_conf_prefix = ""
               obj.showDefaultCost()
+              obj.prepared_flag = false
             }
             $(`#shared-dpt-title`).show()
             $(`#shared-dpt-conf`).show()
@@ -1459,6 +1460,7 @@ function display() {
               obj.picking_policy = 1
               obj.dpt_conf_prefix = "-" + obj.suffix[obj.suffix.length - 1]
               obj.showDefaultCost()
+              obj.prepared_flag = false
             }
             $(`#shared-dpt-title`).hide()
             $(`#shared-dpt-conf`).hide()
