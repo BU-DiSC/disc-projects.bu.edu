@@ -16,6 +16,9 @@ var plotted_metrics = ["num_deletes", "num_existing_tombstones",
     "write_amp", "storage_space", "memory_footprint"]
 var default_value_for_metrics = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 var global_workload_array = [new Array(), new Array(),new Array(),new Array()];
+var global_workload_ready_array = [
+  false, false, false, false
+]
 var in_progress_flag = false;
 function intersection(x, y) {
   result = new Set();
@@ -80,28 +83,40 @@ class RocksDBLSM {
       this.picking_policy = picking_policy;
       this.dpt_conf_prefix = "";
       if(prefix) {
-          this.T = document.querySelector(`#${prefix}-input-T`).value;
+          this.T = document.querySelector(`#${prefix}-input-T`).value
+          setInput(`#${prefix}-input-T`)
           this.KeySize = convertToBytes(`#${prefix}-select-KeySize`,
-            document.querySelector(`#${prefix}-input-KeySize`).value);
+            document.querySelector(`#${prefix}-input-KeySize`).value)
+          setInput(`#${prefix}-input-KeySize`, `#${prefix}-select-KeySize`)
           this.E = convertToBytes(`#${prefix}-select-E`,
-            document.querySelector(`#${prefix}-input-E`).value);
-          this.N = document.querySelector(`#${prefix}-input-N`).value;
+            document.querySelector(`#${prefix}-input-E`).value)
+          setInput(`#${prefix}-input-E`, `#${prefix}-select-E`)
+          this.N = document.querySelector(`#${prefix}-input-N`).value
+          setInput(`#${prefix}-input-N`)
           this.M = convertToBytes(`#${prefix}-select-M`,
             document.querySelector(`#${prefix}-input-M`).value)
+          setInput(`#${prefix}-input-M`,`#${prefix}-select-M`)
           this.P = convertToBytes(`#${prefix}-select-P`,
             document.querySelector(`#${prefix}-input-P`).value)
+          setInput(`#${prefix}-input-P`,`#${prefix}-select-P`)
           this.bpk = parseFloat(
             document.querySelector(`#${prefix}-input-bpk`).value)
+          setInput(`#${prefix}-input-bpk`)
           //this.s = document.querySelector(`#${prefix}-input-s`).value;
           this.mu = convertToMilliSeconds(`#${prefix}-select-mu`,
             document.querySelector(`#${prefix}-input-mu`).value)
+          setInput(`#${prefix}-input-mu`,`#${prefix}-select-mu`)
           this.phi = convertToMilliSeconds(`#${prefix}-select-phi`,
             document.querySelector(`#${prefix}-input-phi`).value)
+          setInput(`#${prefix}-input-phi`,`#${prefix}-select-phi`)
           this.Deletes =
             document.querySelector(`#${prefix}-input-Deletes`).value
+          setInput(`#${prefix}-input-Deletes`)
           this.DPT = convertToMilliSeconds(
             `#${prefix}-select` + this.dpt_conf_prefix +`-DPT`,
             getInputValbyId(`#${prefix}-input` + this.dpt_conf_prefix + `-DPT`))
+          setInput(`#${prefix}-input` + this.dpt_conf_prefix + `-DPT`,
+            `#${prefix}-select` + this.dpt_conf_prefix +`-DPT`)
       } else {
           this.T = this.DEFAULT.T;
           this.E = this.DEFAULT.E;
@@ -149,23 +164,25 @@ class RocksDBLSM {
 
     var workload_idx = 0;
     if (prefix != "cmp"){
-      workload_idx =  parseInt(prefix.at(prefix.length - 1));
+      workload_idx =  parseInt(prefix.at(prefix.length - 1))
     }
 
-    var tmpE = convertToBytes(`#${prefix}-select-E`, document.querySelector(`#${prefix}-input-E`).value);
-    var tmpM = convertToBytes(`#${prefix}-select-M`, document.querySelector(`#${prefix}-input-M`).value);
-    var tmpNTotal = document.querySelector(`#${prefix}-input-N`).value;
-    var tmpNTotalApproximate = getApproximateScaleDownInserts(tmpNTotal, Math.round(tmpM/tmpE));
-    var tmpDeletes = document.querySelector(`#${prefix}-input-Deletes`).value;
+    var tmpE = convertToBytes(`#${prefix}-select-E`, document.querySelector(`#${prefix}-input-E`).value)
+    var tmpM = convertToBytes(`#${prefix}-select-M`, document.querySelector(`#${prefix}-input-M`).value)
+    var tmpNTotal = document.querySelector(`#${prefix}-input-N`).value
+    var tmpNTotalApproximate = getApproximateScaleDownInserts(tmpNTotal, Math.round(tmpM/tmpE))
+    var tmpDeletes = document.querySelector(`#${prefix}-input-Deletes`).value
 
-    if (tmpNTotalApproximate != this.NTotalApproximate || tmpDeletes != this.Deletes) {
-      this.E = tmpE;
-      this.M = tmpM;
-      this.NTotal = tmpNTotal;
-      this.NTotalApproximate = tmpNTotalApproximate;
-      this.Deletes = tmpDeletes;
-      genWorkload(this.NTotalApproximate, this.Deletes, workload_idx);
-      this.prepared_flag = false;
+    if ((tmpNTotalApproximate != this.NTotalApproximate || tmpDeletes != this.Deletes) &&
+      !global_workload_ready_array[workload_idx]) {
+      this.E = tmpE
+      this.M = tmpM
+      this.NTotal = tmpNTotal
+      this.NTotalApproximate = tmpNTotalApproximate
+      this.Deletes = tmpDeletes
+      genWorkload(this.NTotalApproximate, this.Deletes, workload_idx)
+      global_workload_ready_array[workload_idx] = true
+      this.prepared_flag = false
     }
 
     this.entries_per_file = Math.min(Math.round(this.M/this.E),
@@ -1280,31 +1297,31 @@ function progressAdvance() {
 	//console.log("runTime");
     const currentVal = window.progressSlider.getValue();
     if (!in_progress_flag) {
-         in_progress_flag = true;
+         in_progress_flag = true
         document.querySelector("#adjustable-progress-bar").dispatchEvent(new Event('change'));
     } else if (window.progressEventId && currentVal < window.progressSlider.getAttribute("max")) {
-	    //changeProgressBar(currentVal + 1);
-	    const newVal = currentVal  + 1;
-	    //window.progressSlider.setValue(newVal);
-	    changeProgressBar(window.progressSlider, newVal);
-		var event = new Event('change');
+	    //changeProgressBar(currentVal + 1)
+	    const newVal = currentVal  + 1
+	    //window.progressSlider.setValue(newVal)
+	    changeProgressBar(window.progressSlider, newVal)
+		var event = new Event('change')
 		// var input_elem = document.querySelector("#cmp-input-N");
-		var elem = document.querySelector("#adjustable-progress-bar");
-		elem.dispatchEvent(event);
-				//document.querySelector("#adjustable-progress-bar").onchange();
+		var elem = document.querySelector("#adjustable-progress-bar")
+		elem.dispatchEvent(event)
+				//document.querySelector("#adjustable-progress-bar").onchange()
     } else {
-		//console.log("Stttopppp", currentVal);
-        clearInterval(window.progressEventId);
+		//console.log("Stttopppp", currentVal)
+        clearInterval(window.progressEventId)
 	}
 }
 
 function initPlot(){
-  var local_name_table = name_table;
+  var local_name_table = name_table
   if (document.getElementById("customRadio2").checked) {
-    local_name_table = name_table2;
+    local_name_table = name_table2
   }
   for(let i = 0; i < plotted_metrics.length; i++){
-    traces_for_plots[plotted_metrics[i]] = [];
+    traces_for_plots[plotted_metrics[i]] = []
     for(let j = 0; j < 3; j++){
       traces_for_plots[plotted_metrics[i]].push({
         x: [],
@@ -1326,44 +1343,44 @@ function initPlot(){
  * when indiv-analysis being displayed
  */
 function initCmp() {
-  var lsmCmpctPP1 = new RocksDBLSM("cmp", "lsm-cmpct-pp-1", 1);
-  var lsmCmpctPP2 = new RocksDBLSM("cmp", "lsm-cmpct-pp-2", 2);
-  var lsmCmpctPP3 = new RocksDBLSM("cmp", "lsm-cmpct-pp-3", 3);
-  lsmCmpctPP1.showDefaultCost();
-  lsmCmpctPP2.showDefaultCost();
-  lsmCmpctPP3.showDefaultCost();
-  genWorkload(lsmCmpctPP1.NTotalApproximate, lsmCmpctPP1.Deletes, 0);
-  global_workload_array[1] = global_workload_array[0];
-  global_workload_array[2] = global_workload_array[0];
-  global_workload_array[3] = global_workload_array[0];
+  var lsmCmpctPP1 = new RocksDBLSM("cmp", "lsm-cmpct-pp-1", 1)
+  var lsmCmpctPP2 = new RocksDBLSM("cmp", "lsm-cmpct-pp-2", 2)
+  var lsmCmpctPP3 = new RocksDBLSM("cmp", "lsm-cmpct-pp-3", 3)
+  lsmCmpctPP1.showDefaultCost()
+  lsmCmpctPP2.showDefaultCost()
+  lsmCmpctPP3.showDefaultCost()
+  genWorkload(lsmCmpctPP1.NTotalApproximate, lsmCmpctPP1.Deletes, 0)
+  global_workload_array[1] = global_workload_array[0]
+  global_workload_array[2] = global_workload_array[0]
+  global_workload_array[3] = global_workload_array[0]
 
-  window.lsmCmpctPP1 = lsmCmpctPP1;     // pass to global
-  window.lsmCmpctPP2 = lsmCmpctPP2;
-  window.lsmCmpctPP3 = lsmCmpctPP3;
+  window.lsmCmpctPP1 = lsmCmpctPP1     // pass to global
+  window.lsmCmpctPP2 = lsmCmpctPP2
+  window.lsmCmpctPP3 = lsmCmpctPP3
 
   window.obj = {lsmCmpctPP1:window.lsmCmpctPP1,
       lsmCmpctPP2:window.lsmCmpctPP2,
-      lsmCmpctPP3:window.lsmCmpctPP3};
+      lsmCmpctPP3:window.lsmCmpctPP3}
 
-  window.lsmCmpctPP1.update("cmp");
-  window.lsmCmpctPP2.update("cmp");
-  window.lsmCmpctPP3.update("cmp");
+  window.lsmCmpctPP1.update("cmp")
+  window.lsmCmpctPP2.update("cmp")
+  window.lsmCmpctPP3.update("cmp")
 
-  window.lsmCmpctPP1.show();
-  window.lsmCmpctPP2.show();
-  window.lsmCmpctPP3.show();
+  window.lsmCmpctPP1.show()
+  window.lsmCmpctPP2.show()
+  window.lsmCmpctPP3.show()
 
-  window.lsmCmpctPP1.prepared_flag = false;
-  window.lsmCmpctPP2.prepared_flag = false;
-  window.lsmCmpctPP3.prepared_flag = false;
+  window.lsmCmpctPP1.prepared_flag = false
+  window.lsmCmpctPP2.prepared_flag = false
+  window.lsmCmpctPP3.prepared_flag = false
 
 
-	window.focusedTree = "default";
-	window.individualProgress = new Map();
-	window.individualProgress["lsmCmpctPP1"] = 0;
-	window.individualProgress["lsmCmpctPP2"] = 0;
-	window.individualProgress["lsmCmpctPP3"] = 0;
-	window.compProgress = 0;
+	window.focusedTree = "default"
+	window.individualProgress = new Map()
+	window.individualProgress["lsmCmpctPP1"] = 0
+	window.individualProgress["lsmCmpctPP2"] = 0
+	window.individualProgress["lsmCmpctPP3"] = 0
+	window.compProgress = 0
 }
 
 /* Initialize the gradient bar for tombstone age and
@@ -1648,36 +1665,26 @@ function sync_cumulative_data(cumulativeDataList) {
   }
 }
 
-function runCmp() {
-  if (this.id.startsWith("cmp-input") && in_progress_flag) {
-      clearInterval(window.progressEventId);
-      window.progressEventId = null;
-      $("#loader").show();
-
-      lsmCmpctPP1.prepared_flag = false;
-      lsmCmpctPP2.prepared_flag = false;
-      lsmCmpctPP3.prepared_flag = false;
-
-  }
+function runCmpInDetail(this_ref) {
 	//console.log("ID:", this.id);
-	var input_N = 0;
-  var maxVal = 100;
+	var input_N = 0
+  var maxVal = 100
 
-	if (this.id == "adjustable-progress-bar"){
+	if (this_ref.id == "adjustable-progress-bar"){
 		stopAllIndiv();
-		window.focusedTree = "default";
-		const newVal = window.progressSlider.getValue();
-		progress_percentage = newVal;
-    maxVal = window.progressSlider.getAttribute("max");
+		window.focusedTree = "default"
+		const newVal = window.progressSlider.getValue()
+		progress_percentage = newVal
+    maxVal = window.progressSlider.getAttribute("max")
 		const newPercentage = Math.floor(newVal / maxVal * 100);
-		document.getElementById("progress-percentage-label").innerHTML = newPercentage + "%";
+		document.getElementById("progress-percentage-label").innerHTML = newPercentage + "%"
 	} else if (["lsm-cmpct-pp-1-progress-bar", "lsm-cmpct-pp-2-progress-bar", "lsm-cmpct-pp-3-progress-bar"].indexOf(this.id) != -1){
-		switch (this.id) {
+		switch (this_ref.id) {
 			case "lsm-cmpct-pp-1-progress-bar":
 				window.focusedTree = "lsm-cmpct-pp-1"
 				break
 			case "lsm-cmpct-pp-2-progress-bar":
-				window.focusedTree = "lsm-cmpct-pp-2";
+				window.focusedTree = "lsm-cmpct-pp-2"
 				break
 			case "lsm-cmpct-pp-3-progress-bar":
 				window.focusedTree = "lsm-cmpct-pp-3"
@@ -1688,9 +1695,8 @@ function runCmp() {
 	}
 
   var target = "cmp"
-
   var input = getInput("cmp")
-  validate(this, target, input)
+  validate(this_ref, target, input)
 
   if (in_progress_flag) {
     switch (window.focusedTree) {
@@ -1712,7 +1718,7 @@ function runCmp() {
                     .cumulativeData[lsmCmpctPP3.cumulativeData.length - 1]["sync_point"],
             ) + 1;
 
-            if (this.id == "switch-for-update-granularity") {
+            if (this_ref.id == "switch-for-update-granularity") {
               var old_progress_val = window.progressSlider.getValue()
               var next_progress_val = 0
               var index = old_progress_val
@@ -1748,7 +1754,7 @@ function runCmp() {
                 lsmCmpctPP3.cumulativeData.length
             );
             window.progressSlider.setAttribute('max', maxVal - 1);
-            if (this.id == "switch-for-update-granularity") {
+            if (this_ref.id == "switch-for-update-granularity") {
               var old_progress_val = window.progressSlider.getValue();
               var index = 0;
               while(index < lsmCmpctPP1.cumulativeData.length &&
@@ -1761,19 +1767,19 @@ function runCmp() {
                 }
                 if (lsmCmpctPP1.cumulativeData[index]['sync_point']
                    < old_progress_val) {
-                  index++;
-                  continue;
+                  index++
+                  continue
                 }
 
                 if (!lsmCmpctPP1.cumulativeData[index]
                   .hasOwnProperty('sync_point')){
-                  index++;
-                  continue;
+                  index++
+                  continue
                 }
                 if (lsmCmpctPP2.cumulativeData[index]['sync_point']
                    < old_progress_val) {
-                  index++;
-                  continue;
+                  index++
+                  continue
                 }
 
                 if (!lsmCmpctPP3.cumulativeData[index]
@@ -1819,9 +1825,9 @@ function runCmp() {
 
         sync_cumulative_data([lsmCmpctPP1.cumulativeData,
         lsmCmpctPP2.cumulativeData,
-        lsmCmpctPP3.cumulativeData]);
-        lsmCmpctPP1.show();
-        break;
+        lsmCmpctPP3.cumulativeData])
+        lsmCmpctPP1.show()
+        break
     case "lsm-cmpct-pp-2":
         lsmCmpctPP2.update(target);
         if (document.getElementById("switch-for-update-granularity").checked) {
@@ -1830,12 +1836,12 @@ function runCmp() {
                     .cumulativeData[lsmCmpctPP2.cumulativeData.length - 1]["sync_point"]);
         } else {
             window.sliders["lsm-cmpct-pp-2"]
-                .setAttribute('max', lsmCmpctPP2.cumulativeData.length);
+                .setAttribute('max', lsmCmpctPP2.cumulativeData.length)
         }
         sync_cumulative_data([lsmCmpctPP1.cumulativeData,
         lsmCmpctPP2.cumulativeData,
-        lsmCmpctPP3.cumulativeData]);
-        lsmCmpctPP2.show();
+        lsmCmpctPP3.cumulativeData])
+        lsmCmpctPP2.show()
         break;
     case "lsm-cmpct-pp-3":
         lsmCmpctPP3.update(target);
@@ -1849,24 +1855,33 @@ function runCmp() {
         }
         sync_cumulative_data([lsmCmpctPP3.cumulativeData,
         lsmCmpctPP2.cumulativeData,
-        lsmCmpctPP3.cumulativeData]);
-        lsmCmpctPP3.show();
-        break;
+        lsmCmpctPP3.cumulativeData])
+        lsmCmpctPP3.show()
+        break
+    }
+
+    runPlots()
+    if (this_ref.id.startsWith("cmp-input")) {
+        const id = setInterval(progressAdvance, 400)
+        window.progressEventId = id
+    }
+    $("#loader").hide()
   }
 
-  runPlots()
+
 }
 
 
-    if (in_progress_flag) {
-        $("#loader").hide();
-        if (this.id.startsWith("cmp-input")) {
-            const id = setInterval(progressAdvance, 400);
-            window.progressEventId = id;
-        }
-    }
-
-
+function runCmp() {
+  if (this.id.startsWith("cmp-input") && in_progress_flag) {
+      clearInterval(window.progressEventId)
+      window.progressEventId = null
+      $("#loader").show()
+      lsmCmpctPP1.prepared_flag = false
+      lsmCmpctPP2.prepared_flag = false
+      lsmCmpctPP3.prepared_flag = false
+  }
+  setTimeout(runCmpInDetail, 10, this)
 }
 
 /* General API for runing different tree bush
@@ -1876,116 +1891,130 @@ function runCmp() {
 /* Validate and correct the input */
 function validate(self, target, input) {
     // T >= 2, N, E > 1, M > 1
+    var workload_idx = 0;
+    if (target != "cmp"){
+      workload_idx =  parseInt(target.at(target.length - 1))
+    }
     switch (self.id) {
         case `${target}-input-T`:
             self.prepared_flag = false;
             if (input.T < 2 || !Number.isInteger(input.T)) {
                 if (!Number.isInteger(input.T)) {
-                    alert("Invalid input: the ratio of LSM-Tree should be an integer");
-                    restoreInput(`#${target}-input-T`);
-                    break;
+                    alert("Invalid input: the ratio of LSM-Tree should be an integer")
+                    restoreInput(`#${target}-input-T`)
+                    break
                 }
                 if (input.T < 2) {
-                    alert("Invalid input: the minimal ratio of LSM-Tree is 2");
-                    restoreInput(`#${target}-input-T`);
-                    break;
+                    alert("Invalid input: the minimal ratio of LSM-Tree is 2")
+                    restoreInput(`#${target}-input-T`)
+                    break
                 }
             } else {
-                setInput(`#${target}-input-T`);
+                setInput(`#${target}-input-T`)
             }
-            break;
+            break
         case `${target}-input-DPT`:
-            self.prepared_flag = false;
-            break;
+        case `${target}-select-DPT`:
+            self.prepared_flag = false
+            setInput(`#${target}-input-DPT`, `#${target}-select-DPT`)
+            break
         case `${target}-input-N`:
-            self.prepared_flag = false;
+            self.prepared_flag = false
             if (input.N < 1 || !Number.isInteger(input.N)) {
                 if (!Number.isInteger(input.N)) {
-                    alert("Invalid input: the #entries should be an integer");
-                    restoreInput(`#${target}-input-N`);
-                    break;
+                    alert("Invalid input: the #entries should be an integer")
+                    restoreInput(`#${target}-input-N`)
+                    break
                 }
                 if (input.N < 1) {
-                    alert("Invalid input: the minimal #entries is 1");
-                    restoreInput(`#${target}-input-N`);
-                    break;
+                    alert("Invalid input: the minimal #entries is 1")
+                    restoreInput(`#${target}-input-N`)
+                    break
                 }
             } else {
-                setInput(`#${target}-input-N`);
+                setInput(`#${target}-input-N`)
             }
+            global_workload_ready_array[workload_idx] = false
             break;
         case `${target}-input-KeySize`:
         case `${target}-select-KeySize`:
         case `${target}-input-E`:
         case `${target}-select-E`:
+            global_workload_ready_array[workload_idx] = false
             if (input.K < 1 || input.E < 1 || input.E < input.KeySize ||
               input.E > input.M || input.E > input.P || input.E > input.F) {
                 //restore to legally previous state
                 if (input.KeySize < 1) {
-                    alert("Invalid input: the minimal size of the key is 1 byte");
-                    restoreInput(`#${target}-input-KeySize`, `#${target}-select-KeySize`);
+                    alert("Invalid input: the minimal size of the key is 1 byte")
+                    restoreInput(`#${target}-input-KeySize`, `#${target}-select-KeySize`)
                     break;
                 }
                 if (input.E < 1) {
-                    alert("Invalid input: the minimal size of an entry is 1 byte");
-                    restoreInput(`#${target}-input-E`, `#${target}-select-E`);
-                    break;
+                    alert("Invalid input: the minimal size of an entry is 1 byte")
+                    restoreInput(`#${target}-input-E`, `#${target}-select-E`)
+                    break
                 }
                 if (input.E < input.KeySize) {
-                    alert("Invalid input: the entry size has to be larger than the key size");
-                    restoreInput(`#${target}-input-E`, `#${target}-select-E`);
-                    restoreInput(`#${target}-input-KeySize`, `#${target}-select-KeySize`);
-                    break;
+                    alert("Invalid input: the entry size has to be larger than the key size")
+                    if (self.id == `${target}-input-KeySize` ||
+                      self.id == `${target}-select-KeySize`) {
+                      restoreInput(`#${target}-input-KeySize`, `#${target}-select-KeySize`)
+                    } else {
+                      restoreInput(`#${target}-input-E`, `#${target}-select-E`)
+                    }
+                    break
                 }
                 if (input.E > input.P) {
-                    alert("Invalid input: the maximal size of an entry should be <= page size");
-                    restoreInput(`#${target}-input-E`, `#${target}-select-E`);
-                    break;
+                    alert("Invalid input: the maximal size of an entry should be <= page size")
+                    restoreInput(`#${target}-input-E`, `#${target}-select-E`)
+                    break
                 }
                 if (input.E > input.F) {
-                    alert("Invalid input: the maximal size of an entry should be <= file size");
-                    restoreInput(`#${target}-input-E`, `#${target}-select-E`);
-                    break;
+                    alert("Invalid input: the maximal size of an entry should be <= file size")
+                    restoreInput(`#${target}-input-E`, `#${target}-select-E`)
+                    break
                 }
                 if (input.E > input.M) {
-                    alert("Invalid input: the maximal size of an entry should be <= buffer size");
-                    restoreInput(`#${target}-input-E`, `#${target}-select-E`);
-                    break;
+                    alert("Invalid input: the maximal size of an entry should be <= buffer size")
+                    restoreInput(`#${target}-input-E`, `#${target}-select-E`)
+                    break
                 }
             } else {    // save new state
-                setInput(`#${target}-input-E`, `#${target}-select-E`);
+                setInput(`#${target}-input-KeySize`, `#${target}-select-KeySize`)
+                setInput(`#${target}-input-E`, `#${target}-select-E`)
             }
             break;
         case `${target}-input-M`:
         case `${target}-select-M`:
+            global_workload_ready_array[workload_idx] = false
             if (input.M < 1 || input.M < input.E || input.M < input.P || input.F < 1 || input.F < input.P) {
                 if (input.F < input.P) {
                     alert("Invalid input: in terms of buffer, the corresponding file size shoud not be < page size");
                     restoreInput(`#${target}-input-M`, `#${target}-select-M`);
-                    break;
+                    break
                 }
                 if (input.F < 1) {
                     alert("Invalid input: in terms of buffer, the corresponding file size shoud not be < 1 byte");
                     restoreInput(`#${target}-input-M`, `#${target}-select-M`);
-                    break;
+                    break
                 }
                 if (input.M < input.P) {
                     alert("Invalid input: the minimal size of buffer should be >= page size");
                     restoreInput(`#${target}-input-M`, `#${target}-select-M`);
-                    break;
+                    break
                 }
                 if (input.M < input.E) {
                     alert("Invalid input: the minimal size of buffer should be >= entry size");
                     restoreInput(`#${target}-input-M`, `#${target}-select-M`);
-                    break;
+                    break
                 }
                 if (input.M < 1) {
                     alert("Invalid input: the minimal size of buffer is 1 byte");
                     restoreInput(`#${target}-input-M`, `#${target}-select-M`);
-                    break;
+                    break
                 }
             } else {
-                setInput(`#${target}-input-M`, `#${target}-select-M`);
+                setInput(`#${target}-input-M`, `#${target}-select-M`)
             }
             break;
         case `${target}-input-P`:  //1byte <= P <= E & M & F
@@ -1994,64 +2023,62 @@ function validate(self, target, input) {
                 if (input.P < input.E) {
                     alert("Invalid input: the minimal size of a page should be >= entry size");
                     restoreInput(`#${target}-input-P`, `#${target}-select-P`);
-                    break;
+                    break
                 }
                 if (input.P < 1) {
                     alert("Invalid input: the minimal size of a page should be >= 1 byte");
                     restoreInput(`#${target}-input-P`, `#${target}-select-P`);
-                    break;
+                    break
                 }
                 if (input.P > input.F) {
                     alert("Invalid input: the maximal size of a page should be <= file size");
                     restoreInput(`#${target}-input-P`, `#${target}-select-P`);
-                    break;
+                    break
                 }
                 if (input.P > input.M) {
                     alert("Invalid input: the maximal size of a page should be <= buffer size");
                     restoreInput(`#${target}-input-P`, `#${target}-select-P`);
-                    break;
+                    break
                 }
             } else {
-                setInput(`#${target}-input-P`, `#${target}-select-P`);
+                setInput(`#${target}-input-P`, `#${target}-select-P`)
             }
             break;
         case `${target}-input-bpk`:  //0<= bpk
-        case `${target}-select-bpk`:
             if (input.bpk < 0) {
                 alert("Invalid input: the minimal bits-per-key allocated for" +
-                  "bloom filters should be >= 0");
-                restoreInput(`#${target}-input-bpk`);
+                  "bloom filters should be >= 0")
+                restoreInput(`#${target}-input-bpk`)
             } else {
-                setInput(`#${target}-input-bpk`);
+                setInput(`#${target}-input-bpk`)
             }
-            break;
-        case `${target}-input-f`:  //global setting: 1byte <= F <= M
-            if (input.F < 1 || input.F < input.P || input.F < input.E || input.F > input.M) {
-                if (input.F < input.P) {
-                    alert("Invalid input: the minimal size of a file should be >= page size");
-                    restoreInput("#cmp-input-f");
-                    break;
-                }
-                if (input.F < input.E) {
-                    alert("Invalid input: the minimal size of a file should be >= entry size");
-                    restoreInput("#cmp-input-f");
-                    break;
-                }
-                if (input.F < 1) {
-                    alert("Invalid input: the minimal size of a file should be >= 1 byte");
-                    restoreInput("#cmp-input-f");
-                    break;
-                }
-                if (input.F > input.M) {
-                    alert("Invalid input: in global setting, the maximal size of a file should be <= buffer size");
-                    restoreInput("#cmp-input-f");
-                    break;
-                }
-            } else {
-                setInput("#cmp-input-f");
-            }
-            break;
-
+            break
+        // case `${target}-input-f`:
+        //     if (input.F < 1 || input.F < input.P || input.F < input.E || input.F > input.M) {
+        //         if (input.F < input.P) {
+        //             alert("Invalid input: the minimal size of a file should be >= page size")
+        //             restoreInput("#cmp-input-f")
+        //             break;
+        //         }
+        //         if (input.F < input.E) {
+        //             alert("Invalid input: the minimal size of a file should be >= entry size")
+        //             restoreInput("#cmp-input-f")
+        //             break;
+        //         }
+        //         if (input.F < 1) {
+        //             alert("Invalid input: the minimal size of a file should be >= 1 byte")
+        //             restoreInput("#cmp-input-f")
+        //             break
+        //         }
+        //         if (input.F > input.M) {
+        //             alert("Invalid input: in global setting, the maximal size of a file should be <= buffer size")
+        //             restoreInput("#cmp-input-f")
+        //             break
+        //         }
+        //     } else {
+        //         setInput("#cmp-input-f")
+        //     }
+        //     break
         // case `${target}-input-s`:  //0 <= s <= 100
         //     if (input.s < 0 || input.s > 100) {
         //         if (input.s < 0) {
@@ -2076,39 +2103,40 @@ function validate(self, target, input) {
         //         setInput(`#${target}-input-mu`);
         //     }
         //     break;
-        case `${target}-input-phi`:  //phi > 0
-            if (input.phi <= 0) {
-                alert("Invalid input: the storage write speed should be >= 0");
-                restoreInput(`#${target}-input-phi`);
+        case `${target}-input-mu`:  //mu > 0
+        case `${target}-select-mu`:
+            if (input.mu <= 0) {
+                alert("Invalid input: the storage read speed should be >= 0")
+                restoreInput(`#${target}-input-mu`, `#${target}-select-mu`)
             } else {
-                setInput(`#${target}-input-phi`);
+                setInput(`#${target}-input-mu`, `#${target}-select-mu`)
             }
-            break;
-        case `${target}-select-Mf`:  //TODO
-        case `${target}-input-Mf`:  //TODO
+            break
+        case `${target}-input-phi`:  //phi > 0
+        case `${target}-select-phi`:
+            if (input.phi <= 0) {
+                alert("Invalid input: the storage write speed should be >= 0")
+                restoreInput(`#${target}-input-phi`, `#${target}-select-phi`)
+            } else {
+                setInput(`#${target}-input-phi`, `#${target}-select-phi`)
+            }
+            break
         case `${target}-input-Deletes`:
-        case `${target}-input-DPT`:
-        case `${target}-bg-merging`:
-        case `${target}-threshold`:
-        // currently untriggered by event, unchanged merge policy
-        // case `${target}-rlsm-leveling`:
-        // case `${target}-rlsm-tiering`:
-        // case `${target}-rlsm4-lazyLevel`:
-        // case `${target}-rlsm3-tiering`:
-        // case `${target}-rlsm3-leveling`:
-            break;
+            global_workload_ready_array[workload_idx] = false
+            setInput(`#${target}-input-Deletes`)
+            break
 		case "adjustable-progress-bar":
-			break;
+			break
 		case "lsm-cmpct-pp-1-progress-bar":
-			break;
+			break
 		case "lsm-cmpct-pp-2-progress-bar":
-			break;
+			break
 		case "lsm-cmpct-pp-3-progress-bar":
-			break;
+			break
     case `switch-for-update-granularity`:
-      break;
+      break
     default:
-      break;
+      break
       //console.log(self.id);
       //alert(`Invalid: Unknown ${target} configuration input`);
   }
@@ -2116,74 +2144,75 @@ function validate(self, target, input) {
 }
 
 function restoreInput(inputTarget, unitTarget) {
-    var inputElem = document.querySelector(inputTarget);
-    inputElem.value = inputElem.dataset.preval;
+    var inputElem = document.querySelector(inputTarget)
+    inputElem.value = inputElem.dataset.preval
     if (unitTarget !== undefined) {
-        var unitElem = document.querySelector(unitTarget);
-        unitElem.selectedIndex = unitElem.dataset.preunit;
+        var unitElem = document.querySelector(unitTarget)
+        unitElem.selectedIndex = unitElem.dataset.preunit
     }
 }
 
 function setInput(inputTarget, unitTarget) {
-    var inputElem = document.querySelector(inputTarget);
-    inputElem.dataset.preval = inputElem.value;
+    var inputElem = document.querySelector(inputTarget)
+    inputElem.dataset.preval = inputElem.value
     if (unitTarget !== undefined) {
-        var unitElem = document.querySelector(unitTarget);
-        unitElem.dataset.preunit = unitElem.selectedIndex;
+        var unitElem = document.querySelector(unitTarget)
+        unitElem.dataset.preunit = unitElem.selectedIndex
     }
 }
 
 function increaseInput() {
-    var input_elem = this.parentElement.previousElementSibling;
+    var input_elem = this.parentElement.previousElementSibling
     if (input_elem.step === "") {
-        input_elem.value = nextPowerOfTwo(getInputVal(input_elem));
+        input_elem.value = nextPowerOfTwo(getInputVal(input_elem))
     } else if (input_elem.step == 10) {
-		const nval = getInputValbyId("#cmp-input-N");
-		const val = getInputVal(input_elem);
+		const nval = getInputValbyId("#cmp-input-N")
+		const val = getInputVal(input_elem)
 		if (nextPowerOfTen(val) < nval) {
-			input_elem.value = nextPowerOfTen(val);
+			input_elem.value = nextPowerOfTen(val)
 		} else {
-			input_elem.value = nval;
+			input_elem.value = nval
 		}
 	}else {
-    input_elem.value = correctDecimal(getInputVal(input_elem) + parseFloat(input_elem.step));
+    input_elem.value = correctDecimal(getInputVal(input_elem) + parseFloat(input_elem.step))
   }
 
-  window.lsmCmpctPP1.prepared_flag = false;
-  window.lsmCmpctPP1.cumulativeMeta = [];
-  window.lsmCmpctPP2.prepared_flag = false;
-  window.lsmCmpctPP2.cumulativeMeta = [];
-  window.lsmCmpctPP3.prepared_flag = false;
-  window.lsmCmpctPP3.cumulativeMeta = [];
+  window.lsmCmpctPP1.prepared_flag = false
+  window.lsmCmpctPP1.cumulativeMeta = []
+  window.lsmCmpctPP2.prepared_flag = false
+  window.lsmCmpctPP2.cumulativeMeta = []
+  window.lsmCmpctPP3.prepared_flag = false
+  window.lsmCmpctPP3.cumulativeMeta = []
+
+  var event = new Event('change')
+  input_elem.dispatchEvent(event)
 }
 
 function decreaseInput() {
-    var input_elem = this.parentElement.previousElementSibling;
+    var input_elem = this.parentElement.previousElementSibling
     if (input_elem.step === "") {
-        input_elem.value = lastPowerOfTwo(getInputVal(input_elem));
+        input_elem.value = lastPowerOfTwo(getInputVal(input_elem))
     } else if (input_elem.step == 10) {
-		const nval = getInputValbyId("#cmp-input-N");
-		const val = getInputVal(input_elem);
+		const nval = getInputValbyId("#cmp-input-N")
+		const val = getInputVal(input_elem)
 		if (val == nval) {
-			input_elem.value = lastPowerOfTen(nval);
+			input_elem.value = lastPowerOfTen(nval)
 		} else {
-			input_elem.value = val / 10;
+			input_elem.value = val / 10
 		}
 	} else {
-        input_elem.value = correctDecimal(getInputVal(input_elem) - parseFloat(input_elem.step));
+        input_elem.value = correctDecimal(getInputVal(input_elem) - parseFloat(input_elem.step))
     }
 
-	if (this.id != "granularity-decrease") {
-    	var event = new Event('change');
-    	input_elem.dispatchEvent(event);
-	}  else {
-		window.granularity = input_elem.value;
-	}
+  window.lsmCmpctPP1.prepared_flag = false
+  window.lsmCmpctPP1.cumulativeMeta = []
+  window.lsmCmpctPP2.prepared_flag = false
+  window.lsmCmpctPP2.cumulativeMeta = []
+  window.lsmCmpctPP3.prepared_flag = false
+  window.lsmCmpctPP3.cumulativeMeta = []
 
-  window.lsmCmpctPP1.prepared_flag = false;
-  window.lsmCmpctPP2.prepared_flag = false;
-  window.lsmCmpctPP3.prepared_flag = false;
-
+  var event = new Event('change')
+  input_elem.dispatchEvent(event)
 }
 
 function startPlaying() {
@@ -3146,12 +3175,12 @@ document.querySelector("#cmp-increase-P").onclick = increaseInput
 document.querySelector("#cmp-decrease-P").onclick = decreaseInput
 document.querySelector("#cmp-increase-bpk").onclick = increaseInput
 document.querySelector("#cmp-decrease-bpk").onclick = decreaseInput
-
+document.querySelector("#cmp-increase-bpk").onclick = increaseInput
+document.querySelector("#cmp-decrease-bpk").onclick = decreaseInput
 document.querySelector("#cmp-increase-mu").onclick = increaseInput
 document.querySelector("#cmp-decrease-mu").onclick = decreaseInput
-document.querySelector("#cmp-increase-phi").onclick = increaseInput
-document.querySelector("#cmp-decrease-phi").onclick = decreaseInput
-
+document.querySelector("#cmp-increase-KeySize").onclick = increaseInput
+document.querySelector("#cmp-decrease-KeySize").onclick = decreaseInput
 document.querySelector("#cmp-increase-Deletes").onclick = increaseInput
 document.querySelector("#cmp-decrease-Deletes").onclick = decreaseInput
 document.querySelector("#cmp-increase-DPT").onclick = increaseInput
@@ -3175,6 +3204,8 @@ document.querySelector("#cmp-input-T").onchange = runCmp
 document.querySelector("#cmp-input-T").onwheel = runCmp
 document.querySelector("#cmp-input-E").onchange = runCmp
 document.querySelector("#cmp-input-E").onwheel = runCmp
+document.querySelector("#cmp-input-KeySize").onchange = runCmp
+document.querySelector("#cmp-input-KeySize").onwheel = runCmp
 document.querySelector("#cmp-input-N").oninput = changeProgressCapacity
 document.querySelector("#cmp-input-N").onwheel = changeProgressCapacity
 document.querySelector("#adjustable-progress-bar").onchange = runCmp
@@ -3184,13 +3215,11 @@ document.querySelector("#lsm-cmpct-pp-2-progress-bar").onchange = runCmp
 document.querySelector("#lsm-cmpct-pp-3-progress-bar").onchange = runCmp
 
 document.querySelector("#cmp-input-M").onchange = runCmp
-document.querySelector("#cmp-input-M").onwheel = runCmp;
-
+document.querySelector("#cmp-input-M").onwheel = runCmp
 document.querySelector("#cmp-input-P").onchange = runCmp
 document.querySelector("#cmp-input-P").onwheel = runCmp
 document.querySelector("#cmp-input-bpk").onchange = runCmp
 document.querySelector("#cmp-input-bpk").onwheel = runCmp
-
 document.querySelector("#cmp-input-mu").onchange = runCmp
 document.querySelector("#cmp-input-mu").onwheel = runCmp
 document.querySelector("#cmp-input-phi").onchange = runCmp
@@ -3210,6 +3239,9 @@ document.querySelector("#cmp-input-3-DPT").onwheel = runCmp
 document.querySelector("#cmp-select-M").onchange = runCmp
 document.querySelector("#cmp-select-E").onchange = runCmp
 document.querySelector("#cmp-select-P").onchange = runCmp
+document.querySelector("#cmp-select-KeySize").onchange = runCmp
+document.querySelector("#cmp-select-mu").onchange = runCmp
+document.querySelector("#cmp-select-phi").onchange = runCmp
 
 
 document.querySelector("#show-stats-btn").onclick = function(){
