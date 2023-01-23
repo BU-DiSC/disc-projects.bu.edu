@@ -1716,7 +1716,7 @@ function runCmpInDetail(this_ref) {
                     .cumulativeData[lsmCmpctPP2.cumulativeData.length - 1]["sync_point"],
                 lsmCmpctPP3
                     .cumulativeData[lsmCmpctPP3.cumulativeData.length - 1]["sync_point"],
-            ) + 1;
+            ) + 1
 
             if (this_ref.id == "switch-for-update-granularity") {
               var old_progress_val = window.progressSlider.getValue()
@@ -1736,6 +1736,9 @@ function runCmpInDetail(this_ref) {
               next_progress_val = Math.min(next_progress_val,
                 lsmCmpctPP3.cumulativeData[index]["sync_point"])
               window.progressSlider.setAttribute('max', maxVal - 1)
+              window.sliders.forEach(function(slider) {
+                slider.setAttribute("max", maxVal - 1)
+              })
               changeProgressBar(window.progressSlider,
                 next_progress_val)
             	document.getElementById("progress-percentage-label").innerHTML =
@@ -1753,7 +1756,10 @@ function runCmpInDetail(this_ref) {
                 lsmCmpctPP2.cumulativeData.length,
                 lsmCmpctPP3.cumulativeData.length
             );
-            window.progressSlider.setAttribute('max', maxVal - 1);
+            window.progressSlider.setAttribute('max', maxVal - 1)
+            window.sliders.forEach(function(slider) {
+              slider.setAttribute("max", maxVal - 1)
+            })
             if (this_ref.id == "switch-for-update-granularity") {
               var old_progress_val = window.progressSlider.getValue();
               var index = 0;
@@ -1813,11 +1819,11 @@ function runCmpInDetail(this_ref) {
         lsmCmpctPP3.show()
         break
       case "lsm-cmpct-pp-1":
-        lsmCmpctPP1.update(target);
+        lsmCmpctPP1.update(target)
         if (document.getElementById("switch-for-update-granularity").checked) {
             window.sliders["lsm-cmpct-pp-1"]
                 .setAttribute('max', lsmCmpctPP1
-                    .cumulativeData[lsmCmpctPP1.cumulativeData.length - 1]["sync_point"]);
+                    .cumulativeData[lsmCmpctPP1.cumulativeData.length - 1]["sync_point"])
         } else {
             window.sliders["lsm-cmpct-pp-1"]
                 .setAttribute('max', lsmCmpctPP1.cumulativeData.length);
@@ -1829,11 +1835,11 @@ function runCmpInDetail(this_ref) {
         lsmCmpctPP1.show()
         break
     case "lsm-cmpct-pp-2":
-        lsmCmpctPP2.update(target);
+        lsmCmpctPP2.update(target)
         if (document.getElementById("switch-for-update-granularity").checked) {
             window.sliders["lsm-cmpct-pp-2"]
                 .setAttribute('max', lsmCmpctPP2
-                    .cumulativeData[lsmCmpctPP2.cumulativeData.length - 1]["sync_point"]);
+                    .cumulativeData[lsmCmpctPP2.cumulativeData.length - 1]["sync_point"])
         } else {
             window.sliders["lsm-cmpct-pp-2"]
                 .setAttribute('max', lsmCmpctPP2.cumulativeData.length)
@@ -1844,11 +1850,11 @@ function runCmpInDetail(this_ref) {
         lsmCmpctPP2.show()
         break;
     case "lsm-cmpct-pp-3":
-        lsmCmpctPP3.update(target);
+        lsmCmpctPP3.update(target)
         if (document.getElementById("switch-for-update-granularity").checked) {
             window.sliders["lsm-cmpct-pp-3"]
                 .setAttribute('max', lsmCmpctPP3
-                    .cumulativeData[lsmCmpctPP3.cumulativeData.length - 1]["sync_point"]);
+                    .cumulativeData[lsmCmpctPP3.cumulativeData.length - 1]["sync_point"])
         } else {
             window.sliders["lsm-cmpct-pp-3"]
                 .setAttribute('max', lsmCmpctPP3.cumulativeData.length);
@@ -1931,6 +1937,11 @@ function validate(self, target, input) {
                     restoreInput(`#${target}-input-N`)
                     break
                 }
+            } else if (input.N > 160000000) {
+              alert("Too larger input may result in too long time for loading," +
+              "thus the webpage may be not responding.")
+              restoreInput(`#${target}-input-N`)
+              break
             } else {
                 setInput(`#${target}-input-N`)
             }
@@ -2365,7 +2376,10 @@ function getApproximateScaleDownInserts(num_of_inserts, entries_per_file){
   if(entries_per_file < scaled_entries_per_file){
     return num_of_inserts;
   } else{
-    return Math.round(num_of_inserts/entries_per_file)*scaled_entries_per_file;
+    if (num_of_inserts >= 15000000) {
+      scaled_entries_per_file *= 10000000.0/num_of_inserts
+    }
+    return Math.round(num_of_inserts/entries_per_file)*scaled_entries_per_file
   }
 }
 
@@ -2413,17 +2427,6 @@ function genWorkload(scaled_inserts, delete_percentage, workload_index){
   }
   tmp_workload_keys_to_list_idxes.clear();
   tmp_workload_keys_list.length = 0;
-}
-
-function changeProgressCapacity(slider) {
-	//console.log("Event Triggered");
-	const newVal = getInputValbyId("#cmp-input-N");
-	//window.progressSlider.setAttribute("max", newVal);
-	if (this.id == "cmp-input-N") {
-		window.progressSlider.setAttribute("max", newVal);
-		window.sliders.forEach(function(slider) {slider.setAttribute("max", newVal);});
-    //runCmp();
-	}
 }
 
 function switchViewType() {
@@ -3206,8 +3209,8 @@ document.querySelector("#cmp-input-E").onchange = runCmp
 document.querySelector("#cmp-input-E").onwheel = runCmp
 document.querySelector("#cmp-input-KeySize").onchange = runCmp
 document.querySelector("#cmp-input-KeySize").onwheel = runCmp
-document.querySelector("#cmp-input-N").oninput = changeProgressCapacity
-document.querySelector("#cmp-input-N").onwheel = changeProgressCapacity
+document.querySelector("#cmp-input-N").oninput = runCmp
+document.querySelector("#cmp-input-N").onwheel = runCmp
 document.querySelector("#adjustable-progress-bar").onchange = runCmp
 document.querySelector("#adjustable-progress-bar").onclick = dragHandler
 document.querySelector("#lsm-cmpct-pp-1-progress-bar").onchange = runCmp
