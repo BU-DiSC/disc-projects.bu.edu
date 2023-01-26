@@ -1482,6 +1482,7 @@ function display() {
               obj.picking_policy = 1
               obj.dpt_conf_prefix = "-" + obj.suffix[obj.suffix.length - 1]
               obj.showDefaultCost()
+              obj.prepared_flag = false
               obj.progress_percentage = 0
               obj.showBush()
             }
