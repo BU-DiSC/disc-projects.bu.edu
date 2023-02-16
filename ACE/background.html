@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Acheron : Persisting Deletes in LSM Engines</title>
+	<!-- Bootswatch CSS based on Bootstrao -->
+	<!-- Theme: http://bootswatch.com/flatly/ -->
+	<link rel="stylesheet" href="css/bootstrap.min.css">
+	<!-- Plugin CSS -->
+	<link rel="stylesheet" href="css/bootstrap-slider.min.css">
+	<!-- Custom CSS -->
+	<link rel="stylesheet" href="css/styles.css">
+	<link rel="stylesheet" href="css/tooltip.css">
+	<!-- Google Font -->
+	<link href="https://fonts.googleapis.com/css?family=Lato:300,400&display=swap" rel="stylesheet">
+	<!-- Google Material Icon-->
+	<link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Material+Icons+Outlined" rel="stylesheet">
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script src="js/plotly.js"></script>
+
+	<style>
+		div.fixed {
+		position: fixed;
+		bottom: 50%;
+		left: 0;
+		width: 60px;
+		height: 200px;
+		}
+	</style>
+</head>
+
+<body>
+	<header id="page-top">
+		<nav class="navbar navbar-expand-lg navbar-dark navbar-fixed-top bg-dark fixed-top" style="background-color:#4fa49d !important">
+			<div class="container">
+				<a class="navbar-brand" href="#page-top">Acheron<span class="sr-only">(current)</span></a></a>
+				<button id="navbarToggle" class="navbar-toggler" type="button" data-toggle="collapse"
+					data-target="#collapsable-nav" aria-controls="collapsable-nav" aria-expanded="false"
+					aria-label="Toggle navigation">
+					<span class="navbar-toggler-icon"></span>
+				</button>
+
+				<div id="collapsable-nav" class="collapse navbar-collapse" id="collapsable-nav">
+					<ul class="nav navbar-nav ml-auto">
+						<!-- <li class="nav-item">
+							<a class="nav-link" href="#problem">Problem</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" href="#research">Research</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" href="#interactiveDemo">Compactionary</a>
+						</li> -->
+						<li class="nav-item">
+							<a class="nav-link" href="research.html#publication">Publications</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" href="research.html#authors">The Team</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" href="research.html#sponsors">Sponsors</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</nav>
+
+
+		<!-- <div class="jumbotron">
+			<video controls width="250">
+
+				<source src="./img/test.mov"
+						type="video/mov">
+
+				Sorry, your browser doesn't support embedded videos.
+			</video>
+		</div> -->
+
+	</header>
+
+  <div class="fixed">
+		<div class="rcorners-1" style="background-color:8288B4">
+            <a href="research.html"><span class="rcorners-click"></span></a>
+            <div class="rcorners-text-1"><a href="index.html" style="text-decoration:none; color: rgba(255, 255, 255, 0.88)">Home</a></div>
+          </div>
+    <div class="rcorners-2" style="background-color:8288B4">
+                  <a href="research.html"><span class="rcorners-click"></span></a>
+                  <div class="rcorners-text-2"><a href="background.html" style="text-decoration:none; color: rgba(255, 255, 255, 0.88)">Background</a></div>
+                </div>
+                <div class="rcorners-3" style="background-color:8288B4">
+                        <a href="research.html#problem"><span class="rcorners-click"></span></a>
+                        <div class="rcorners-text-3"><a href="research.html" style="text-decoration:none; color: rgba(255, 255, 255, 0.88)">Acheron&nbsp;</a>
+            			</div>
+            			<img class="img-responsive img-left" src="./img/animation.gif" alt="" width="40px" />
+                      </div>
+	</div>
+
+	<section id="problem" style="padding-top:100px">
+		<div class="container">
+			<div class="row section-title text-center">
+				<!-- <h2> What is Acheron and Why do we need it? </h2> -->
+        	<h2> What is Acheron? </h2>
+			</div>
+      <div class="row">
+        <p>
+          <img class="img-responsive img-centered" src="./img/compactionary-lsm-everywhere.png" alt="" align="left" width=20% style="margin-left:10%;margin-right:10%" />
+          <b>Acheron</b> is a web-based system that demonstrates the performance implications of <i>out-of-place</i> deletes in Log-structured merge (LSM) trees through visualizing the life cycle of tombstones.
+          LSM trees are frequently employed as core data structures in modern NoSQL storage engines because they offer
+high ingestion rate and low latency for query processing. In LSM trees, incoming entries
+are batched in an in-memory write buffer, and once the buffer
+is full, it is flushed to storage as an immutable sorted run. When the
+number of accumulated similar-sized runs exceeds a pre-defined threshold, they are merge-sorted to form a larger immutable run.
+          </p>
+    		</div>
+      <hr >
+      <div class="row">
+        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 mt-3"  >
+          <div class="row section-title text-center" style="border-width:5px;border-radius: 20px;
+    border-style:dotted;">
+    				<h3> New Privacy Regulations </h3>
+    			</div>
+        </div>
+        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 mt-3">
+          <div class="row section-title text-center" style="border-width:5px;border-radius: 20px;
+    border-style:dotted;">
+    				<h3> Performance</h3>
+    			</div>
+        </div>
+      </div>
+      <div class="row text-center" style="margin-top:-30px">
+        <img class="img-responsive img-centered" src="./img/lethe-demo-1.png" alt="" width=100% />
+      </div>
+			<div class="row">
+				<div>
+          <br>
+          <p>
+            As LSM trees employ the <i>out-of-place</i> paradigm , obsolete
+data cannot be removed instantly and may be retained in LSM trees
+for an arbitrarily long time.
+            Obsolete data may on the one hand, violate data privacy regulations (e.g.,
+<i>the right to be forgotten</i> in EU’s GDPR, <i>right to delete</i> in California’s
+CCPA and CPRA), and on the other hand, it hurts performance.
+            In Acheron, users can observe that
+the state of the art does not provide guarantees on when obsolete
+entries can be physically removed, and also observe that <a href="https://dl.acm.org/doi/abs/10.1145/3318464.3389757">FADE</a>
+can achieve timely persistent deletes without full tree compaction.
+            Users can further customize the workload, LSM tuning knobs,
+and disk parameters to investigate the impact of different factors
+on tombstones and the performance.
+          </p>
+				</div>
+			</div>
+
+			</div>
+	</section>
+
+	<section class="bg-light">
+		<div class="container">
+			<div class="row section-title text-center">
+				<h2> Deletes in LSM </h2>
+			</div>
+
+      <div class="row">
+        <p>
+          Every delete operation is
+implemented by inserting a <i>tombstone</i>, as shown in the following Figure. Within
+the memory buffer, a tombstone eagerly deletes any older matching
+entries, and it is maintained to invalidate further matching entries
+in the tree. When the memory buffer is full, all the entries (including
+tombstones) in the buffer are flushed to disk as a file with a tagged
+time stamp. As more data is ingested, this file will be involved in
+compactions, during which older entries with the same key will be
+<i>physically</i> discarded.
+        </p>
+        <br>
+        <img class="img-responsive img-centered" src="./img/intro.png" alt="" width="1000px">
+        <br>
+      </div>
+
+		</div>
+	</section>
+
+  <section id="research" style="margin:0 10px">
+    <div class="container">
+      <div class="row text-center">
+        <h2> FADE : FAst DEletes </h2>
+      </div>
+      <div class="row">
+                <div class="col-lg-12">
+                    <p> To enable timely persistent deletes, in <a href="https://dl.acm.org/doi/abs/10.1145/3318464.3389757">prior work</a>, we introduced
+<b>FADE</b>, a new family of delete-aware compaction policies. FADE
+(short for <i>FAst DEletes</i>) piggybacks the task of timely delete persistence
+to the LSM-tree’s compaction routine while retaining the
+LSM tree’s benefit of amortized merging cost and predictable performance.
+Acheron taps into the key design of FADE and presents
+an interactive framework highlighting how one can navigate the
+performance-privacy trade-off between the delete persistence and a
+target performance.
+                    </p>
+                    <br>
+                </div>
+            </div>
+            <div class="col-lg-12 text-center">
+                      <img class="img-responsive img-centered" src="./img/effacingcompaction.png" alt="" width="850px">
+                  </div>
+                  <div class="row">
+                      <div class="col-lg-12">
+                          <br>
+                          <p> Note that, this compaction trigger is completely orthogonal
+                              to the saturation-based trigger, and is driven
+                              by the <i>age of the oldest tombstone contained in a
+                              file</i>. This way, FADE ensures timely delete
+                              persistence, and by removing the invalidated entries
+                              timely and persistently from the tree, FADE also
+                              improves the overall performance of the storage
+                              engine in presence of deletes. The figure above shows
+                              step-wise how FADE guarantees timely delete persistence
+                              by setting earlier deadlines for future compaction jobs.
+                          </p>
+                      </div>
+                  </div>
+    </div>
+
+	</section>
+
+
+
+  <hr>
+  <footer class="text-center">
+        <div class="footer-below">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-6">
+                        <a target="_blank" href="http://www.bu.edu/cs/">
+                            <img class="img-responsive img-centered img-logo" src="./img/BU-logo.png" alt="">
+                        </a>
+                        <br>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <a target="_blank" href="https://disc.bu.edu">
+                            <img class="img-responsive img-centered img-logo" src="./img/disc-logo.png" alt="">
+                        </a>
+                        <br>
+                        <br>
+                    </div>
+                </div>
+                </div>
+            </div>
+
+        <div class="footer-below">
+            <div class="container">
+                <div class="row text-center">
+                    <div class="col-lg-12 text-center">
+                        Copyright © 2023. DiSC lab. All Rights Reserved.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+
+	<!-- jQuery (Bootstrap JS plugins depend on it) -->
+	<script src="js/jquery-3.4.1.min.js"></script>
+	<!-- <script src="js/bootstrap.min.js"></script> -->
+	<script src="js/bootstrap.bundle.min.js"></script>
+	<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({tex2jax: {preview: "none", inlineMath: [['$','$'], ['\\(','\\)']]}, "fast-preview": {disabled: true}});
+  </script>
+	<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML' async></script>
+	<script src="js/bootstrap-slider.js"></script>
+	<script src="js/popper.min.js"></script>
+	<script src="js/script.js"></script>
+	<!-- <script src="js/treeBush.js"></script> -->
+</body>
+
+</html>

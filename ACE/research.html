@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Acheron : Persisting Deletes in LSM Engines</title>
+	<!-- Bootswatch CSS based on Bootstrao -->
+	<!-- Theme: http://bootswatch.com/flatly/ -->
+	<link rel="stylesheet" href="css/bootstrap.min.css">
+	<!-- Plugin CSS -->
+	<link rel="stylesheet" href="css/bootstrap-slider.min.css">
+	<!-- Custom CSS -->
+	<link rel="stylesheet" href="css/styles.css">
+	<link rel="stylesheet" href="css/tooltip.css">
+  <link rel="stylesheet" href="css/loading.css">
+	<!-- Google Font -->
+	<link href="https://fonts.googleapis.com/css?family=Lato:300,400&display=swap" rel="stylesheet">
+	<!-- Google Material Icon-->
+	<link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Material+Icons+Outlined" rel="stylesheet">
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script src="js/plotly.js"></script>
+
+	<style>
+		div.fixed {
+		position: fixed;
+		bottom: 50%;
+		left: 0;
+		width: 60px;
+		height: 200px;
+		}
+	</style>
+</head>
+
+<body>
+	<header id="page-top">
+		<nav class="navbar navbar-expand-lg navbar-dark navbar-fixed-top bg-dark fixed-top" style="background-color:#4fa49d !important">
+			<div class="container">
+
+				<a class="navbar-brand" href="#page-top">
+					&nbsp; Acheron<span class="sr-only">(current)</span>
+				</a></a>
+				<button id="navbarToggle" class="navbar-toggler" type="button" data-toggle="collapse"
+						data-target="#collapsable-nav" aria-controls="collapsable-nav" aria-expanded="false"
+						aria-label="Toggle navigation">
+					<span class="navbar-toggler-icon"></span>
+				</button>
+
+				<div id="collapsable-nav" class="collapse navbar-collapse" id="collapsable-nav">
+					<ul class="nav navbar-nav ml-auto">
+						<!-- <li class="nav-item">
+							<a class="nav-link" href="#problem">Problem</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" href="#research">Research</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" href="#interactiveDemo">Compactionary</a>
+						</li> -->
+						<li class="nav-item">
+							<a class="nav-link" href="#publication">Publications</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" href="#authors">The Team</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" href="#sponsors">Sponsors</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</nav>
+
+		<!-- <div class="jumbotron">
+			<video controls width="250">
+
+				<source src="./img/test.mov"
+						type="video/mov">
+
+				Sorry, your browser doesn't support embedded videos.
+			</video>
+		</div> -->
+
+	</header>
+
+	<div class="fixed">
+		<div class="rcorners-1" style="background-color:8288B4">
+			<a href="research.html"><span class="rcorners-click"></span></a>
+			<div class="rcorners-text-1"><a href="index.html" style="text-decoration:none; color: rgba(255, 255, 255, 0.88)">Home</a></div>
+		</div>
+		<div class="rcorners-2" style="background-color:8288B4">
+			<a href="research.html"><span class="rcorners-click"></span></a>
+			<div class="rcorners-text-2"><a href="background.html" style="text-decoration:none; color: rgba(255, 255, 255, 0.88)">Background</a></div>
+		</div>
+		<div class="rcorners-3" style="background-color:8288B4">
+			<a href="research.html#problem"><span class="rcorners-click"></span></a>
+			<div class="rcorners-text-3">
+				<a href="research.html" style="text-decoration:none; color: rgba(255, 255, 255, 0.88)">Acheron &nbsp;</a>
+			</div>
+			<img class="img-responsive img-left" src="./img/animation.gif" alt="" width="40px" />
+		</div>
+	</div>
+
+	<div class="loading" id="loader" style="display:none">Loading&#8230;</div>
+
+	<section id="research" style="margin:0 10px">
+
+		<div id="interactiveDemo" class="container">
+			<div class="row section-title text-center">
+				<h2>
+					<a target="_blank" href="https://disc-projects.bu.edu/compactionary/files/LSM_Compact_Demo.mp4">
+						<span class="metric-title" data-toggle="tooltip" data-placement="right"
+							  title="Watch walkthrough this video" style="color:#000"> Acheron </span>
+					</a>
+				</h2>
+				<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 mt-3">
+					<div class="custom-control custom-radio text-right">
+						<input id="customRadio1" type="radio" name="customRadio" class="custom-control-input" checked="">
+						<label class="custom-control-label" for="customRadio1">File Picking Policy</label>
+					</div>
+				</div>
+				<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 mt-3">
+					<div class="custom-control custom-radio text-left">
+						<input id="customRadio2" type="radio" name="customRadio" class="custom-control-input">
+						<label class="custom-control-label" for="customRadio2">DPT Analysis in FADE</label>
+					</div>
+				</div>
+			</div>
+
+			<!-- Comparative configuration starts here -->
+			<div id="cmp-conf-row" class="row">
+				<div class="cmp-conf-col col-lg-4 col-md-6 col-sm-6">
+					<h4 class="text-center" style="font-size:large;">Workload</h4>
+					<div class="input-group input-group-sm mb-2">
+						<div class="input-group-prepend">
+							<label class="input-group-text">#Ingests</label>
+						</div>
+						<input id="cmp-input-N" value="10000000" min="1" type="number" step="1" data-preval="1"
+							   class="cmp-input form-control" aria-label="#Ingests">
+						<div class="input-group-append incrementer">
+							<button id="cmp-increase-N" class="increase"></button>
+							<button id="cmp-decrease-N" class="decrease"></button>
+						</div>
+					</div>
+					<div class="input-group input-group-sm mb-2">
+						<div class="input-group-prepend">
+							<label class="input-group-text">Key size</label>
+						</div>
+						<input id="cmp-input-KeySize" value="4" min="1" type="number" step="1" data-preval="1" class="cmp-input form-control"
+							   aria-label="Key Size">
+						<div class="input-group-append incrementer">
+							<button id="cmp-increase-KeySize" class="increase"></button>
+							<button id="cmp-decrease-KeySize" class="decrease"></button>
+						</div>
+						<select id="cmp-select-KeySize" class="input-group-append custom-select cmp-input" data-preunit="0">
+							<option value="0" selected> B</option>
+							<option value="1">KB</option>
+							<option value="2">MB</option>
+							<option value="3">GB</option>
+						</select>
+					</div>
+					<div class="input-group input-group-sm mb-2">
+						<div class="input-group-prepend">
+							<label class="input-group-text">Entry size</label>
+						</div>
+						<input id="cmp-input-E" value="128" min="1" type="number" data-preval="1" class="cmp-input form-control"
+							   aria-label="Entry Size">
+						<div class="input-group-append incrementer">
+							<button id="cmp-increase-E" class="increase"></button>
+							<button id="cmp-decrease-E" class="decrease"></button>
+						</div>
+						<select id="cmp-select-E" class="input-group-append custom-select cmp-input" data-preunit="0">
+							<option value="0" selected> B</option>
+							<option value="1">KB</option>
+							<option value="2">MB</option>
+							<option value="3">GB</option>
+						</select>
+					</div>
+					<div class="input-group input-group-sm mb-2">
+						<div class="input-group-prepend">
+							<label class="input-group-text">% Deletes</label>
+						</div>
+						<input id="cmp-input-Deletes" value="25" min="0" max="25" step="1" type="number" data-preval="2"
+							   class="cmp-input form-control" aria-label="the proportion of deletes">
+						<div class="input-group-append incrementer">
+							<button id="cmp-increase-Deletes" class="increase"></button>
+							<button id="cmp-decrease-Deletes" class="decrease"></button>
+						</div>
+					</div>
+				</div>
+
+				<div class="cmp-conf-col col-lg-4 col-md-6 col-sm-6">
+					<h4 class="text-center" style="font-size:large;">Main Memory Parameter</h4>
+					<div class="input-group input-group-sm mb-2">
+						<div class="input-group-prepend">
+							<label class="input-group-text">Buffer/File size</label>
+						</div>
+						<input id="cmp-input-M" value="16" min="1" data-preval="1" type="number" class="cmp-input form-control"
+							   aria-label="Buffer capacity">
+						<div class="input-group-append incrementer">
+							<button id="cmp-increase-M" class="increase"></button>
+							<button id="cmp-decrease-M" class="decrease"></button>
+						</div>
+						<select id="cmp-select-M" class="input-group-append custom-select cmp-input" data-preunit="2">
+							<option value="0">B</option>
+							<option value="1">KB</option>
+							<option value="2" selected>MB</option>
+							<option value="3">GB</option>
+						</select>
+					</div>
+					<div class="input-group input-group-sm mb-2">
+						<div class="input-group-prepend">
+							<label class="input-group-text">BF bits-per-key</label>
+						</div>
+						<input id="cmp-input-bpk" value="10" min="0" type="number" data-preval="1024"
+							   class="cmp-input form-control" aria-label="Bloom filters size">
+						<div class="input-group-append incrementer">
+							<button id="cmp-increase-bpk" class="increase"></button>
+							<button id="cmp-decrease-bpk" class="decrease"></button>
+						</div>
+					</div>
+
+					<h4 class="text-center" style="font-size:large;">Data Layout</h4>
+					<div class="input-group input-group-sm mb-2">
+						<div class="input-group-prepend">
+							<label class="input-group-text">Size ratio</label>
+						</div>
+						<input id="cmp-input-T" value="2" min="2" step="1" type="number" data-preval="2"
+							   class="cmp-input form-control" aria-label="Ratio">
+						<div class="input-group-append incrementer">
+							<button id="cmp-increase-T" class="increase"></button>
+							<button id="cmp-decrease-T" class="decrease"></button>
+						</div>
+					</div>
+				</div>
+
+				<div class="cmp-conf-col col-lg-4 col-md-6 col-sm-6">
+					<h4 class="text-center" style="font-size:large;">Disk Parameters</h4>
+					<div class="input-group input-group-sm mb-2">
+						<div class="input-group-prepend">
+							<label class="input-group-text" data-toggle="tooltip" data-placement="bottom"
+								   title="Storage read speed per I/O">Read Speed (Per I/O)</label>
+						</div>
+						<input id="cmp-input-mu" value="0.01" min="0" step="1" type="number" data-preval="1"
+							   class="form-control" aria-label="Storage read speed per I/O">
+						<div class="input-group-append incrementer">
+							<button id="cmp-increase-mu" class="increase"></button>
+							<button id="cmp-decrease-mu" class="decrease"></button>
+						</div>
+						<select id="cmp-select-mu" class="input-group-append custom-select cmp-input" data-preunit="0">
+							<option value="2">ms</option>
+							<option value="3">&#956;s</option>
+						</select>
+					</div>
+					<div class="input-group input-group-sm mb-2">
+						<div class="input-group-prepend">
+							<label class="input-group-text" data-toggle="tooltip" data-placement="bottom"
+								   title="Storage write speed per I/O">Write Speed (Per I/O)</label>
+						</div>
+						<input id="cmp-input-phi" value="0.02" min="0" step="1" type="number" data-preval="1"
+							   class="form-control" aria-label="Storage write speed per I/O">
+						<div class="input-group-append incrementer">
+							<button id="cmp-increase-phi" class="increase"></button>
+							<button id="cmp-decrease-phi" class="decrease"></button>
+						</div>
+						<select id="cmp-select-phi" class="input-group-append custom-select cmp-input" data-preunit="0">
+							<option value="2">ms</option>
+							<option value="3">&#956;s</option>
+						</select>
+					</div>
+
+					<div class="input-group input-group-sm mb-2">
+						<div class="input-group-prepend">
+							<label class="input-group-text">Page size</label>
+						</div>
+						<input id="cmp-input-P" value="4" min="1" type="number" data-preval="1" class="cmp-input form-control"
+							   aria-label="Page Size">
+						<div class="input-group-append incrementer">
+							<button id="cmp-increase-P" class="increase"></button>
+							<button id="cmp-decrease-P" class="decrease"></button>
+						</div>
+						<select id="cmp-select-P" class="input-group-append custom-select cmp-input" data-preunit="1">
+							<option value="0">B</option>
+							<option value="1" selected>KB</option>
+							<option value="2">MB</option>
+							<option value="3">GB</option>
+						</select>
+					</div>
+
+					<h4 id="shared-dpt-title" class="text-center" style="font-size:large;">FADE Tuning</h4><!--or put under Workload-->
+					<div id="shared-dpt-conf" class="input-group input-group-sm mb-2">
+						<div class="input-group-prepend">
+							<label class="input-group-text">Persistence Threshold</label><!--When the Tombstones need to be cleared by, units?-->
+						</div>
+						<input id="cmp-input-DPT" value="30" min="1" max="1000" step="5" type="number" data-preval="2"
+							   class="cmp-input form-control" aria-label="Ratio">
+						<div class="input-group-append incrementer">
+							<button id="cmp-increase-DPT" class="increase"></button>
+							<button id="cmp-decrease-DPT" class="decrease"></button>
+						</div>
+						<select id="cmp-select-DPT" class="input-group-append custom-select cmp-input" data-preunit="0">
+							<option value="0">s</option>
+							<option value="1">mins</option>
+						</select>
+					</div>
+
+				</div>
+			</div>
+			<!-- END of comparative configurations of Interactive Demo -->
+
+			<br>
+			<div id="control-panel" class="">
+				<div class="container-fluid">
+					<div class="row">
+						<div class="cmp-conf-row input-group input-group-sm col-7">
+							<div class="input-group-prepend">
+								<label class="input-group-text">Progress</label>
+							</div>
+							<div id="progress-box" class="slider-box form-control">
+								<input id="adjustable-progress-bar" data-slider-id='ex1Slider' class="cmp-input" type="text" data-slider-min="0"
+									   data-slider-max="100" data-slider-step="1" data-slider-value="0" />
+								<label id="progress-percentage-label" class="progress-label">0%</label>
+							</div>
+						</div>
+						<div id="lsm-button-group" class="row col-4">
+							<div class="btn-group" role="group" aria-label="progress-control">
+								<button id="autoplay-button" type="button" class="btn btn-info">Play</button>
+								<button id="stop-button" type="button" class="btn btn-warning">Pause</button>
+								<button id="finish-button" type="button" class="btn btn-danger">Finish</button>
+							</div>
+							<div class="custom-control custom-switch" style="margin-left:5px">
+								<input type="checkbox" class="custom-control-input" id="switch-for-update-granularity">
+								<label class="custom-control-label" for="switch-for-update-granularity" data-toggle="tooltip" data-placement="top" data-original-title="Update per operation (flush/compaction)"></label>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<br />
+
+			<!-- Interactive Demo result starts here -->
+			<!-- Diagram result starts here -->
+			<div class="row mt-3">
+
+			</div>
+			<div id="indiv-bush-row" class="row mt-3">
+				<!-- Vanilla LSM-Tree bush results starts here lsm-cmpct-pp-1-->
+				<div class="lcol-lg-4 col-md-4 col-sm-4">
+					<div id="cmp-lsm-cmpct-pp-1-mp" class="row cmp-indiv-mp">
+						<div id="cmp-lsm-cmpct-pp-1-title" class="lsm-title">
+							<span>FADE</span>
+						</div>
+            <div id="cmp-lsm-cmpct-pp-1-dpt" class="input-group input-group-sm mb-2" style="display:none;width:80%">
+  						<div class="input-group-prepend">
+  							<label class="input-group-text">Persistence Threshold</label><!--When the Tombstones need to be cleared by, units?-->
+  						</div>
+  						<input id="cmp-input-1-DPT" value="10" min="1" max="1000" step="5" type="number" data-preval="2"
+  							   class="cmp-input form-control" aria-label="Ratio">
+  						<div class="input-group-append incrementer">
+  							<button id="cmp-increase-1-DPT" class="increase"></button>
+  							<button id="cmp-decrease-1-DPT" class="decrease"></button>
+  						</div>
+  						<select id="cmp-select-1-DPT" class="input-group-append custom-select cmp-input" data-preunit="0">
+  							<option value="0">s</option>
+  							<option value="1">mins</option>
+  						</select>
+  					</div>
+
+						<!--<span class="material-icons" id="lsm-cmpct-pp-1-autoplay-button">play_arrow</span>-->
+						<image id="lsm-cmpct-pp-1-autoplay-button" class="play-class" src="img/play_circle_outline_black_24dp.svg" />
+						<input id="lsm-cmpct-pp-1-progress-bar" data-slider-id='lsm-cmpct-pp-1-Slider' class="cmp-input" type="text" data-slider-min="0"
+							   data-slider-max="100" data-slider-step="1" data-slider-value="0" />
+					</div>
+					<div class="col"><br /></div>
+					<div id="lsm-cmpct-pp-1-bush" class="bush-res">
+						<div class="row">
+							<button type="button" class="lsm-btn btn btn-secondary"></button>
+							<button type="button" class="lsm-btn btn btn-secondary"></button>
+
+						</div>
+						<div class="row">
+							<button type="button" class="lsm-btn btn btn-secondary"></button>
+						</div>
+						<div class="row">
+							<button type="button" class="lsm-btn btn btn-secondary"></button>
+						</div>
+						<div class="row">
+							<button type="button" class="lsm-btn btn btn-secondary"></button>
+						</div>
+					</div>
+				</div> <!-- END of lsm-cmpct-pp-1-bush-col result -->
+
+				<div class="col-lg-4 col-md-4 col-sm-4">
+					<div id="cmp-lsm-cmpct-pp-2-mp" class="row cmp-indiv-mp">
+						<!--<div id="rlsm-button-group">
+							<div class="btn-group" role="group" aria-label="progress-control">
+								<button id="rlsm-autoplay-button" type="button" class="btn btn-success">Play</button>
+								<button id="rlsm-stop-button" type="button" class="btn btn-warning">Pause</button>
+								<button id="rlsm-finish-button" type="button" class="btn btn-danger">Finish</button>
+							</div>
+						</div>-->
+						<div id="cmp-lsm-cmpct-pp-2-title" class="lsm-title">
+							<span>MinOverlappingRatio</span>
+						</div>
+            <div id="cmp-lsm-cmpct-pp-2-dpt" class="input-group input-group-sm mb-2" style="display:none;width:80%">
+              <div class="input-group-prepend">
+                <label class="input-group-text">Persistence Threshold</label><!--When the Tombstones need to be cleared by, units?-->
+              </div>
+              <input id="cmp-input-2-DPT" value="30" min="1" max="1000" step="5" type="number" data-preval="2"
+                   class="cmp-input form-control" aria-label="Ratio">
+              <div class="input-group-append incrementer">
+                <button id="cmp-increase-2-DPT" class="increase"></button>
+                <button id="cmp-decrease-2-DPT" class="decrease"></button>
+              </div>
+              <select id="cmp-select-2-DPT" class="input-group-append custom-select cmp-input" data-preunit="0">
+                <option value="0">s</option>
+                <option value="1">mins</option>
+              </select>
+            </div>
+
+						<!--<span class="material-icons" id="rlsm-autoplay-button">play_arrow</span>-->
+						<image id="lsm-cmpct-pp-2-autoplay-button" class="play-class" src="img/play_circle_outline_black_24dp.svg" />
+						<input id="lsm-cmpct-pp-2-progress-bar" data-slider-id='lsm-cmpct-pp-2-Slider' class="cmp-input" type="text" data-slider-min="0"
+							   data-slider-max="100" data-slider-step="1" data-slider-value="0" />
+
+					</div>
+					<div class="col"><br /></div>
+					<div id="lsm-cmpct-pp-2-bush" class="bush-res">
+						<div class="row">
+							<div class="lsm-btn-group">
+								<button type="button" class="lsm-btn btn btn-secondary"></button>
+								<button type="button" class="lsm-btn btn btn-secondary"></button>
+								<button type="button" class="lsm-btn btn btn-secondary"></button>
+							</div>
+						</div>
+
+						<div class="row">
+							<div class="lsm-btn-group">
+								<button type="button" class="lsm-btn btn btn-secondary"></button>
+								<button type="button" class="lsm-btn btn btn-secondary"></button>
+								<button type="button" class="lsm-btn btn btn-secondary"></button>
+							</div>
+						</div>
+
+						<div class="row">
+							<div class="lsm-btn-group">
+								<button type="button" class="lsm-btn btn btn-secondary"></button>
+								<button type="button" class="lsm-btn btn btn-secondary"></button>
+								<button type="button" class="lsm-btn btn btn-secondary"></button>
+							</div>
+						</div>
+
+						<div class="row">
+							<div class="lsm-btn-group">
+								<button type="button" class="lsm-btn btn btn-secondary"></button>
+								<button type="button" class="lsm-btn btn btn-secondary"></button>
+								<button type="button" class="lsm-btn btn btn-secondary"></button>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="lsm-cmpct-pp-3-bush-col col-lg-4 col-md-4 col-sm-4">
+					<div id="cmp-lsm-cmpct-pp-3-mp" class="row cmp-indiv-mp">
+						<div id="cmp-lsm-cmpct-pp-3-title" class="lsm-title">
+							<span>Round-Robin</span>
+						</div>
+            <div id="cmp-lsm-cmpct-pp-3-dpt" class="input-group input-group-sm mb-2" style="display:none;width:80%">
+  						<div class="input-group-prepend">
+  							<label class="input-group-text">Persistence Threshold</label><!--When the Tombstones need to be cleared by, units?-->
+  						</div>
+  						<input id="cmp-input-3-DPT" value="60" min="1" max="1000" step="5" type="number" data-preval="2"
+  							   class="cmp-input form-control" aria-label="Ratio">
+  						<div class="input-group-append incrementer">
+  							<button id="cmp-increase-3-DPT" class="increase"></button>
+  							<button id="cmp-decrease-3-DPT" class="decrease"></button>
+  						</div>
+  						<select id="cmp-select-3-DPT" class="input-group-append custom-select cmp-input" data-preunit="0">
+  							<option value="0">s</option>
+  							<option value="1">mins</option>
+  						</select>
+  					</div>
+						<!--<span class="material-icons" id="rlsm4-autoplay-button">play_arrow</span>-->
+						<image id="lsm-cmpct-pp-3-autoplay-button" class="play-class" src="img/play_circle_outline_black_24dp.svg" />
+						<input id="lsm-cmpct-pp-3-progress-bar" data-slider-id='lsm-cmpct-pp-3-Slider' class="cmp-input" type="text" data-slider-min="0"
+							   data-slider-max="100" data-slider-step="1" data-slider-value="0" />
+
+					</div>
+					<div class="col-1"><br /></div>
+					<div id="lsm-cmpct-pp-3-bush" class="bush-res">
+						<div class="row">
+							<div class="lsm-btn-group">
+								<button type="button" class="lsm-btn btn btn-secondary"></button>
+								<button type="button" class="lsm-btn btn btn-secondary"></button>
+								<button type="button" class="lsm-btn btn btn-secondary"></button>
+							</div>
+						</div>
+
+						<div class="row">
+							<div class="lsm-btn-group">
+								<button type="button" class="lsm-btn btn btn-secondary"></button>
+								<button type="button" class="lsm-btn btn btn-secondary"></button>
+								<button type="button" class="lsm-btn btn btn-secondary"></button>
+							</div>
+						</div>
+
+						<div class="row">
+							<div class="lsm-btn-group">
+								<button type="button" class="lsm-btn btn btn-secondary"></button>
+								<button type="button" class="lsm-btn btn btn-secondary"></button>
+								<button type="button" class="lsm-btn btn btn-secondary"></button>
+							</div>
+						</div>
+
+						<div class="row">
+							<div class="lsm-btn-group">
+								<button type="button" class="lsm-btn btn btn-secondary"></button>
+								<button type="button" class="lsm-btn btn btn-secondary"></button>
+								<button type="button" class="lsm-btn btn btn-secondary"></button>
+							</div>
+						</div>
+					</div>
+				</div> <!-- END of rlsm43-col-res -->
+			</div> <!-- END of diagram result -->
+
+			<br>
+
+			<div id="gradient-show-ttl-1" class="row text-center">
+			</div>
+			<div id="gradient-show-ttl-2" class="row text-center">
+			</div>
+
+			<div id="gradient-show-overlapping-ratio" class="row text-center" style="margin-top:5px">
+			</div>
+			<br>
+			<!-- Cost result starts here -->
+			<div id="cost-result" class="row">
+				<!-- Demo1 cost result starts here -->
+				<!-- #Deletes -->
+				<div class="lsm-cmpct-pp-1-cost-col col-lg-4 col-md-4 col-sm-4">
+					<div class="row">
+						<div class="metrics col-lg-7 col-md-7 col-sm-7">
+							<span class="metric-title" data-toggle="tooltip" data-placement="left"
+								  title="The number of deletes issued to the LSM-tree.">#Deletes</span>
+						</div>
+						<div class="cost-col col-lg-5 col-md-5 col-sm-5 text-center">
+							<span id="lsm-cmpct-pp-1-num-deletes" class="cost uncertain" data-toggle="tooltip" data-placement="right">XXX</span>
+						</div>
+					</div>
+					<!-- #Existing tombstones-->
+					<div class="row">
+						<div class="metrics col-lg-7 col-md-7 col-sm-7">
+							<span class="metric-title" data-toggle="tooltip" data-placement="left"
+								  title="The number of existing tombstones in the current LSM tree.">#Existing tombstones</span>
+						</div>
+						<div class="cost-col col-lg-5 col-md-5 col-sm-5 text-center">
+							<span id="lsm-cmpct-pp-1-num-existing-tombstones" class="cost uncertain" data-toggle="tooltip" data-placement="right">XXX</span>
+						</div>
+					</div>
+					<!-- #Existing tombstones-->
+					<div class="row">
+						<div class="metrics col-lg-7 col-md-7 col-sm-7">
+							<span class="metric-title" data-toggle="tooltip" data-placement="left"
+								  title="The number of expired tombstones (with respect to the corresponding persistence threshold) in the current LSM tree.">#Expired tombstones</span>
+						</div>
+						<div class="cost-col col-lg-5 col-md-5 col-sm-5 text-center">
+							<span id="lsm-cmpct-pp-1-num-expired-tombstones" class="cost uncertain" data-toggle="tooltip" data-placement="right">XXX</span>
+						</div>
+					</div>
+					<!--Maximum tombstones Age-->
+					<div class="row">
+						<div class="metrics col-lg-7 col-md-7 col-sm-7">
+							<span class="metric-title" data-toggle="tooltip" data-placement="left"
+								  title="The maximum obsolete age among all the tombstones in the current LSM tree.">Max obsolete age</span>
+						</div>
+						<div class="cost-col col-lg-5 col-md-5 col-sm-5 text-center">
+							<span id="lsm-cmpct-pp-1-max-obsolete-age" class="cost uncertain" data-toggle="tooltip" data-placement="right">XXX</span>
+						</div>
+					</div>
+					<!-- Number of compactions-->
+					<div class="row">
+						<div class="metrics col-lg-7 col-md-7 col-sm-7">
+							<span class="metric-title" data-toggle="tooltip" data-placement="left"
+								  title="The total number of compactions occured so far">#Compactions</span>
+						</div>
+						<div class="cost-col col-lg-5 col-md-5 col-sm-5 text-center">
+							<span id="lsm-cmpct-pp-1-num-compaction" class="cost uncertain" data-toggle="tooltip" data-placement="right">XXX</span>
+						</div>
+					</div>
+					<!-- Average compaction size-->
+					<div class="row">
+						<div class="metrics col-lg-7 col-md-7 col-sm-7">
+							<span class="metric-title" data-toggle="tooltip" data-placement="left"
+								  title="The average compaction size of all the compactions occured so far">Avg cmpct. size</span>
+						</div>
+						<div class="cost-col col-lg-5 col-md-5 col-sm-5 text-center">
+							<span id="lsm-cmpct-pp-1-compaction-size" class="cost uncertain">XXX</span>
+						</div>
+					</div>
+					<!-- Average compaction latency -->
+					<div class="row">
+						<div class="metrics col-lg-7 col-md-7 col-sm-7">
+							<span class="metric-title" data-toggle="tooltip" data-placement="left"
+								  title="The average compaction latency of all the compactions occured so far.">Avg cmpct. lat.</span>
+						</div>
+						<div class="cost-col col-lg-5 col-md-5 col-sm-5 text-center">
+							<span id="lsm-cmpct-pp-1-compaction-latency" class="cost uncertain" data-toggle="tooltip" data-placement="right">XXX</span>
+						</div>
+					</div>
+					<!-- Worst case compaction latency -->
+					<div class="row">
+						<div class="metrics col-lg-7 col-md-7 col-sm-7">
+							<span class="metric-title" data-toggle="tooltip" data-placement="left"
+								  title="The worst-case compaction latnecy among all the compactions occured so far.">Wc cmpct. lat.</span>
+						</div>
+						<div class="cost-col col-lg-5 col-md-5 col-sm-5 text-center">
+							<span id="lsm-cmpct-pp-1-tail-compaction-latency" class="cost uncertain" data-toggle="tooltip" data-placement="right">XXX</span>
+						</div>
+					</div>
+					<!-- Ingestion Cost -->
+					<div class="row">
+						<div class="metrics col-lg-7 col-md-7 col-sm-7">
+							<span class="metric-title" data-toggle="tooltip" data-placement="left"
+								  title="Ingestion cost: the average I/O performed by ingestion (including inserts and deletes).">Ingestion cost</span>
+						</div>
+						<div class="cost-col col-lg-5 col-md-5 col-sm-5 text-center">
+							<span id="lsm-cmpct-pp-1-ingestion-cost" class="cost uncertain" data-toggle="tooltip" data-placement="right">XXX</span>
+						</div>
+					</div>
+					<!-- Write Amplification -->
+					<div class="row">
+						<div class="metrics col-lg-7 col-md-7 col-sm-7">
+							<span class="metric-title" data-toggle="tooltip" data-placement="left"
+								  title="The average write amplification.">Write Amp</span>
+						</div>
+						<div class="cost-col col-lg-5 col-md-5 col-sm-5 text-center">
+							<span id="lsm-cmpct-pp-1-write-amp" class="cost uncertain" data-toggle="tooltip" data-placement="right">XXX</span>
+						</div>
+					</div>
+					<!--Storage space-->
+					<div class="row">
+						<div class="metrics col-lg-7 col-md-7 col-sm-7">
+							<span class="metric-title">Storage space</span>
+						</div>
+						<div class="cost-col col-lg-5 col-md-5 col-sm-5 text-center">
+							<span id="lsm-cmpct-pp-1-storage-cost" class="cost uncertain" data-toggle="tooltip" data-placement="right">XXX TB</span>
+						</div>
+					</div>
+					<!--Memory footprint-->
+					<div class="row">
+						<div class="metrics col-lg-7 col-md-7 col-sm-7">
+							<span class="metric-title">Memory footprint</span>
+						</div>
+						<div class="cost-col col-lg-5 col-md-5 col-sm-5 text-center">
+							<span id="lsm-cmpct-pp-1-mem-cost" class="cost uncertain" data-toggle="tooltip" data-placement="right">XXX GB</span>
+						</div>
+					</div>
+				</div> <!-- END of demo1 cost result -->
+				<!-- Demo2 cost result starts here -->
+				<div class="lsm-cmpct-pp-2-cost-col col-lg-4 col-md-4 col-sm-4">
+					<div class="row">
+						<div class="cost-col col-lg-12 col-md-12 col-sm-12 text-center">
+							<span id="lsm-cmpct-pp-2-num-deletes" class="cost uncertain">XXX</span>
+						</div>
+					</div>
+					<!-- #Existing tombstones-->
+					<div class="row">
+						<div class="cost-col col-lg-12 col-md-12 col-sm-12 text-center">
+							<span id="lsm-cmpct-pp-2-num-existing-tombstones" class="cost uncertain">XXX</span>
+						</div>
+					</div>
+					<!-- #Existing tombstones-->
+					<div class="row">
+						<div class="cost-col col-lg-12 col-md-12 col-sm-12 text-center">
+							<span id="lsm-cmpct-pp-2-num-expired-tombstones" class="cost uncertain">XXX</span>
+						</div>
+					</div>
+					<!-- #Existing tombstones-->
+					<div class="row">
+						<div class="cost-col col-lg-12 col-md-12 col-sm-12 text-center">
+							<span id="lsm-cmpct-pp-2-max-obsolete-age" class="cost uncertain">XXX</span>
+						</div>
+					</div>
+					<!-- Number of compactions-->
+					<div class="row">
+						<div class="cost-col col-lg-12 col-md-12 col-sm-12 text-center">
+							<span id="lsm-cmpct-pp-2-num-compaction" class="cost uncertain">XXX</span>
+						</div>
+					</div>
+					<!-- Average compaction size-->
+					<div class="row">
+						<div class="cost-col col-lg-12 col-md-12 col-sm-12 text-center">
+							<span id="lsm-cmpct-pp-2-compaction-size" class="cost uncertain">XXX</span>
+						</div>
+					</div>
+					<!-- Average compaction latency -->
+					<div class="row">
+						<div class="cost-col col-lg-12 col-md-12 col-sm-12 text-center">
+							<span id="lsm-cmpct-pp-2-compaction-latency" class="cost uncertain">XXX</span>
+						</div>
+					</div>
+					<!-- Worst case compaction latency -->
+					<div class="row">
+						<div class="cost-col col-lg-12 col-md-12 col-sm-12 text-center">
+							<span id="lsm-cmpct-pp-2-tail-compaction-latency" class="cost uncertain">XXX</span>
+						</div>
+					</div>
+					<!-- Ingestion Cost -->
+					<div class="row">
+						<div class="cost-col col-lg-12 col-md-12 col-sm-12 text-center">
+							<span id="lsm-cmpct-pp-2-ingestion-cost" class="cost uncertain">XXX</span>
+						</div>
+					</div>
+
+					<!-- Write Amplification -->
+					<div class="row">
+						<div class="cost-col col-lg-12 col-md-12 col-sm-12 text-center">
+							<span id="lsm-cmpct-pp-2-write-amp" class="cost uncertain">XXX</span>
+						</div>
+					</div>
+					<!--Storage space-->
+					<div class="row">
+						<div class="cost-col col-lg-12 col-md-12 col-sm-12 text-center">
+							<span id="lsm-cmpct-pp-2-storage-cost" class="cost uncertain">XXX TB</span>
+						</div>
+					</div>
+					<!--Memory footprint-->
+					<div class="row">
+						<div class="cost-col col-lg-12 col-md-12 col-sm-12 text-center">
+							<span id="lsm-cmpct-pp-2-mem-cost" class="cost uncertain">XXX GB</span>
+						</div>
+					</div>
+				</div> <!-- END of demo3 cost result -->
+				<!-- Demo3 cost result starts here -->
+				<div class="lsm-cmpct-pp-3-cost-col col-lg-4 col-md-4 col-sm-4">
+					<div class="row">
+						<div class="cost-col col-lg-12 col-md-12 col-sm-12 text-center">
+							<span id="lsm-cmpct-pp-3-num-deletes" class="cost uncertain">XXX</span>
+						</div>
+					</div>
+					<!-- #Existing tombstones-->
+					<div class="row">
+						<div class="cost-col col-lg-12 col-md-12 col-sm-12 text-center">
+							<span id="lsm-cmpct-pp-3-num-existing-tombstones" class="cost uncertain">XXX</span>
+						</div>
+					</div>
+					<!-- #Existing tombstones-->
+					<div class="row">
+						<div class="cost-col col-lg-12 col-md-12 col-sm-12 text-center">
+							<span id="lsm-cmpct-pp-3-num-expired-tombstones" class="cost uncertain">XXX</span>
+						</div>
+					</div>
+					<!-- #Existing tombstones-->
+					<div class="row">
+						<div class="cost-col col-lg-12 col-md-12 col-sm-12 text-center">
+							<span id="lsm-cmpct-pp-3-max-obsolete-age" class="cost uncertain">XXX</span>
+						</div>
+					</div>
+					<!-- Number of compactions-->
+					<div class="row">
+						<div class="cost-col col-lg-12 col-md-12 col-sm-12 text-center">
+							<span id="lsm-cmpct-pp-3-num-compaction" class="cost uncertain">XXX</span>
+						</div>
+					</div>
+					<!-- Average compaction size-->
+					<div class="row">
+						<div class="cost-col col-lg-12 col-md-12 col-sm-12 text-center">
+							<span id="lsm-cmpct-pp-3-compaction-size" class="cost uncertain">XXX</span>
+						</div>
+					</div>
+					<!-- Average compaction latency -->
+					<div class="row">
+						<div class="cost-col col-lg-12 col-md-12 col-sm-12 text-center">
+							<span id="lsm-cmpct-pp-3-compaction-latency" class="cost uncertain">XXX</span>
+						</div>
+					</div>
+					<!-- Worst case compaction latency -->
+					<div class="row">
+						<div class="cost-col col-lg-12 col-md-12 col-sm-12 text-center">
+							<span id="lsm-cmpct-pp-3-tail-compaction-latency" class="cost uncertain">XXX</span>
+						</div>
+					</div>
+					<!-- Ingestion Cost -->
+					<div class="row">
+						<div class="cost-col col-lg-12 col-md-12 col-sm-12 text-center">
+							<span id="lsm-cmpct-pp-3-ingestion-cost" class="cost uncertain">XXX</span>
+						</div>
+					</div>
+
+					<!-- Write Amplification -->
+					<div class="row">
+						<div class="cost-col col-lg-12 col-md-12 col-sm-12 text-center">
+							<span id="lsm-cmpct-pp-3-write-amp" class="cost uncertain">XXX</span>
+						</div>
+					</div>
+					<!--Storage space-->
+					<div class="row">
+						<div class="cost-col col-lg-12 col-md-12 col-sm-12 text-center">
+							<span id="lsm-cmpct-pp-3-storage-cost" class="cost uncertain">XXX TB</span>
+						</div>
+					</div>
+					<!--Memory footprint-->
+					<div class="row">
+						<div class="cost-col col-lg-12 col-md-12 col-sm-12 text-center">
+							<span id="lsm-cmpct-pp-3-mem-cost" class="cost uncertain">XXX GB</span>
+						</div>
+					</div>
+				</div> <!-- END of demo3 cost result -->
+
+			</div> <!-- END of all cost results -->
+
+			<div id="plot-result" style="width: 100%; text-align: left; padding: 5px; margin: 0 auto; display:none">
+				<hr>
+				<div class="row" style="border: 2px solid #666666; border-radius: 15px;border-style: dotted">
+					<div class="col-lg-4">
+						<div class="row" style="margin-right:0px; margin-left:0px">
+							<div class="col-lg-4" style="border: 2px solid #F5B041;background-color: #F5B041; height: 20px;margin-top:5px;">
+							</div>
+							<div id="lsm-cmpct-pp-1-legend" class="col-lg-8 text-center" style="margin:5px auto">
+								<b>FADE</b>
+							</div>
+						</div>
+					</div>
+					<div class="col-lg-4">
+						<div class="row " style="margin-right:0px; margin-left:0px">
+							<div class="col-lg-4" style="border: 2px solid #52BE80;background-color: #52BE80; height: 20px;margin-top:5px;">
+							</div>
+							<div id="lsm-cmpct-pp-2-legend" class="col-lg-8 text-center" style="margin:5px auto">
+								<b> MinOverlappingRatio</b>
+							</div>
+						</div>
+					</div>
+					<div class="col-lg-4">
+						<div class="row " style="margin-right:0px; margin-left:0px">
+							<div class="col-lg-4" style="border: 2px solid #2E86C1;background-color: #2E86C1; height: 20px;margin-top:5px;">
+							</div>
+							<div id="lsm-cmpct-pp-3-legend" class="col-lg-8 text-center" style="margin:5px auto">
+								<b> Round-Robin</b><!--Hybrid Strategy-->
+							</div>
+						</div>
+					</div>
+				</div>
+				<br>
+
+				<div class="row">
+					<div class="col-lg-3">
+						<div id="num_deletes_plot" style="border: 2px solid #666666; border-radius: 15px;border-style: dashed;padding:1px">
+						</div>
+					</div>
+					<div class="col-lg-3">
+						<div id="num_existing_tombstones_plot" style="border: 2px solid #666666; border-radius: 15px;border-style: dashed;padding:1px">
+						</div>
+					</div>
+					<div class="col-lg-3">
+						<div id="num_expired_tombstones_plot" style="border: 2px solid #666666; border-radius: 15px;border-style: dashed;padding:1px">
+						</div>
+					</div>
+					<div class="col-lg-3">
+						<div id="max_obsolete_age_plot" style="border: 2px solid #666666; border-radius: 15px;border-style: dashed;padding:1px">
+						</div>
+					</div>
+				</div>
+				<br>
+				<div class="row">
+					<div class="col-lg-3">
+						<div id="num_compactions_plot" style="border: 2px solid #666666; border-radius: 15px;border-style: dashed;padding:1px">
+						</div>
+					</div>
+					<div class="col-lg-3">
+						<div id="avg_cmpct_lat_plot" style="border: 2px solid #666666; border-radius: 15px;border-style: dashed;padding:1px">
+						</div>
+					</div>
+					<div class="col-lg-3">
+						<div id="avg_cmpct_size_plot" style="border: 2px solid #666666; border-radius: 15px;border-style: dashed;padding:1px">
+						</div>
+					</div>
+					<div class="col-lg-3">
+						<div id="wc_cmpct_lat_plot" style="border: 2px solid #666666; border-radius: 15px;border-style: dashed;padding:1px">
+						</div>
+					</div>
+
+				</div>
+				<br>
+				<div class="row">
+					<div class="col-lg-3">
+						<div id="ingest_cost_plot" style="border: 2px solid #666666; border-radius: 15px;border-style: dashed;padding:1px">
+						</div>
+					</div>
+					<div class="col-lg-3">
+						<div id="write_amp_plot" style="border: 2px solid #666666; border-radius: 15px;border-style: dashed;padding:1px">
+						</div>
+					</div>
+
+					<div class="col-lg-3">
+						<div id="storage_space_plot" style="border: 2px solid #666666; border-radius: 15px;border-style: dashed;padding:1px">
+						</div>
+					</div>
+					<div class="col-lg-3">
+						<div id="memory_footprint_plot" style="border: 2px solid #666666; border-radius: 15px;border-style: dashed;padding:1px">
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<hr class="my-4 row">
+
+			<div class="row" id="show-plot-btn">
+				<div class="col-lg-12 text-right">
+					<div>
+						<a class="btn btn-info btn-lg" target="_blank" style="color:#fff">
+							Show Plots
+						</a>
+					</div>
+				</div>
+			</div>
+			<div class="row" id="show-stats-btn" style="display:none">
+				<div class="col-lg-12 text-right">
+					<div>
+						<a class="btn btn-info btn-lg" target="_blank" style="color:#fff">
+							Show Stats
+						</a>
+					</div>
+				</div>
+			</div>
+
+		</div>
+	</section>
+	<!-- <section id="selected-takeaways" class="bg-light">
+	  <div class="container">
+		<div class="row ection-title text-center">
+				  <h2> Selected Takeaways </h2>
+		</div>
+
+		  <div class="row" style="padding-top:40px">
+			<div class="col-lg-6">
+			  <img class="img-responsive img-centered" style="border: 5px solid #ddd;border-radius: 8px;padding: 5px;margin-left:10%" src="./img/compaction-takeaway-data-moved.png" alt="" width=80%/>
+			</div>
+			<div class="col-lg-6">
+			  <img class="img-responsive img-centered" style="border: 5px solid #ddd;border-radius: 8px;padding: 5px;margin-left:10%" src="./img/compaction-takeaway-tail-cmpt-latency.png" alt="" width=80%/>
+			</div>
+		  </div>
+
+		  <div class="row text-center">
+			<div class="col-lg-6">
+			  <div class="text-center" style="margin:10px auto">
+				<img class="img-responsive img-centered" src="./img/shining-bulbs.png" width="30px">
+				<span>Compacting data at smaller granularity reduces data movement. </span>
+			  </div>
+			</div>
+			<div class="col-lg-6">
+			  <div class="text-center" style="margin:10px auto">
+				<img class="img-responsive img-centered" src="./img/shining-bulbs.png" width="30px">
+				<span>"Tiering" moves the least data but incurs the highest tail write latency.</span>
+			  </div>
+			</div>
+		  </div>
+
+		  <div class="row" style="padding-top:20px">
+			<div class="col-lg-6">
+			  <img class="img-responsive img-centered" style="border: 5px solid #ddd;border-radius: 8px;padding: 5px;margin-left:10%" src="./img/compaction-takeaway-point-lookup.png" alt="" width=80%/>
+			</div>
+			<div class="col-lg-6">
+			  <img class="img-responsive img-centered" style="border: 5px solid #ddd;border-radius: 8px;padding: 5px;margin-left:20%" src="./img/compaction-takeaway-update.png" alt="" width=60%/>
+			</div>
+		  </div>
+
+		  <div class="row text-center">
+			<div class="col-lg-6">
+			  <div class="text-center" style="margin:10px auto">
+				<img class="img-responsive img-centered" src="./img/shining-bulbs.png" width="30px">
+				<span>Hybrid layouts (e.g., 1-leveling) dominate point lookup performance. </span>
+			  </div>
+			</div>
+			<div class="col-lg-6">
+			  <div class="text-center" style="margin:10px auto">
+				<img class="img-responsive img-centered" src="./img/shining-bulbs.png" width="30px">
+				<span>"Tiering" dominates other strategies for update-intensive workloads.</span>
+			  </div>
+			</div>
+		  </div>
+	  </div>
+	</section> -->
+	<section id="publication" class="bg-light" style="padding-top:100px">
+		<div class="container" style="margin-top:-150px">
+			<div class="row" style="text-align: center">
+				<div class="col-lg-12">
+					<h2><br><br><b>For more details check our paper!</h2></b>
+				</div>
+			</div>
+			<div class="row">
+        <div class="col-lg-12">
+					<p class="content">
+						<br />
+            Subhadeep Sarkar, Tarikul Islam Papon, Dimitris Staratzis, Manos Athanassoulis <br>
+              <a href="https://dl.acm.org/doi/pdf/10.1145/3318464.3389757" target="_blank"><b><u>Lethe: A Tunable Delete-Aware LSM Engine</u></b></a>
+              <a href="https://arxiv.org/abs/2006.04777" target="_blank"><font color="Blue"><u>[Updated arXiv version]</u></font></a>
+              <a href="https://www.youtube.com/watch?v=P0qUS2BwATg" target="_blank"><font color="Blue"><u>[SIGMOD '20 presentation video]</u></font></a>
+              <br/>
+              In Proceedings of the ACM SIGMOD International Conference on Management of Data, 2020
+
+					</p>
+				</div>
+				<div class="col-lg-12">
+					<p class="content">
+						<br />
+						Subhadeep Sarkar, Dimitris Staratzis, Zichen Zhu, Manos Athanassoulis <br />
+						<a href="http://vldb.org/pvldb/vol14/p2216-sarkar.pdf" target="_blank"><b><u>Constructing and Analyzing the LSM Compaction Design Space</u></b></a>
+						<!-- <a href="https://arxiv.org/abs/2006.04777" target="_blank"><font color="Blue"><u>[Updated arXiv version]</u></font></a> -->
+						<a href="https://www.youtube.com/watch?v=Ok1_ADEclFc" target="_blank"><font color="Blue"><u>[VLDB '21 presentation video]</u></font></a>
+						<br />
+						In Proceedings of the VLDB Endowment, Volume 11, Issue 14, August, 2021
+
+					</p>
+				</div>
+
+
+			</div>
+		</div>
+	</section>
+
+	<section id="authors" class="alternate-2">
+		<div class="container page-scroll">
+			<div class="row" style="text-align: center">
+				<h2><br><b>Meet The Authors</b></h2><br>
+			</div>
+			<br />
+			<div class="row">
+
+        <div class="col-md-4 col-lg-4 text-center topReveal">
+					<div class="team-member-box-2">
+						<div class="team-image-wrapper rotateTopReveal">
+
+							<a target="_blank" href="https://cs-people.bu.edu/zczhu/">
+								<img src="./img/people/zichen.jpg" alt="Zichen Zhu" class="img-fluid rounded-circle team-member-img text-center image-people-toggle-faculty image-shown">
+							</a>
+						</div>
+						<h3><a target="_blank" href="https://cs-people.bu.edu/zczhu/"><font color="#000"> Zichen Zhu </font></a></h3>
+						<p style="text-align:center">PhD Researcher</p>
+					</div>
+				</div>
+
+				<div class="col-md-4 col-lg-4 text-center topReveal">
+					<div class="team-member-box-2">
+						<div class="team-image-wrapper rotateTopReveal">
+
+							<a target="_blank" href="http://subhadeepsarkar.bitbucket.io">
+								<img src="./img/people/subjadeep.jpeg" alt="Subhadeep Sarkar" class="img-fluid rounded-circle team-member-img text-center image-people-toggle-faculty image-shown">
+							</a>
+						</div>
+						<h3> <a target="_blank" href="http://subhadeepsarkar.bitbucket.io"><font color="#000"> Subhadeep Sarkar</font></a></h3>
+						<p style="text-align:center">Postdoctoral Researcher</p>
+					</div>
+				</div>
+
+				<div class="col-md-4 col-lg-4 text-center topReveal">
+					<div class="team-member-box-2">
+						<div class="team-image-wrapper rotateTopReveal">
+
+							<a target="_blank" href="https://cs-people.bu.edu/mathan/">
+								<img src="./img/people/manos.jpg" alt="Manos Athanassoulis" class="img-fluid rounded-circle team-member-img text-center image-people-toggle-faculty image-shown">
+							</a>
+						</div>
+						<h3><a target="_blank" href="https://cs-people.bu.edu/mathan/"><font color="#000"> Manos Athanassoulis</font></a></h3>
+						<p style="text-align:center">Assistant Professor</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Footer -->
+	<!-- <footer>
+			<div class="footer-above">
+				<div class="container">
+					<div class="row text-center">
+	<hr>
+					</div>
+				</div>
+			</div>
+			<div class="footer-below">
+				<div class="container">
+					<div class="row text-center">
+						<div class="col-lg-12">Copyright © All Rights Reserved.</div>
+					</div>
+				</div>
+			</div>
+		</footer> -->
+
+	<section id="sponsors" style="background-color:#ecf0f1;padding:0px;margin:40px 0px">
+		<div class="container page-scroll">
+			<div class="row" style="text-align: center">
+				<h2><br><b>Sponsors</b></h2><br>
+			</div>
+			<div class="row">
+				<div class="col-lg-6 text-center">
+					<img src="./img/FB-logo.png" width="150">
+					<br>
+				</div>
+
+				<div class="col-lg-6 text-center">
+					<a target="_blank" href="#">
+						<img src="./img/NSF-logo.png" width="150">
+					</a>
+					<br>
+					<br><br>
+				</div>
+			</div>
+
+		</div>
+	</section>
+	<footer class="text-center">
+		<div class="footer-below">
+			<div class="container">
+				<div class="row">
+					<div class="col-lg-6">
+						<a target="_blank" href="http://www.bu.edu/cs/">
+							<img class="img-responsive img-centered img-logo" src="./img/BU-logo.png" alt="">
+						</a>
+						<br>
+					</div>
+
+					<div class="col-lg-6">
+						<a target="_blank" href="https://disc.bu.edu">
+							<img class="img-responsive img-centered img-logo" src="./img/disc-logo.png" alt="">
+						</a>
+						<br>
+						<br>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="footer-below">
+			<div class="container">
+				<div class="row text-center">
+					<div class="col-lg-12 text-center">
+						Copyright © 2023. DiSC lab. All Rights Reserved.
+					</div>
+				</div>
+			</div>
+		</div>
+	</footer>
+
+
+	<!-- <script>
+		window.onload = function(){
+		  if (navigator.userAgent.match(/Chrome|AppleWebKit/)) {
+		window.location.href = "#interactiveDemo";
+	} else {
+		window.location.hash = "#interactiveDemo";
+	}
+		}
+	  </script> -->
+	<!-- jQuery (Bootstrap JS plugins depend on it) -->
+	<script src="js/jquery-3.4.1.min.js"></script>
+	<!-- <script src="js/bootstrap.min.js"></script> -->
+	<script src="js/bootstrap.bundle.min.js"></script>
+	<script type="text/x-mathjax-config">
+		MathJax.Hub.Config({tex2jax: {preview: "none", inlineMath: [['$','$'], ['\\(','\\)']]}, "fast-preview": {disabled: true}});
+	</script>
+	<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML' async></script>
+	<script src="js/bootstrap-slider.js"></script>
+	<script src="js/popper.min.js"></script>
+	<script src="js/script.js"></script>
+	<script src="js/treeBush.js"></script>
+</body>
+
+</html>
