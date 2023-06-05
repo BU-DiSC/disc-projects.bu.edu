@@ -2,6 +2,7 @@ body {
 	font-family: "Lato","Helvetica Neue",Helvetica,Arial,sans-serif;
 	font-weight: 400;
 }
+
 section {
 	padding-top: 100px;
   padding-left: 50px;
@@ -35,9 +36,7 @@ p {
 	font-size: 20px;
 	font-weight: 300;
 }
-select {
 
-}
 hr {
 	margin-top: 1.5rem;
 	margin-bottom: 1.5rem;
@@ -256,8 +255,6 @@ font-size: 1.5em;
 	box-shadow: 0 0 0 0.1rem rgba(44,62,80,0.25);
 }
 
-.input-group-sm>.input-group-prepend>.input-group-text {
-}
 
 .progress-label {
 	text-align: center;
@@ -278,9 +275,6 @@ input[type=number]::-webkit-outer-spin-button,
 input[type=number]::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
-}
-input[type=number] {
-    -moz-appearance:textfield;
 }
 
 /* Merge policy selecting bar */
@@ -433,12 +427,7 @@ input[type=number] {
 
 }
 
-/* LSM tree bush diagram reuslt display */
-.bush-res > div:first-child > button:first-child,
-.bush-res > div:first-child >  div:first-child > button:first-child  { /* Custom buffer color */
-	/*background-color:#2C3E50;
-	border-color: #2C3E50;*/
-}
+
 .lsm-btn-group, .lsm-btn { /* Default, tree bush result */
 	height: 18px;
 	margin: 0 auto 3px;
@@ -481,9 +470,7 @@ input[type=number] {
 .cost-col {
 	padding: 0px;
 }
-.uncertain {
-	/*color:red;*/
-}
+
 
 .col-lg-3 .row {
 	padding-left: 15px;
@@ -692,3 +679,4 @@ footer .footer-below {
     /* padding-bottom: -5px; */
     /*background-color: #ecf0f1;*/ /*#233140;*/
 }
+
