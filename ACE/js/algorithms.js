@@ -112,9 +112,9 @@ function calculate(wload, bLen, alpha, baseAlg){
     //base bufferpool
     var baseTotalCells = 0;
     var basetable = $('<table>').attr("id", "base-alg-table").addClass("table cmp-indiv-mp");
-    for(var i = 0; i <= bufferLength / 16; i++){
-        var row = $('<tr>');
-        for(var k = 0; k < 16 && baseTotalCells < Math.ceil(bufferLength); k++){
+    for(var i = 0; i <= bufferLength / 20; i++){
+        var row = $('<tr>').addClass("tablecell");
+        for(var k = 0; k < 20 && baseTotalCells < Math.ceil(bufferLength); k++){
             row.append($("<td>"));
             baseTotalCells++;
         }
@@ -125,9 +125,9 @@ function calculate(wload, bLen, alpha, baseAlg){
     //ACE bufferpool
     var ACETotalCells = 0;
     var ACEtable = $('<table>').attr("id", "ACE-alg-table").addClass("table cmp-indiv-mp");
-    for(var i = 0; i <= bufferLength / 16; i++){
-        var row = $('<tr>');
-        for(var k = 0; k < 16 && ACETotalCells < Math.ceil(bufferLength); k++){
+    for(var i = 0; i <= bufferLength / 20; i++){
+        var row = $('<tr>').addClass("tablecell");
+        for(var k = 0; k < 20 && ACETotalCells < Math.ceil(bufferLength); k++){
             row.append($("<td>"));
             ACETotalCells++;
         }
@@ -693,6 +693,7 @@ function ACE(page){
 // }
 
 //returns IO of base and ACE
+
 function IOcalc(wload, bLen, alpha, baseAlg){
     reloader = 0;
     //global variables

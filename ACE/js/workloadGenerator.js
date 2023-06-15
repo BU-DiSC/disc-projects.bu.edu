@@ -133,10 +133,33 @@ function RWWorkload(e_val){
 
 //generate graph for varying Read/Write ratio
 function RWgraph(){
-        var temp1 = IOcalc(RWWorkload(20),parseInt(b.value), parseInt(alpha.value), parseInt($("#baseAlg").val()));
-        var temp2 = IOcalc(RWWorkload(40),parseInt(b.value), parseInt(alpha.value), parseInt($("#baseAlg").val()));
-        var temp3 = IOcalc(RWWorkload(60),parseInt(b.value), parseInt(alpha.value), parseInt($("#baseAlg").val()));
-        var temp4 = IOcalc(RWWorkload(80),parseInt(b.value), parseInt(alpha.value), parseInt($("#baseAlg").val()));
+    
+    var b = parseInt($("#b").val())
+    var a = parseInt($("#alpha").val());
+
+    var LRUx1 = [];
+    var LRUy1 = [];
+    var LRUx2 = [];
+    var LRUy2 = [];
+    var CFLRUx1 = [];
+    var CFLRUy1 = [];
+    var CFLRUx2 = [];
+    var CFLRUy2 = [];
+
+    for(var i = 0; i < 100; i+=10){
+        var LRUstats = IOcalc(RWWorkload(i),b, a, 0);
+        LRUx1.push(i);
+        LRUy1.push(LRUstats[0] * .4);
+        LRUx2.push(i);
+        LRUy2.push(LRUstats[1] * .4);
+
+        var CFLRUstats = IOcalc(RWWorkload(i),b, a, 1);
+        CFLRUx1.push(i);
+        CFLRUy1.push(CFLRUstats[0] * .4);
+        CFLRUx2.push(i);
+        CFLRUy2.push(CFLRUstats[1] * .4);
+    }
+
         var RWlayout = {
             xaxis: {
                 autorange: true,
@@ -150,30 +173,16 @@ function RWgraph(){
                 showgrid: false,
                 zeroline: false,
                 showline: false, 
-                title: "# write IO"
+                title: "Write latency (ms)"
             },
             title: "Read/Write %"
         };
-        let baseAlgTitle="";
-        let ACEAlgTitle="";
-        let something = parseInt($("#baseAlg").val())
-        if(something == 0){
-            baseAlgTitle = "base-LRU"
-            ACEAlgTitle = "ACE-LRU"
-        }else{
-            baseAlgTitle = "base-CFLRU"
-            ACEAlgTitle = "ACE-CFLRU"
-        }
-        var x1 = [20, 40, 60, 80];
-        var y1 = [temp1[0], temp2[0], temp3[0], temp4[0]];
-    
-    
-        var x2 = [20, 40, 60, 80];
-        var y2 = [temp1[1], temp2[1], temp3[1], temp4[1]];
         
         var RWData = [
-            {x: x1, y: y1, mode:"lines", name:baseAlgTitle},
-            {x: x2, y: y2, mode:"lines", name:ACEAlgTitle}
+            {x: LRUx1, y: LRUy1, mode:"lines", name:"Base LRU"},
+            {x: LRUx2, y: LRUy2, mode:"lines", name:"ACE LRU"},
+            {x: CFLRUx1, y: CFLRUy1, mode:"lines", name:"Base CFLRU"},
+            {x: CFLRUx2, y: CFLRUy2, mode:"lines", name:"ACE CFLRU"},
         ];
         
         Plotly.newPlot('RWplot', RWData, RWlayout);
@@ -181,51 +190,58 @@ function RWgraph(){
 
 //generate graph for varying Buffer size
 function Bgraph(){
-    var temp1 = IOcalc(generateWorkload(),10, parseInt(alpha.value), parseInt($("#baseAlg").val()));
-    var temp2 = IOcalc(generateWorkload(),50, parseInt(alpha.value), parseInt($("#baseAlg").val()));
-    var temp3 = IOcalc(generateWorkload(),250, parseInt(alpha.value), parseInt($("#baseAlg").val()));
-    var temp4 = IOcalc(generateWorkload(),1000, parseInt(alpha.value), parseInt($("#baseAlg").val()));
-    var Blayout = {
-        xaxis: {
-            autorange: true,
-            showgrid: false,
-            zeroline: false,
-            showline: false,
-            title: "Bufferpool Size"
-        },
-        yaxis: {
-            autorange: true,
-            showgrid: false,
-            zeroline: false,
-            showline: false, 
-            title: "# write IO"
-        },
-        title: "Buffer Size"
-    };
 
-    let baseAlgTitle="";
-    let ACEAlgTitle="";
-    let something = parseInt($("#baseAlg").val())
-    if(something == 0){
-        baseAlgTitle = "base-LRU"
-        ACEAlgTitle = "ACE-LRU"
-    }else{
-        baseAlgTitle = "base-CFLRU"
-        ACEAlgTitle = "ACE-CFLRU"
+    var a = parseInt($("#alpha").val());
+
+    var LRUx1 = [];
+    var LRUy1 = [];
+    var LRUx2 = [];
+    var LRUy2 = [];
+    var CFLRUx1 = [];
+    var CFLRUy1 = [];
+    var CFLRUx2 = [];
+    var CFLRUy2 = [];
+
+    for(var i = 10; i < 1000; i = i * 2.5){
+        var LRUstats = IOcalc(generateWorkload(),i, a, 0);
+        LRUx1.push(i);
+        LRUy1.push(LRUstats[0] * .4);
+        LRUx2.push(i);
+        LRUy2.push(LRUstats[1] * .4);
+
+        var CFLRUstats = IOcalc(generateWorkload(),i, a, 1);
+        CFLRUx1.push(i);
+        CFLRUy1.push(CFLRUstats[0] * .4);
+        CFLRUx2.push(i);
+        CFLRUy2.push(CFLRUstats[1] * .4);
     }
-    
-    var x1 = [10, 50, 250, 1000];
-    var y1 = [temp1[0], temp2[0], temp3[0], temp4[0]];
 
-
-    var x2 = [10, 50, 250, 1000];
-    var y2 = [temp1[1], temp2[1], temp3[1], temp4[1]];
+        var Blayout = {
+            xaxis: {
+                autorange: true,
+                showgrid: false,
+                zeroline: false,
+                showline: false,
+                title: "Bufferpool size"
+            },
+            yaxis: {
+                autorange: true,
+                showgrid: false,
+                zeroline: false,
+                showline: false, 
+                title: "Write latency (ms)"
+            },
+            title: "Buffer Size"
+        };
+        
+        var BData = [
+            {x: LRUx1, y: LRUy1, mode:"lines", name:"Base LRU"},
+            {x: LRUx2, y: LRUy2, mode:"lines", name:"ACE LRU"},
+            {x: CFLRUx1, y: CFLRUy1, mode:"lines", name:"Base CFLRU"},
+            {x: CFLRUx2, y: CFLRUy2, mode:"lines", name:"ACE CFLRU"},
+        ];
+        
+        Plotly.newPlot('Bplot', BData, Blayout);
     
-    var BData = [
-        {x: x1, y: y1, mode:"lines", name:baseAlgTitle},
-        {x: x2, y: y2, mode:"lines", name:ACEAlgTitle}
-    ];
-    
-    Plotly.newPlot('Bplot', BData, Blayout);
 }
 })

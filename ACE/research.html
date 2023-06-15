@@ -43,7 +43,6 @@
   	<script src="js/plotly.js"></script>
   	<script src="js/workloadGenerator.js"></script>
   	<script src="js/algorithms.js"></script>
-	<script src="js/data.js"></script>
 	<style>
 		div.fixed {
 		position: fixed;
@@ -269,26 +268,9 @@
 			<!-- Interactive Demo result starts here -->
 			<!-- Diagram result starts here -->
 			<style>
-						
-				.table {
-					  border-spacing: 0px;
-					  margin-right: 50px;
-					margin-bottom: 20px;
-				}
-				td {
-					border: 1px solid black;
-					width: 10px;
-					height: 10px;
-					text-align: center;
-				}
-				.cellRed
-				{
-					background-color: Red;
-				}
-
-				.cellGreen
-				{
-					background-color: Lime;
+				.tablecell{
+					display: table-cell;
+					vertical-align: inherit;
 				}
 			</style>
 
@@ -591,9 +573,25 @@
 						<a id="graph" class="btn btn-info btn-lg" target="_blank" style="color:#fff">
 							Show Plots
 						</a>
+						<div class="flex-parent-element">
+							<div class="flex-child-element magenta" id="RWplot"></div>
+							<div class="flex-child-element green" id="Bplot"></div>
+						  </div>
+						<style>
+							.flex-parent-element {
+							display: flex;
+							width: 100%;
+							}
 
-						<div id="RWplot"></div>
-						<div id="Bplot"></div>
+							.flex-child-element {
+							flex: 1;
+							margin: 10px;
+							}
+
+							.flex-child-element:first-child {
+							margin-right: 20px;
+							}
+						</style>
 					</div>
 				</div>
 			</div>
