@@ -173,16 +173,16 @@ function RWgraph(){
                 showgrid: false,
                 zeroline: false,
                 showline: false, 
-                title: "Write latency (ms)"
+                title: "Workload latency (ms)"
             },
             title: "Read/Write %"
         };
         
         var RWData = [
-            {x: LRUx1, y: LRUy1, mode:"lines", name:"Base LRU"},
-            {x: LRUx2, y: LRUy2, mode:"lines", name:"ACE LRU"},
-            {x: CFLRUx1, y: CFLRUy1, mode:"lines", name:"Base CFLRU"},
-            {x: CFLRUx2, y: CFLRUy2, mode:"lines", name:"ACE CFLRU"},
+            {x: LRUx1, y: LRUy1, mode:"scatter", name:"Base LRU"},
+            {x: LRUx2, y: LRUy2, mode:"scatter", name:"ACE LRU"},
+            {x: CFLRUx1, y: CFLRUy1, mode:"scatter", name:"Base CFLRU"},
+            {x: CFLRUx2, y: CFLRUy2, mode:"scatter", name:"ACE CFLRU"},
         ];
         
         Plotly.newPlot('RWplot', RWData, RWlayout);
@@ -191,6 +191,7 @@ function RWgraph(){
 //generate graph for varying Buffer size
 function Bgraph(){
 
+    var ops = parseInt($('#x').val());
     var a = parseInt($("#alpha").val());
 
     var LRUx1 = [];
@@ -202,8 +203,8 @@ function Bgraph(){
     var CFLRUx2 = [];
     var CFLRUy2 = [];
 
-    for(var i = 10; i < 1000; i = i * 2.5){
-        var LRUstats = IOcalc(generateWorkload(),i, a, 0);
+    for(var i = 1; i < 20; i = i += 2){
+        var LRUstats = IOcalc(generateWorkload(),ops/100*i, a, 0);
         LRUx1.push(i);
         LRUy1.push(LRUstats[0] * .4);
         LRUx2.push(i);
@@ -229,16 +230,16 @@ function Bgraph(){
                 showgrid: false,
                 zeroline: false,
                 showline: false, 
-                title: "Write latency (ms)"
+                title: "Workload latency (ms)"
             },
             title: "Buffer Size"
         };
         
         var BData = [
-            {x: LRUx1, y: LRUy1, mode:"lines", name:"Base LRU"},
-            {x: LRUx2, y: LRUy2, mode:"lines", name:"ACE LRU"},
-            {x: CFLRUx1, y: CFLRUy1, mode:"lines", name:"Base CFLRU"},
-            {x: CFLRUx2, y: CFLRUy2, mode:"lines", name:"ACE CFLRU"},
+            {x: LRUx1, y: LRUy1, mode:"scatter", name:"Base LRU"},
+            {x: LRUx2, y: LRUy2, mode:"scatter", name:"ACE LRU"},
+            {x: CFLRUx1, y: CFLRUy1, mode:"scatter", name:"Base CFLRU"},
+            {x: CFLRUx2, y: CFLRUy2, mode:"scatter", name:"ACE CFLRU"},
         ];
         
         Plotly.newPlot('Bplot', BData, Blayout);

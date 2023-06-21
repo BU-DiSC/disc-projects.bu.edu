@@ -95,7 +95,10 @@
                         <a href="research.html#problem"><span class="rcorners-click"></span></a>
                         <div class="rcorners-text-3"><a href="research.html" style="text-decoration:none; color: rgba(255, 255, 255, 0.88)">Acheron&nbsp;</a>
             			</div>
+                  <!--
+                    weird animation on the research.html side button
             			<img class="img-responsive img-left" src="./img/animation.gif" alt="" width="40px" />
+                  -->
                       </div>
 	</div>
 
@@ -103,17 +106,16 @@
 		<div class="container">
 			<div class="row section-title text-center">
 				<!-- <h2> What is Acheron and Why do we need it? </h2> -->
-        	<h2> What is Acheron? </h2>
+        	<h2> What is ACE and why do we need it? </h2>
 			</div>
       <div class="row">
         <p>
           <img class="img-responsive img-centered" src="./img/compactionary-lsm-everywhere.png" alt="" align="left" width=20% style="margin-left:10%;margin-right:10%" />
-          <b>Acheron</b> is a web-based system that demonstrates the performance implications of <i>out-of-place</i> deletes in Log-structured merge (LSM) trees through visualizing the life cycle of tombstones.
-          LSM trees are frequently employed as core data structures in modern NoSQL storage engines because they offer
-high ingestion rate and low latency for query processing. In LSM trees, incoming entries
-are batched in an in-memory write buffer, and once the buffer
-is full, it is flushed to storage as an immutable sorted run. When the
-number of accumulated similar-sized runs exceeds a pre-defined threshold, they are merge-sorted to form a larger immutable run.
+          <b>ACE</b> is a new bufferpool manager that adresses two challenged of state-of-the-art bufferpool managers. 
+          First, existing bufferpool managers often assume that the underlying devices have no concurrency.
+          When writing dirty pages to disk, state-of-the-art bufferpool managers write(evict) one page at a time, 
+          missing the opputinity to exploit the device's concurrency. Second, page replacement policies generally do not consider the device asymmetry,
+          instead, they treat read and write request equally.
           </p>
     		</div>
       <hr >
@@ -121,36 +123,29 @@ number of accumulated similar-sized runs exceeds a pre-defined threshold, they a
         <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 mt-3"  >
           <div class="row section-title text-center" style="border-width:5px;border-radius: 20px;
     border-style:dotted;">
-    				<h3> New Privacy Regulations </h3>
+    				<h3> Default </h3>
     			</div>
         </div>
         <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 mt-3">
           <div class="row section-title text-center" style="border-width:5px;border-radius: 20px;
     border-style:dotted;">
-    				<h3> Performance</h3>
+    				<h3> ACE </h3>
     			</div>
         </div>
       </div>
       <div class="row text-center" style="margin-top:-30px">
-        <img class="img-responsive img-centered" src="./img/lethe-demo-1.png" alt="" width=100% />
+        <img class="img-responsive img-centered" src="./img/defualt-design1024_1.png" alt="" width=50% />
+        <img class="img-responsive img-centered" src="./img/new-design1024_1.png" alt = "" width="50%" />
       </div>
 			<div class="row">
 				<div>
           <br>
           <p>
-            As LSM trees employ the <i>out-of-place</i> paradigm , obsolete
-data cannot be removed instantly and may be retained in LSM trees
-for an arbitrarily long time.
-            Obsolete data may on the one hand, violate data privacy regulations (e.g.,
-<i>the right to be forgotten</i> in EU’s GDPR, <i>right to delete</i> in California’s
-CCPA and CPRA), and on the other hand, it hurts performance.
-            In Acheron, users can observe that
-the state of the art does not provide guarantees on when obsolete
-entries can be physically removed, and also observe that <a href="https://dl.acm.org/doi/abs/10.1145/3318464.3389757">FADE</a>
-can achieve timely persistent deletes without full tree compaction.
-            Users can further customize the workload, LSM tuning knobs,
-and disk parameters to investigate the impact of different factors
-on tombstones and the performance.
+            To adress these issues, we propose ACE, a bufferpool manager that utilizes the underlying device concurrency to bridge the device assymetry. 
+            Our approach uses asymmetry/concurrency-aware write-back and eviction policies. 
+            The write-back policy always writes multiple pages concurrently, hence amortizing the write cost. 
+            The eviction policy evicts one or multiple pages at the same time from the bufferpool to enable prefetching.
+            When multiple pages are evicted at once, <i>ACE</i> can concurrently prefetch pages to exploit the device's read concurrency.
           </p>
 				</div>
 			</div>
@@ -161,23 +156,23 @@ on tombstones and the performance.
 	<section class="bg-light">
 		<div class="container">
 			<div class="row section-title text-center">
-				<h2> Deletes in LSM </h2>
+				<h2> Abstract Overview of ACE Components </h2>
 			</div>
 
       <div class="row">
         <p>
-          Every delete operation is
-implemented by inserting a <i>tombstone</i>, as shown in the following Figure. Within
-the memory buffer, a tombstone eagerly deletes any older matching
-entries, and it is maintained to invalidate further matching entries
-in the tree. When the memory buffer is full, all the entries (including
-tombstones) in the buffer are flushed to disk as a file with a tagged
-time stamp. As more data is ingested, this file will be involved in
-compactions, during which older entries with the same key will be
-<i>physically</i> discarded.
+          When a request for reading or writing page P is received, we first search through the bufferpool.
+          If P is not found and the bufferpool is full, then at least one page has to be evicted.
+          The page replacement algorithm determines the page to be evicted.
+          If the top page is clean, it is evicted and paage P is fetched. Until this part,
+          Ace is identical to any state-of-the-art bufferpool manager. However, if the top page is dirty, ACE proceeds as follows: <br>
+          • ACE without prefetching: concurrently write nw dirty pages and evict a single page. <br>
+          • ACE with prefetching: concurrently write nw dirty pages, evict ne pages, and concurrently prefetch ne - 1 pages. <br>
+          The values nw and ne depend on the underlying device concurrency and the potential benefits of prefetching. 
+          When prefetching is enabled, ACE evicts ne pages in order to prefetch ne - 1 pages exploiting the read concurrency of the device.
         </p>
         <br>
-        <img class="img-responsive img-centered" src="./img/intro.png" alt="" width="1000px">
+        <img class="img-responsive img-centered" src="./img/design-space1024_1.png" alt="" width="1000px">
         <br>
       </div>
 
@@ -187,39 +182,23 @@ compactions, during which older entries with the same key will be
   <section id="research" style="margin:0 10px">
     <div class="container">
       <div class="row text-center">
-        <h2> FADE : FAst DEletes </h2>
+        <h2> ACE: Case Example </h2>
       </div>
       <div class="row">
                 <div class="col-lg-12">
-                    <p> To enable timely persistent deletes, in <a href="https://dl.acm.org/doi/abs/10.1145/3318464.3389757">prior work</a>, we introduced
-<b>FADE</b>, a new family of delete-aware compaction policies. FADE
-(short for <i>FAst DEletes</i>) piggybacks the task of timely delete persistence
-to the LSM-tree’s compaction routine while retaining the
-LSM tree’s benefit of amortized merging cost and predictable performance.
-Acheron taps into the key design of FADE and presents
-an interactive framework highlighting how one can navigate the
-performance-privacy trade-off between the delete persistence and a
-target performance.
+                    <p> Below is an example of ACE processing through one read request with a full bufferpool using LRU.
                     </p>
                     <br>
                 </div>
             </div>
             <div class="col-lg-12 text-center">
-                      <img class="img-responsive img-centered" src="./img/effacingcompaction.png" alt="" width="850px">
+                      <img class="img-responsive img-centered" src="./img/example of ACE.png" alt="" width="650px">
                   </div>
                   <div class="row">
                       <div class="col-lg-12">
                           <br>
-                          <p> Note that, this compaction trigger is completely orthogonal
-                              to the saturation-based trigger, and is driven
-                              by the <i>age of the oldest tombstone contained in a
-                              file</i>. This way, FADE ensures timely delete
-                              persistence, and by removing the invalidated entries
-                              timely and persistently from the tree, FADE also
-                              improves the overall performance of the storage
-                              engine in presence of deletes. The figure above shows
-                              step-wise how FADE guarantees timely delete persistence
-                              by setting earlier deadlines for future compaction jobs.
+                          <p> ACE page selection policies for nw = 3 and ne = 3. ACE writes three dirty pages (p6, p4, p2) following the
+                              LRU order; if prefetching is enabled three pages (p6, p5, p4) are evicted, otherwise one page (p6) is evicted.
                           </p>
                       </div>
                   </div>

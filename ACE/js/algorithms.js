@@ -695,7 +695,6 @@ function ACE(page){
 //returns IO of base and ACE
 
 function IOcalc(wload, bLen, alpha, baseAlg){
-    reloader = 0;
     //global variables
     workload = wload; 
     bufferLength = bLen;
@@ -735,6 +734,6 @@ function IOcalc(wload, bLen, alpha, baseAlg){
         baseAlgorithm(quick);
         ACEAlgorithm(quick);  
     }
-    return [writeIO, ACEwriteIO];
+    return [writeIO + readIO, ACEwriteIO + ACEreadIO];
 }
 
