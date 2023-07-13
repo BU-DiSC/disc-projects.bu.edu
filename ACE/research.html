@@ -196,7 +196,6 @@
 								<span class="input-group-text"># of Operations</span>
 							</div>
 							<input type="number" class="form-control" id="x" value=50000 min=0 max=100000 disabled>
-							<br><small class="form-text text-muted">Maximum: 100,000</small>
 						</div>
 					</div>
 
@@ -229,12 +228,12 @@
 							
 							<div class="input-group mb-3">
 								<div class="input-group-prepend">
-									<span class="input-group-text">Base Algorithm</span>
+									<span class="input-group-text">Algorithm</span>
 								</div>
 								<select class="form-control" id="baseAlg">
 									<option value=0>LRU</option>
 									<option value=1>CFLRU</option>
-									<option value=2 disabled>LRU-WSR</option>
+									<option value=2 >LRU-WSR</option>
 								</select>
 							</div>
 						</div>
@@ -251,11 +250,11 @@
 					<div class="row">
 						<div id="lsm-button-group" class="row col-4">
 							<div class="btn-group" role="group" aria-label="progress-control">
-								<button id="play-button" type="button" class="btn btn-info">Play</button>
+								<button id="play-button" type="button" class="btn btn-info">
+									<img src="img/play:pause.png" width="50" height="50">
+								</button>
 								<button id="fast-button" type="button" class="btn btn-warning">Fast</button>
 								<button id="slow-button" type="button" class="btn btn-secondary">Slow</button>
-								<button id="pause-button" type="button" class="btn btn-dark">Pause</button>
-								<button id="resume-button" type="button" class="btn btn-light">Resume</button>
 								<button id="finish-button" type="button" class="btn btn-danger">Finish</button>
 							</div>
 						</div>
@@ -280,7 +279,7 @@
 				<div class="col-sm">
 					<div id="cmp-lsm-cmpct-pp-1-mp" class="row cmp-indiv-mp">
 						<div  class="lsm-title">
-							<span id="base-alg-table-title" class="row cmp-indiv-mp">baseLRU</span>
+							<span id="base-alg-table-title" class="row cmp-indiv-mp">LRU</span>
 						</div>
 					</div>
 					<div id="table1">
@@ -344,16 +343,6 @@
 							<span id="base-alg-pages-written" class="cost uncertain" data-toggle="tooltip" data-placement="right">XXX</span>
 						</div>
 					</div>
-					<!-- Total Data Written(MB)-->
-					<div class="row">
-						<div class="metrics col-lg-7 col-md-7 col-sm-7">
-							<span class="metric-title" data-toggle="tooltip" data-placement="left"
-								  title="The amount of dirty data that was written">Total Data Written(MB)</span>
-						</div>
-						<div class="cost-col col-lg-5 col-md-5 col-sm-5 text-center">
-							<span id="base-alg-data-written" class="cost uncertain" data-toggle="tooltip" data-placement="right">XXX</span>
-						</div>
-					</div>
 					<!-- #Read I/O-->
 					<div class="row">
 						<div class="metrics col-lg-7 col-md-7 col-sm-7">
@@ -394,16 +383,6 @@
 							<span id="base-alg-pages-prefetched" class="cost uncertain" data-toggle="tooltip" data-placement="right">XXX</span>
 						</div>
 					</div>
-					<!-- Workload Latency -->
-					<div class="row">
-						<div class="metrics col-lg-7 col-md-7 col-sm-7">
-							<span class="metric-title" data-toggle="tooltip" data-placement="left"
-								  title="The time it takes to queue an action.">Write Amp</span>
-						</div>
-						<div class="cost-col col-lg-5 col-md-5 col-sm-5 text-center">
-							<span id="base-alg-workload-latency" class="cost uncertain" data-toggle="tooltip" data-placement="right">XXX</span>
-						</div>
-					</div>
 				</div> <!-- END of demo1 cost result -->
 				<!-- Demo2 cost result starts here -->
 				<div class="lsm-cmpct-pp-2-cost-col col-lg-4 col-md-4 col-sm-4">
@@ -431,12 +410,6 @@
 							<span id="ace-alg-pages-written" class="cost uncertain">XXX</span>
 						</div>
 					</div>
-					<!-- ACE data written-->
-					<div class="row">
-						<div class="cost-col col-lg-12 col-md-12 col-sm-12 text-center">
-							<span id="ace-alg-data-written" class="cost uncertain">XXX</span>
-						</div>
-					</div>
 					<!-- ACE read IO-->
 					<div class="row">
 						<div class="cost-col col-lg-12 col-md-12 col-sm-12 text-center">
@@ -459,13 +432,6 @@
 					<div class="row">
 						<div class="cost-col col-lg-12 col-md-12 col-sm-12 text-center">
 							<span id="ace-alg-pages-prefetched" class="cost uncertain">XXX</span>
-						</div>
-					</div>
-
-					<!-- workload latency-->
-					<div class="row">
-						<div class="cost-col col-lg-12 col-md-12 col-sm-12 text-center">
-							<span id="ace-alg-workload-latency" class="cost uncertain">XXX</span>
 						</div>
 					</div>
 				</div> <!-- END of demo3 cost result -->
@@ -571,9 +537,13 @@
 				<div class="col-lg-12 text-right">
 					<div>
 						<a id="graph" class="btn btn-info btn-lg" target="_blank" style="color:#fff">
-							Show Plots
+							Varied RW% and BP Size
+							
+
 						</a>
+						
 						<div class="flex-parent-element">
+							
 							<div class="flex-child-element magenta" id="RWplot"></div>
 							<div class="flex-child-element green" id="Bplot"></div>
 						  </div>
@@ -593,6 +563,7 @@
 							}
 						</style>
 					</div>
+					<iframe id="loadingbar" src="https://giphy.com/embed/kUTME7ABmhYg5J3psM" width="240" height="180" frameBorder="0" class="giphy-embed col-sm" allowFullScreen></iframe>
 				</div>
 			</div>
 
@@ -668,8 +639,8 @@
 						<br />
             Tarikul Islam Papon, Manos Athanassoulis <br>
               <a href="https://disc.bu.edu/papers/icde23-papon" target="_blank"><b><u>ACEing the Bufferpool Management Paradigm for Modern Storage Devices</u></b></a>
-              <a href="https://arxiv.org/abs/2006.04777" target="_blank"><font color="Blue"><u>[Updated arXiv version]</u></font></a>
-              <a href="https://www.youtube.com/watch?v=P0qUS2BwATg" target="_blank"><font color="Blue"><u>[SIGMOD '20 presentation video]</u></font></a>
+              <a href="add url" target="_blank"><font color="Blue"><u>[blank]</u></font></a>
+              <a href="add url" target="_blank"><font color="Blue"><u>[blank]</u></font></a>
               <br/>
               In Proceedings of the ACM SIGMOD International Conference on Management of Data, 2020
 			</div>
@@ -679,7 +650,7 @@
 	<section id="authors" class="alternate-2">
 		<div class="container page-scroll">
 			<div class="row" style="text-align: center">
-				<h2><br><b>Meet The Authors</b></h2><br>
+				<h2><br><b>Meet The Team</b></h2><br>
 			</div>
 			<br/>
 			<div class="row">
@@ -711,7 +682,7 @@
 					</div>
 				</div>
 				<div class="col-sm"></div>
-				
+
 			</div>
 		</div>
 	</section>

@@ -1,4 +1,6 @@
 $(document).ready(function(){
+    $("#loadingbar").hide();
+    var playing = false;
 
 	/*First & Second Graphs*/
     //input fields
@@ -54,14 +56,39 @@ $(document).ready(function(){
     });
 
     $("#play-button").click(function(){
-        calculate(generateWorkload(),parseInt(b.value), parseInt(alpha.value), parseInt($("#baseAlg").val()));
+        if(capacity()){
+            if(!playing){
+                calculate(generateWorkload(),parseInt(b.value), parseInt(alpha.value), parseInt($("#baseAlg").val()));
+            }
+            playing = true;
+        }
+    });
+
+    $("#finish-button").click(function(){
+        playing = false;
     });
 
     $("#graph").click(function(){
-        RWgraph();
-        Bgraph();
-    })
+        showLoading();
 
+        setTimeout(function(){
+            RWgraph();
+            Bgraph();
+            hideLoading();
+        }, 100);
+        
+        
+
+    });
+
+function showLoading(){
+
+    $("#loadingbar").show();
+}
+
+function hideLoading(){
+    $("#loadingbar").hide();
+}
 
 function generateWorkload(){
 
@@ -160,32 +187,75 @@ function RWgraph(){
         CFLRUy2.push(CFLRUstats[1] * .4);
     }
 
-        var RWlayout = {
-            xaxis: {
-                autorange: true,
-                showgrid: false,
-                zeroline: false,
-                showline: false,
-                title: "%read/write ratio"
-            },
-            yaxis: {
-                autorange: true,
-                showgrid: false,
-                zeroline: false,
-                showline: false, 
-                title: "Workload latency (ms)"
-            },
-            title: "Read/Write %"
-        };
-        
-        var RWData = [
-            {x: LRUx1, y: LRUy1, mode:"scatter", name:"Base LRU"},
-            {x: LRUx2, y: LRUy2, mode:"scatter", name:"ACE LRU"},
-            {x: CFLRUx1, y: CFLRUy1, mode:"scatter", name:"Base CFLRU"},
-            {x: CFLRUx2, y: CFLRUy2, mode:"scatter", name:"ACE CFLRU"},
-        ];
-        
-        Plotly.newPlot('RWplot', RWData, RWlayout);
+    var LRUtrace = {
+
+        x: LRUx1, 
+        y: LRUy1, 
+        mode:"scatter", 
+        name:"LRU",
+        marker: {
+            size: 12,
+            symbol: 'circle-open'
+        }
+    }
+
+    var ACELRUtrace = {
+
+        x: LRUx2, 
+        y: LRUy2, 
+        mode:"scatter", 
+        name:"LRU",
+        marker: {
+            size: 12,
+            symbol: 'diamond-open'
+        }
+    }
+
+    var CFLRUtrace = {
+
+        x: CFLRUx1, 
+        y: CFLRUy1, 
+        mode:"scatter", 
+        name:"CFLRU",
+        marker: {
+            size: 12,
+            symbol: 'square-open'
+        }
+    }
+
+    var ACECFLRUtrace = {
+
+        x: CFLRUx2, 
+        y: CFLRUy2, 
+        mode:"scatter", 
+        name:"CFLRU",
+        marker: {
+            size: 12,
+            symbol: 'x-open'
+        }
+    }
+
+    var RWlayout = {
+        xaxis: {
+            autorange: true,
+            showgrid: false,
+            zeroline: false,
+            showline: false,
+            title: "%read/write ratio"
+        },
+        yaxis: {
+            autorange: true,
+            showgrid: false,
+            zeroline: false,
+            showline: false, 
+            title: "Workload latency (ms)"
+        },
+        title: "Read/Write %"
+    };
+    
+    var RWData = [LRUtrace, ACELRUtrace, CFLRUtrace, ACECFLRUtrace];
+    
+    Plotly.newPlot('RWplot', RWData, RWlayout);
 }
 
 //generate graph for varying Buffer size
@@ -217,32 +287,106 @@ function Bgraph(){
         CFLRUy2.push(CFLRUstats[1] * .4);
     }
 
-        var Blayout = {
-            xaxis: {
-                autorange: true,
-                showgrid: false,
-                zeroline: false,
-                showline: false,
-                title: "Bufferpool size"
-            },
-            yaxis: {
-                autorange: true,
-                showgrid: false,
-                zeroline: false,
-                showline: false, 
-                title: "Workload latency (ms)"
-            },
-            title: "Buffer Size"
-        };
-        
-        var BData = [
-            {x: LRUx1, y: LRUy1, mode:"scatter", name:"Base LRU"},
-            {x: LRUx2, y: LRUy2, mode:"scatter", name:"ACE LRU"},
-            {x: CFLRUx1, y: CFLRUy1, mode:"scatter", name:"Base CFLRU"},
-            {x: CFLRUx2, y: CFLRUy2, mode:"scatter", name:"ACE CFLRU"},
-        ];
-        
-        Plotly.newPlot('Bplot', BData, Blayout);
+    var LRUtrace = {
+
+        x: LRUx1, 
+        y: LRUy1, 
+        mode:"scatter", 
+        name:"LRU",
+        marker: {
+            size: 12,
+            symbol: 'circle-open'
+        }
+    }
+    
+    var ACELRUtrace = {
+
+        x: LRUx2, 
+        y: LRUy2, 
+        mode:"scatter", 
+        name:"LRU",
+        marker: {
+            size: 12,
+            symbol: 'diamond-open'
+        }
+    }
+
+    var CFLRUtrace = {
+
+        x: CFLRUx1, 
+        y: CFLRUy1, 
+        mode:"scatter", 
+        name:"CFLRU",
+        marker: {
+            size: 12,
+            symbol: 'square-open'
+        }
+    }
+
+    var ACECFLRUtrace = {
+
+        x: CFLRUx2, 
+        y: CFLRUy2, 
+        mode:"scatter", 
+        name:"CFLRU",
+        marker: {
+            size: 12,
+            symbol: 'x-open'
+        }
+    }
+    var BData = [LRUtrace, ACELRUtrace, CFLRUtrace, ACECFLRUtrace];
+    
+    var Blayout = {
+        xaxis: {
+            autorange: true,
+            showgrid: false,
+            zeroline: false,
+            showline: true,
+            title: "Bufferpool size (% of Workload)"
+        },
+        yaxis: {
+            autorange: true,
+            showgrid: false,
+            zeroline: false,
+            showline: true, 
+            title: "Workload latency (ms)"
+        },
+        title: "Buffer Size"
+    };
+    
+    Plotly.newPlot('Bplot', BData, Blayout);
     
 }
+
+//check if input values are too high
+function capacity(){
+
+    if( parseInt(b.value) > 1000 || parseInt(b.value) < 0){
+        window.alert("buffer pool size is too large or invalid");
+    }
+    else if(parseInt(n.value) > 10000 || parseInt(n.value) < parseInt(b.value)){
+        window.alert("disk size is too large");
+    }
+    else if(parseInt(x.value) > 100000 || parseInt(x.value) < parseInt(b.value)){
+        window.alert("workload size is too large");
+    }
+    else if(parseInt(e.value) > 100 || parseInt(e.value) < 0){
+        window.alert("read ratio cannot exceed 100%");
+    }
+    else if(parseInt(alpha.value) > 8 || parseInt(alpha.value) < 0){
+        window.alert("current SSD concurrency is no more than 8 and postive");
+    }
+    else if(parseInt(s.value) > 100 || parseInt(s.value) < 0){
+        window.alert("skewness cannot exceed 100% or be negative");
+    }
+    else if(true){
+        return true;
+    }
+
+    inputs.forEach((element, index) => {
+        element.prop("disabled",true); 
+        element.val(workload1[index]);
+    });
+}
+
 })
