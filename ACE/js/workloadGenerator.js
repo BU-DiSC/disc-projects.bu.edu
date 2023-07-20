@@ -70,7 +70,8 @@ $(document).ready(function(){
 
     $("#graph").click(function(){
         showLoading();
-
+        
+        
         setTimeout(function(){
             RWgraph();
             Bgraph();
@@ -240,14 +241,14 @@ function RWgraph(){
             autorange: true,
             showgrid: false,
             zeroline: false,
-            showline: false,
+            showline: true,
             title: "%read/write ratio"
         },
         yaxis: {
             autorange: true,
             showgrid: false,
             zeroline: false,
-            showline: false, 
+            showline: true, 
             title: "Workload latency (ms)"
         },
         title: "Read/Write %"

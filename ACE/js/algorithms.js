@@ -1,6 +1,6 @@
 var pauser = false;
 var reloader = 0;
-var delay = 100;
+var delay = 200;
 var playing = false;
 
 $(document).ready(function(){
@@ -39,6 +39,7 @@ $(document).ready(function(){
 /*Base Variables*/
 var buffer;
 var dirty;
+var coldflag;
 var uses;
 var baseTotalBuffer = [];
 
@@ -90,6 +91,7 @@ function calculate(wload, bLen, alpha, baseAlg){
     //base bufferpool
     buffer = [];
     dirty = [];
+    coldflag = [];
     uses = {};
     //base metric
     bufferHit = 0;
@@ -170,13 +172,6 @@ function finisher(){
     }
     baseDisplay();
     ACEDisplay(); 
-}
-
-function Highlight(index){
-    var table = document.getElementById('ACE-alg-table');
-    var num_columns = table.rows[0].cells.length;
-    var cell = table.rows[Math.floor(cellIndex/num_columns)].cells[index % num_columns];    
-    cell.style.backgroundColor = "yellow";
 }
 
 function baseDisplay(){
@@ -408,113 +403,81 @@ function ACECFLRU(p){
 
 function baseLRUWSR(p){
 
-    var coldflag = [];
-    var eviction = [];
-
-    // console.log(algorithm==base?"base":(algorithm==coneAlpha?"coneA":(algorithm==coneXAlpha?"coneX":(algorithm==cowAlpha?"cowA":(algorithm==cowXAlpha?"cowX":"invalid")))));
-    // console.log("asymmetry: "+alphaVal);
-
     
-        var type = workload[p][0];
-        var page = workload[p][1];
 
-        // console.log(type,page);
-        
-        // add to dirty if "W"
-        if (type == "W" && !dirty.includes(page)){
-            dirty.push(page);
-        }
+    var type = workload[p][0];
+    var page = workload[p][1];
 
-        // if buffer has page
-        if (buffer.includes(page)){
-            bufferHit++;
-            if (coldflag[buffer.indexOf(page)]==1||(dirty.includes(page)&&coldflag[buffer.indexOf(page)]==-1))
-                eviction.splice(eviction.indexOf(page),1);
-            if (dirty.includes(page))
-                coldflag[buffer.indexOf(page)] = 0; //if the page is dirty, (re)set cold flag to 0
-            //move page to the end of buffer & coldflag arrays
-            coldflag.push(coldflag.splice(buffer.indexOf(page),1)[0]);
-            buffer.push(buffer.splice(buffer.indexOf(page), 1)[0]);
+    // add to dirty if "W"
+    if (type == "W" && !dirty.includes(page)){
+        dirty.push(page);
+    }
+    
+    // if buffer has page
+    if (buffer.includes(page)){
+        bufferHit++;
+        //move page to the end of buffer array
+        buffer.push(buffer.splice(buffer.indexOf(page), 1)[0]);
+        if(dirty.includes(page)){
+            dirty.push(dirty.splice(dirty.indexOf(page),1)[0]);
+            coldflag[coldflag.indexOf(page)] = 1;
         }
-        //if buffer does not have a page
-        else
-        {
-            bufferMiss++;
-            readIO++;
-            //if buffer not full
-            if (buffer.length < bufferLength){
-                buffer.push(page);
-                if (dirty.includes(page)){
-                    coldflag.push(0); //if the page is dirty, set cold flag to 0
-                }else{
-                    coldflag.push(-1);
-                    eviction.push(page);
-                }
+        coldflag.push(coldflag.splice(coldflag.indexOf(page), 1)[0]);
+
+    }else{
+
+        bufferMiss++;
+        readIO++;
+        //if buffer not full
+        if (buffer.length < bufferLength){
+            buffer.push(page);
+            if(dirty.includes(page)){
+                coldflag.push(1);
+            }else{
+                coldflag.push(0);
             }
-            //if buffer is full
-            else {
+            pagesRead++;
+        }else{
+            let eviction = 0;
+            while(eviction < 1){
                 const first = buffer[0];
-                //if first page is clean
-                if ((!dirty.includes(first)) && coldflag[0] == -1){
-                    buffer.shift();
-                    coldflag.shift();
-                    eviction.shift();
-                }
-                //if first page is not clean
-                else{
-                    //look for a page with cold flag set
-                    var candidate = 0;
-                    while ((coldflag[buffer.indexOf(eviction[candidate])] == -1 || coldflag[buffer.indexOf(eviction[candidate])] == 0) && candidate < eviction.length){
-                        candidate++;
+                if (dirty.includes(first)){
+                    if(coldflag[0] == 0){
+                        dirty.splice(dirty.indexOf(first), 1);
+                        eviction = 1;
+                        pagesWritten++;
+                        writeIO++;
+                    }else{
+                        coldflag[0] = 0;
+                        coldflag.push(coldflag.splice(0, 1)[0]);
+                        buffer.push(buffer.splice(0, 1)[0]);
+                        dirty.push(dirty.splice(dirty.indexOf(first),1)[0]);
                     }
-
-                    var evictPage = eviction[candidate];
-                    if (evictPage == null) evictPage = buffer[0];
-
-                    const candidateIndex = buffer.indexOf(evictPage);
-
-                    if (dirty.includes(evictPage)) 
-                        dirty.splice(dirty.indexOf(evictPage),1);
-                    
-                    buffer.splice(candidateIndex,1);
-                    coldflag.splice(candidateIndex,1);
-
-                    for (var k = 0; k < candidateIndex; k++){
-                        if (dirty.includes(buffer[k]))
-                            coldflag[k] = 1;
-                    }
-
-                    if (candidateIndex != 0){
-                        const lastItem = buffer[candidateIndex - 1];
-
-                        var setIndex = 0;
-                        while (buffer[setIndex] != lastItem && setIndex < buffer.length){
-                            if (coldflag[setIndex] == 1){
-                                buffer.push(buffer.splice(setIndex,1)[0]);
-                                coldflag.push(coldflag.splice(setIndex,1)[0]);
-                                eviction.push(buffer[setIndex]);
-                            }
-                            setIndex++;  
-                        }
-                    }
-
-                    //write to the disk before eviction
-                    writeIO++;
-                }
-                
-                
-                buffer.push(page);
-                if (dirty.includes(page)){
-                    coldflag.push(0); //if the page is dirty, set cold flag to 0
-                } else {
-                    coldflag.push(-1);
-                    eviction.push(page);
+                }else{
+                    eviction = 1;
                 }
             }
+            
+            coldflag.shift();
+            buffer.shift(); // remove one item from buffer (evict page)
+            
+            pagesEvicted++;
+            //add page to bufferpool and log flag
+            buffer.push(page);
+            if(dirty.includes(page)){
+                coldflag.push(1);
+            }else{
+                coldflag.push(0);
+            }
+            pagesRead++;
+
         }
-        // console.log(buffer);
-        // console.log(coldflag);
-        // console.log(eviction);
+    }
+    console.log(buffer);
+    console.log(coldflag);
+    //console.log(dirty);
+
+    //start with small buffer and bug check
 }
  
 /*Algorithms*/
@@ -542,7 +505,6 @@ function ACE(page){
             for(var i = 0; i < bufferLength; i++){
                 first = ACEbuffer[i];
                 if (ACEdirty.includes(first)){
-                    Highlight(i);
                     ACEdirty.splice(ACEdirty.indexOf(ACEbuffer[i]), 1);
                     ACEpagesWritten++;
                     break;
@@ -557,6 +519,7 @@ function ACE(page){
     ACEbuffer.push(page);
     ACEpagesRead++;
     
+
 }
 
 // function baseCC(algorithm){
@@ -644,7 +607,8 @@ function IOcalc(wload, bLen, alpha, baseAlg){
     ACEpagesPrefetched = 0;
     for(var quick = 0; quick < workload.length; quick++){
         baseAlgorithm(quick);
-        ACEAlgorithm(quick);  
+        ACEAlgorithm(quick);
+          
     }
     return [writeIO + readIO, ACEwriteIO + ACEreadIO];
 }
