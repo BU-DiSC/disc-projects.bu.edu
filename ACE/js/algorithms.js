@@ -4,6 +4,21 @@ var delay = 200;
 var playing = false;
 
 $(document).ready(function(){
+
+    const $workload = $('#workload');
+    $workload.change(function(){
+        finisher();
+        $("#base-alg-table").remove();
+        $("#ACE-alg-table").remove();
+    });
+
+    const $alg = $('#baseAlg');
+    $alg.change(function(){
+        finisher();
+        $("#base-alg-table").remove();
+        $("#ACE-alg-table").remove();
+    });
+
     $("#fast-button").click(function(){
         delay = 15;    
     });
@@ -13,11 +28,7 @@ $(document).ready(function(){
     });
 
     $("#finish-button").click(function(){
-        playing = false;
-        pauser = false;
-        reloader = 1;
         finisher();
-        $("#play-button").prop('disabled', false);
     });
 
     $("#play-button").click(function(){
@@ -56,6 +67,7 @@ var pagesPrefetched;
 /*ACE Variables*/
 var ACEbuffer;
 var ACEdirty;
+var ACEcoldflag;
 var ACEuses;
 var ACETotalBuffer = [];
 
@@ -105,6 +117,7 @@ function calculate(wload, bLen, alpha, baseAlg){
     //ACE bufferpool
     ACEbuffer = [];
     ACEdirty = [];
+    ACEcoldflag = [];
     ACEuses = {};
     //ACE metrics
     ACEbufferHit = 0;
@@ -152,8 +165,9 @@ function calculate(wload, bLen, alpha, baseAlg){
                 //baseAlgorithm(p);
                 //ACEAlgorithm(p);
                 baseLRUWSR(p);
+                ACELRUWSR(p);
                 baseDisplay();
-                //ACEDisplay();    
+                ACEDisplay();    
                 p++;
             }
                    
@@ -166,12 +180,16 @@ function calculate(wload, bLen, alpha, baseAlg){
 }
 
 function finisher(){
+    playing = false;
+    pauser = false;
+    reloader = 1;
     for(var pagesLeft = p; pagesLeft < workload.length; pagesLeft++){
         baseAlgorithm(pagesLeft);
         ACEAlgorithm(pagesLeft);
     }
     baseDisplay();
     ACEDisplay(); 
+    $("#play-button").prop('disabled', false);
 }
 
 function baseDisplay(){
@@ -403,8 +421,6 @@ function ACECFLRU(p){
 
 function baseLRUWSR(p){
 
-    
-
     var type = workload[p][0];
     var page = workload[p][1];
 
@@ -440,11 +456,12 @@ function baseLRUWSR(p){
         }else{
             let eviction = 0;
             while(eviction < 1){
+                //cycle untile cold flag of 0 is found
                 const first = buffer[0];
                 if (dirty.includes(first)){
                     if(coldflag[0] == 0){
                         dirty.splice(dirty.indexOf(first), 1);
-                        eviction = 1;
+                        eviction++;
                         pagesWritten++;
                         writeIO++;
                     }else{
@@ -453,9 +470,11 @@ function baseLRUWSR(p){
                         buffer.push(buffer.splice(0, 1)[0]);
                         dirty.push(dirty.splice(dirty.indexOf(first),1)[0]);
                     }
+                    
                 }else{
-                    eviction = 1;
+                    eviction++;
                 }
+                
             }
             
             coldflag.shift();
@@ -473,13 +492,101 @@ function baseLRUWSR(p){
 
         }
     }
-    console.log(buffer);
-    console.log(coldflag);
+    //console.log(buffer);
+    //console.log(coldflag);
     //console.log(dirty);
 
     //start with small buffer and bug check
 }
- 
+
+function ACELRUWSR(p){
+
+    
+
+    var type = workload[p][0];
+    var page = workload[p][1];
+
+    // add to dirty if "W"
+    if (type == "W" && !ACEdirty.includes(page)){
+        ACEdirty.push(page);
+    }
+    
+    // if buffer has page
+    if (ACEbuffer.includes(page)){
+        ACEbufferHit++;
+        //move page to the end of buffer array
+        ACEbuffer.push(ACEbuffer.splice(ACEbuffer.indexOf(page), 1)[0]);
+        if(ACEdirty.includes(page)){
+            ACEdirty.push(dirty.splice(ACEdirty.indexOf(page),1)[0]);
+            ACEcoldflag[ACEcoldflag.indexOf(page)] = 1;
+        }
+        ACEcoldflag.push(ACEcoldflag.splice(ACEcoldflag.indexOf(page), 1)[0]);
+
+    }else{
+
+        ACEbufferMiss++;
+        ACEreadIO++;
+        //if buffer not full
+        if (ACEbuffer.length < bufferLength){
+            ACEbuffer.push(page);
+            if(ACEdirty.includes(page)){
+                ACEcoldflag.push(1);
+            }else{
+                ACEcoldflag.push(0);
+            }
+            ACEpagesRead++;
+        }else{
+
+            const first = ACEbuffer[0];
+            if (ACEdirty.includes(first)){
+                let awru = 0;
+                
+                    for(var i = 0; i < ACEdirty.length; i++){
+
+                        if(ACEcoldflag[ACEbuffer.indexOf(ACEdirty[i])] == 0){
+                            
+                            ACEdirty.splice(ACEdirty.indexOf(first), 1);
+                            ACEpagesWritten++;
+
+                        }else{
+
+                            ACEcoldflag[ACEbuffer.indexOf(ACEdirty[i])] = 0;
+                            ACEcoldflag.push(ACEcoldflag.splice(ACEbuffer.indexOf(ACEdirty[i]), 1)[0]);
+                            ACEbuffer.push(ACEbuffer.splice(ACEbuffer.indexOf(ACEdirty[i]), 1)[0]);
+                            ACEdirty.push(ACEdirty.splice(i,1)[0]);
+                            i--;
+
+                        }
+                        awru++;  
+                        if(awru == 8){
+                            break;
+                        }
+                    }
+                ACEwriteIO++;
+            }
+            
+            
+            ACEcoldflag.shift();
+            ACEbuffer.shift(); // remove one item from buffer (evict page)
+            
+            ACEpagesEvicted++;
+            //add page to bufferpool and log flag
+            ACEbuffer.push(page);
+            if(ACEdirty.includes(page)){
+                ACEcoldflag.push(1);
+            }else{
+                ACEcoldflag.push(0);
+            }
+            ACEpagesRead++;
+
+        }
+    }
+    //console.log(ACEbuffer);
+    //console.log(ACEcoldflag);
+    //console.log(ACEdirty);
+
+    //start with small buffer and bug check
+}
 /*Algorithms*/
 function base(page){
     // remove item from dirty (write page)
@@ -575,13 +682,14 @@ function IOcalc(wload, bLen, alpha, baseAlg){
     bufferLength = bLen;
     alphaVal = alpha;
     //assign selected algorithm
-    const ACEalgorithms = [ACELRU, ACECFLRU];
+    const ACEalgorithms = [ACELRU, ACECFLRU, ACELRUWSR];
     ACEAlgorithm = ACEalgorithms[baseAlg];
-    const baseAlgorithms = [baseLRU, baseCFLRU];
+    const baseAlgorithms = [baseLRU, baseCFLRU, baseLRUWSR];
     baseAlgorithm = baseAlgorithms[baseAlg];
     //base bufferpool
     buffer = [];
     dirty = [];
+    coldflag = [];
     uses = {};
     //base metric
     bufferHit = 0;
@@ -595,6 +703,7 @@ function IOcalc(wload, bLen, alpha, baseAlg){
     //ACE bufferpool
     ACEbuffer = [];
     ACEdirty = [];
+    ACEcoldflag = [];
     ACEuses = {};
     //ACE metrics
     ACEbufferHit = 0;
@@ -608,7 +717,6 @@ function IOcalc(wload, bLen, alpha, baseAlg){
     for(var quick = 0; quick < workload.length; quick++){
         baseAlgorithm(quick);
         ACEAlgorithm(quick);
-          
     }
     return [writeIO + readIO, ACEwriteIO + ACEreadIO];
 }

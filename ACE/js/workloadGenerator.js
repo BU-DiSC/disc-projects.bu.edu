@@ -39,6 +39,7 @@ $(document).ready(function(){
     	else{
     		inputs.forEach((element) => element.prop("disabled",false));
     	}
+        playing = false;
     });
     
     /*Change table titles*/
@@ -46,13 +47,17 @@ $(document).ready(function(){
     $alg.change(function(){
     	var algx = parseInt($(this).val());
     	if (algx ==  0){
-    		$("#base-alg-table-title").text("baseLRU");
+    		$("#base-alg-table-title").text("LRU");
             $("#ACE-alg-table-title").text("ACE-LRU");
     	}
-    	else{
-            $("#base-alg-table-title").text("baseCFLRU");
+    	else if(algx == 1){
+            $("#base-alg-table-title").text("CFLRU");
             $("#ACE-alg-table-title").text("ACE-CFLRU");
+        }else{
+            $("#base-alg-table-title").text("LRUWSR");
+            $("#ACE-alg-table-title").text("ACE-LRUWSR");
         }
+        playing = false;
     });
 
     $("#play-button").click(function(){
@@ -173,6 +178,10 @@ function RWgraph(){
     var CFLRUy1 = [];
     var CFLRUx2 = [];
     var CFLRUy2 = [];
+    var LRUWSRx1 = [];
+    var LRUWSRy1 = [];
+    var LRUWSRx2 = [];
+    var LRUWSRy2 = [];
 
     for(var i = 0; i < 100; i+=10){
         var LRUstats = IOcalc(RWWorkload(i),b, a, 0);
@@ -180,14 +189,19 @@ function RWgraph(){
         LRUy1.push(LRUstats[0] * .4);
         LRUx2.push(i);
         LRUy2.push(LRUstats[1] * .4);
-
         var CFLRUstats = IOcalc(RWWorkload(i),b, a, 1);
         CFLRUx1.push(i);
         CFLRUy1.push(CFLRUstats[0] * .4);
         CFLRUx2.push(i);
         CFLRUy2.push(CFLRUstats[1] * .4);
+        
+        var LRUWSRstats = IOcalc(RWWorkload(i),b, a, 2);
+        LRUWSRx1.push(i);
+        LRUWSRy1.push(LRUWSRstats[0] * .4);
+        LRUWSRx2.push(i);
+        LRUWSRy2.push(LRUWSRstats[1] * .4);
     }
-
+    
     var LRUtrace = {
 
         x: LRUx1, 
@@ -205,7 +219,7 @@ function RWgraph(){
         x: LRUx2, 
         y: LRUy2, 
         mode:"scatter", 
-        name:"LRU",
+        name:"ACELRU",
         marker: {
             size: 12,
             symbol: 'diamond-open'
@@ -229,10 +243,34 @@ function RWgraph(){
         x: CFLRUx2, 
         y: CFLRUy2, 
         mode:"scatter", 
-        name:"CFLRU",
+        name:"ACECFLRU",
         marker: {
             size: 12,
             symbol: 'x-open'
+        }
+    }
+
+    var LRUWSRtrace = {
+
+        x: LRUWSRx1, 
+        y: LRUWSRy1, 
+        mode:"scatter", 
+        name:"LRUWSR",
+        marker: {
+            size: 12,
+            symbol: 'triangle-up-open'
+        }
+    }
+
+    var ACELRUWSRtrace = {
+
+        x: LRUWSRx2, 
+        y: LRUWSRy2, 
+        mode:"scatter", 
+        name:"ACELRUWSR",
+        marker: {
+            size: 12,
+            symbol: 'triangle-down-open'
         }
     }
 
@@ -254,7 +292,7 @@ function RWgraph(){
         title: "Read/Write %"
     };
     
-    var RWData = [LRUtrace, ACELRUtrace, CFLRUtrace, ACECFLRUtrace];
+    var RWData = [LRUtrace, ACELRUtrace, CFLRUtrace, ACECFLRUtrace, LRUWSRtrace, ACELRUWSRtrace];
     
     Plotly.newPlot('RWplot', RWData, RWlayout);
 }
@@ -273,6 +311,10 @@ function Bgraph(){
     var CFLRUy1 = [];
     var CFLRUx2 = [];
     var CFLRUy2 = [];
+    var LRUWSRx1 = [];
+    var LRUWSRy1 = [];
+    var LRUWSRx2 = [];
+    var LRUWSRy2 = [];
 
     for(var i = 1; i < 20; i = i += 2){
         var LRUstats = IOcalc(generateWorkload(),ops/100*i, a, 0);
@@ -286,6 +328,12 @@ function Bgraph(){
         CFLRUy1.push(CFLRUstats[0] * .4);
         CFLRUx2.push(i);
         CFLRUy2.push(CFLRUstats[1] * .4);
+
+        var LRUWSRstats = IOcalc(generateWorkload(),i, a, 2);
+        LRUWSRx1.push(i);
+        LRUWSRy1.push(LRUWSRstats[0] * .4);
+        LRUWSRx2.push(i);
+        LRUWSRy2.push(LRUWSRstats[1] * .4);
     }
 
     var LRUtrace = {
@@ -305,7 +353,7 @@ function Bgraph(){
         x: LRUx2, 
         y: LRUy2, 
         mode:"scatter", 
-        name:"LRU",
+        name:"ACELRU",
         marker: {
             size: 12,
             symbol: 'diamond-open'
@@ -329,13 +377,38 @@ function Bgraph(){
         x: CFLRUx2, 
         y: CFLRUy2, 
         mode:"scatter", 
-        name:"CFLRU",
+        name:"ACECFLRU",
         marker: {
             size: 12,
             symbol: 'x-open'
         }
     }
-    var BData = [LRUtrace, ACELRUtrace, CFLRUtrace, ACECFLRUtrace];
+
+    var LRUWSRtrace = {
+
+        x: LRUWSRx1, 
+        y: LRUWSRy1, 
+        mode:"scatter", 
+        name:"LRWSR",
+        marker: {
+            size: 12,
+            symbol: 'triangle-up-open'
+        }
+    }
+
+    var ACELRUWSRtrace = {
+
+        x: LRUWSRx2, 
+        y: LRUWSRy2, 
+        mode:"scatter", 
+        name:"ACELRUWSR",
+        marker: {
+            size: 12,
+            symbol: 'triangle-down-open'
+        }
+    }
+
+    var BData = [LRUtrace, ACELRUtrace, CFLRUtrace, ACECFLRUtrace, LRUWSRtrace, ACELRUWSRtrace];
     
     var Blayout = {
         xaxis: {
