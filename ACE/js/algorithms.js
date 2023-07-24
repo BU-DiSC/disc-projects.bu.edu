@@ -96,9 +96,9 @@ function calculate(wload, bLen, alpha, baseAlg){
     alphaVal = alpha;
     p = 0;
     //assign selected algorithm
-    const ACEalgorithms = [ACELRU, ACECFLRU];
+    const ACEalgorithms = [ACELRU, ACECFLRU, ACELRUWSR];
     ACEAlgorithm = ACEalgorithms[baseAlg];
-    const baseAlgorithms = [baseLRU, baseCFLRU];
+    const baseAlgorithms = [baseLRU, baseCFLRU, baseLRUWSR];
     baseAlgorithm = baseAlgorithms[baseAlg];
     //base bufferpool
     buffer = [];
@@ -162,10 +162,8 @@ function calculate(wload, bLen, alpha, baseAlg){
                 return;
             }
             if(!pauser){
-                //baseAlgorithm(p);
-                //ACEAlgorithm(p);
-                baseLRUWSR(p);
-                ACELRUWSR(p);
+                baseAlgorithm(p);
+                ACEAlgorithm(p);
                 baseDisplay();
                 ACEDisplay();    
                 p++;
@@ -501,8 +499,6 @@ function baseLRUWSR(p){
 
 function ACELRUWSR(p){
 
-    
-
     var type = workload[p][0];
     var page = workload[p][1];
 
@@ -517,11 +513,10 @@ function ACELRUWSR(p){
         //move page to the end of buffer array
         ACEbuffer.push(ACEbuffer.splice(ACEbuffer.indexOf(page), 1)[0]);
         if(ACEdirty.includes(page)){
-            ACEdirty.push(dirty.splice(ACEdirty.indexOf(page),1)[0]);
-            ACEcoldflag[ACEcoldflag.indexOf(page)] = 1;
+            ACEdirty.push(ACEdirty.splice(ACEdirty.indexOf(page),1)[0]);
+            ACEcoldflag[ACEbuffer.indexOf(page)] = 1;
         }
-        ACEcoldflag.push(ACEcoldflag.splice(ACEcoldflag.indexOf(page), 1)[0]);
-
+        ACEcoldflag.push(ACEcoldflag.splice(ACEbuffer.indexOf(page), 1)[0]);
     }else{
 
         ACEbufferMiss++;
@@ -547,7 +542,7 @@ function ACELRUWSR(p){
                             
                             ACEdirty.splice(ACEdirty.indexOf(first), 1);
                             ACEpagesWritten++;
-
+                            i--;
                         }else{
 
                             ACEcoldflag[ACEbuffer.indexOf(ACEdirty[i])] = 0;
@@ -555,7 +550,6 @@ function ACELRUWSR(p){
                             ACEbuffer.push(ACEbuffer.splice(ACEbuffer.indexOf(ACEdirty[i]), 1)[0]);
                             ACEdirty.push(ACEdirty.splice(i,1)[0]);
                             i--;
-
                         }
                         awru++;  
                         if(awru == 8){
@@ -581,9 +575,9 @@ function ACELRUWSR(p){
 
         }
     }
-    //console.log(ACEbuffer);
-    //console.log(ACEcoldflag);
-    //console.log(ACEdirty);
+    console.log(ACEbuffer);
+    console.log(ACEcoldflag);
+    console.log(ACEdirty);
 
     //start with small buffer and bug check
 }

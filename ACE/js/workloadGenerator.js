@@ -1,5 +1,4 @@
 $(document).ready(function(){
-    $("#loadingbar").hide();
     var playing = false;
 
 	/*First & Second Graphs*/
@@ -15,12 +14,12 @@ $(document).ready(function(){
     
 
     //[b,n,x,s,d,e,alpha]
-    const workload1 = [250, 5000, 50000, 80, 15, 60, 8];
-    const workload2 = [2500, 5000, 50000, 80, 15, 60, 8];
-    const workload3 = [500, 5000, 50000, 80, 15, 90, 8];
-    const workload4 = [500, 5000, 50000, 80, 15, 20, 8];
-    const workload5 = [500, 10000, 50000, 95, 5, 60, 8];
-    const workload6 = [500, 500, 50000, 100, 100, 60, 8];
+    const workload1 = [100, 5000, 50000, 80, 15, 60, 8];
+    const workload2 = [250, 5000, 50000, 80, 15, 60, 8];
+    const workload3 = [150, 5000, 50000, 80, 15, 90, 8];
+    const workload4 = [150, 5000, 50000, 80, 15, 20, 8];
+    const workload5 = [150, 10000, 50000, 95, 5, 60, 8];
+    const workload6 = [150, 500, 50000, 100, 100, 60, 8];
     const test = [5, 50, 20, 80, 15, 40, 4];
     var workloads = [workload1, workload2, workload3, workload4, workload5, workload6, test];
     var inputs = [$b, $n, $x, $s, $d, $e, $alpha];
@@ -73,27 +72,26 @@ $(document).ready(function(){
         playing = false;
     });
 
+    var progress = 0;
+    var g = document.createElement("progress");
+    var graphDone = false;
     $("#graph").click(function(){
-        showLoading();
         
-        
+        g.setAttribute("value", progress);
+        g.setAttribute("max", "22");
+        document.getElementById("loadingbar").appendChild(g);
+        my = setInterval(update, 100, progress);
         setTimeout(function(){
             RWgraph();
             Bgraph();
-            hideLoading();
+            clearInterval(my);
         }, 100);
         
-        
-
     });
 
-function showLoading(){
-
-    $("#loadingbar").show();
-}
-
-function hideLoading(){
-    $("#loadingbar").hide();
+function update(p){
+    g.setAttribute("value", p);
+    alert(progress)
 }
 
 function generateWorkload(){
@@ -184,6 +182,8 @@ function RWgraph(){
     var LRUWSRy2 = [];
 
     for(var i = 0; i < 100; i+=10){
+        progress++;
+        
         var LRUstats = IOcalc(RWWorkload(i),b, a, 0);
         LRUx1.push(i);
         LRUy1.push(LRUstats[0] * .4);
@@ -200,6 +200,7 @@ function RWgraph(){
         LRUWSRy1.push(LRUWSRstats[0] * .4);
         LRUWSRx2.push(i);
         LRUWSRy2.push(LRUWSRstats[1] * .4);
+
     }
     
     var LRUtrace = {
@@ -295,6 +296,7 @@ function RWgraph(){
     var RWData = [LRUtrace, ACELRUtrace, CFLRUtrace, ACECFLRUtrace, LRUWSRtrace, ACELRUWSRtrace];
     
     Plotly.newPlot('RWplot', RWData, RWlayout);
+    progress++;
 }
 
 //generate graph for varying Buffer size
@@ -334,6 +336,9 @@ function Bgraph(){
         LRUWSRy1.push(LRUWSRstats[0] * .4);
         LRUWSRx2.push(i);
         LRUWSRy2.push(LRUWSRstats[1] * .4);
+
+        progress++;
+        graphDone = true;
     }
 
     var LRUtrace = {
@@ -429,13 +434,13 @@ function Bgraph(){
     };
     
     Plotly.newPlot('Bplot', BData, Blayout);
-    
+    progress++;
 }
 
 //check if input values are too high
 function capacity(){
 
-    if( parseInt(b.value) > 1000 || parseInt(b.value) < 0){
+    if( parseInt(b.value) > 500 || parseInt(b.value) < 0){
         window.alert("buffer pool size is too large or invalid");
     }
     else if(parseInt(n.value) > 10000 || parseInt(n.value) < parseInt(b.value)){
