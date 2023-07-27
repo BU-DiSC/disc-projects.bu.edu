@@ -168,9 +168,6 @@ function calculate(wload, bLen, alpha, baseAlg){
                 ACEDisplay();    
                 p++;
             }
-                   
-            
-          
           if (--i) myLoop(i); 
         }, delay)
     })(workload.length);             
@@ -511,12 +508,12 @@ function ACELRUWSR(p){
     if (ACEbuffer.includes(page)){
         ACEbufferHit++;
         //move page to the end of buffer array
-        ACEbuffer.push(ACEbuffer.splice(ACEbuffer.indexOf(page), 1)[0]);
         if(ACEdirty.includes(page)){
             ACEdirty.push(ACEdirty.splice(ACEdirty.indexOf(page),1)[0]);
             ACEcoldflag[ACEbuffer.indexOf(page)] = 1;
-        }
+        } 
         ACEcoldflag.push(ACEcoldflag.splice(ACEbuffer.indexOf(page), 1)[0]);
+        ACEbuffer.push(ACEbuffer.splice(ACEbuffer.indexOf(page), 1)[0]);
     }else{
 
         ACEbufferMiss++;
@@ -535,12 +532,11 @@ function ACELRUWSR(p){
             const first = ACEbuffer[0];
             if (ACEdirty.includes(first)){
                 let awru = 0;
-                
                     for(var i = 0; i < ACEdirty.length; i++){
 
                         if(ACEcoldflag[ACEbuffer.indexOf(ACEdirty[i])] == 0){
                             
-                            ACEdirty.splice(ACEdirty.indexOf(first), 1);
+                            ACEdirty.splice(i, 1);
                             ACEpagesWritten++;
                             i--;
                         }else{
@@ -575,9 +571,9 @@ function ACELRUWSR(p){
 
         }
     }
-    console.log(ACEbuffer);
-    console.log(ACEcoldflag);
-    console.log(ACEdirty);
+    //console.log(ACEbuffer);
+    //console.log(ACEcoldflag);
+    //console.log(ACEdirty);
 
     //start with small buffer and bug check
 }
