@@ -271,16 +271,20 @@
 					display: table-cell;
 					vertical-align: inherit;
 				}
+				table { 
+    				border-collapse: collapse; 
+				}
 			</style>
 
 			</div>
-			<div id="indiv-bush-row" class="row ">
+			<div id="indiv-bush-row" class="row">
 				<!-- Vanilla LSM-Tree bush results starts here lsm-cmpct-pp-1-->
 				<div class="col-sm">
 					<div id="cmp-lsm-cmpct-pp-1-mp" class="row cmp-indiv-mp">
 						<div  class="lsm-title">
 							<span id="base-alg-table-title" class="row cmp-indiv-mp">LRU</span>
 						</div>
+						<br>
 					</div>
 					<div id="table1">
 					</div>
@@ -291,9 +295,10 @@
 						<div  class="lsm-title">
 							<span id="ACE-alg-table-title" class="row cmp-indiv-mp">ACE-LRU</span>
 						</div>
+						<span id="ACEAlert">notice the streaks of clean pages formed by concurrently writing dirty pages</span>
 					</div>
 						<div id = "table2"></div>
-						<span>notice the streaks of clean pages formed by concurrently writing dirty pages</span>
+						
 					</div>
 					
 				</div>
@@ -301,247 +306,117 @@
 			<br>
 
 			<br>
+
 			<!-- Cost result starts here -->
-			<div id="cost-result" class="row">
-				<!-- Demo1 cost result starts here -->
+			<div id="cost-result" class="container">
+
 				<!-- #Buffer Misses -->
-				<div class="lsm-cmpct-pp-1-cost-col col-lg-4 col-md-4 col-sm-4">
-					<div class="row">
-						<div class="metrics col-lg-7 col-md-7 col-sm-7">
-							<span class="metric-title" data-toggle="tooltip" data-placement="left"
-								  title="The number of times a requested page is not found in the bufferpool.">#Buffer Misses</span>
-						</div>
-						<div class="cost-col col-lg-5 col-md-5 col-sm-5 text-center">
-							<span id="base-alg-buffer-misses" class="cost uncertain" data-toggle="tooltip" data-placement="right">XXX</span>
-						</div>
+				<div class="row">
+					<div class="col text-center">
+						<span id="base-alg-buffer-misses" class="cost uncertain" data-toggle="tooltip" data-placement="right">XXX</span>
 					</div>
-					<!-- #Buffer Hits-->
-					<div class="row">
-						<div class="metrics col-lg-7 col-md-7 col-sm-7">
-							<span class="metric-title" data-toggle="tooltip" data-placement="left"
+					<div class="col-2 text-center">
+						<span class="metric-title" data-toggle="tooltip" data-placement="left"
+										title="The number of times a requested page is not found in the bufferpool.">#Buffer Misses</span>
+					</div>
+					<div class="col text-center">
+						<span id="ace-alg-buffer-misses" class="cost uncertain">XXX</span>
+					</div>
+				</div>
+				<!-- #Buffer Hits-->
+				<div class="row">
+					<div class="col text-center">
+						<span id="base-alg-buffer-hits" class="cost uncertain" data-toggle="tooltip" data-placement="right">XXX</span>
+					</div>
+					<div class="col-2 text-center">
+						<span class="metric-title" data-toggle="tooltip" data-placement="left"
 								  title="The number of times a requested page is in the bufferpool.">#Buffer Hits</span>
-						</div>
-						<div class="cost-col col-lg-5 col-md-5 col-sm-5 text-center">
-							<span id="base-alg-buffer-hits" class="cost uncertain" data-toggle="tooltip" data-placement="right">XXX</span>
-						</div>
 					</div>
-					<!-- #Disk Pages Read-->
-					<div class="row">
-						<div class="metrics col-lg-7 col-md-7 col-sm-7">
-							<span class="metric-title" data-toggle="tooltip" data-placement="left"
+					<div class="col text-center">
+						<span id="ace-alg-buffer-hits" class="cost uncertain">XXX</span>
+					</div>
+				</div>
+				<!-- #Disk Pages Read-->
+				<div class="row">
+					<div class="col text-center">
+						<span id="base-alg-pages-read" class="cost uncertain" data-toggle="tooltip" data-placement="right">XXX</span>
+					</div>
+					<div class="col-2 text-center">
+						<span class="metric-title" data-toggle="tooltip" data-placement="left"
 								  title="The number of pages processed from a workload.">#Disk Pages Read</span>
-						</div>
-						<div class="cost-col col-lg-5 col-md-5 col-sm-5 text-center">
-							<span id="base-alg-pages-read" class="cost uncertain" data-toggle="tooltip" data-placement="right">XXX</span>
-						</div>
 					</div>
-					<!-- #Disk Pages Written-->
-					<div class="row">
-						<div class="metrics col-lg-7 col-md-7 col-sm-7">
-							<span class="metric-title" data-toggle="tooltip" data-placement="left"
+					<div class="col text-center">
+						<span id="ace-alg-pages-read" class="cost uncertain">XXX</span>
+					</div>
+				</div>
+				<!-- #Disk Pages Written-->
+				<div class="row">
+					<div class="col text-center">
+						<span id="base-alg-pages-written" class="cost uncertain" data-toggle="tooltip" data-placement="right">XXX</span>
+					</div>
+					<div class="col-2 text-center">
+						<span class="metric-title" data-toggle="tooltip" data-placement="left"
 								  title="The number of dirty pages written.">#Disk Pages Written</span>
-						</div>
-						<div class="cost-col col-lg-5 col-md-5 col-sm-5 text-center">
-							<span id="base-alg-pages-written" class="cost uncertain" data-toggle="tooltip" data-placement="right">XXX</span>
-						</div>
 					</div>
-					<!-- #Read I/O-->
-					<div class="row">
-						<div class="metrics col-lg-7 col-md-7 col-sm-7">
-							<span class="metric-title" data-toggle="tooltip" data-placement="left"
+					<div class="col text-center">
+						<span id="ace-alg-pages-written" class="cost uncertain">XXX</span>
+					</div>
+				</div>
+				<!-- #Read I/O-->
+				<div class="row">
+					<div class="col text-center">
+						<span id="base-alg-read-IO" class="cost uncertain">XXX</span>
+					</div>
+					<div class="col-2 text-center">
+						<span class="metric-title" data-toggle="tooltip" data-placement="left"
 								  title="The number of times pages were added to the bufferpool.">#Read I/O</span>
-						</div>
-						<div class="cost-col col-lg-5 col-md-5 col-sm-5 text-center">
-							<span id="base-alg-read-IO" class="cost uncertain">XXX</span>
-						</div>
 					</div>
-					<!-- #Write I/O -->
-					<div class="row">
-						<div class="metrics col-lg-7 col-md-7 col-sm-7">
-							<span class="metric-title" data-toggle="tooltip" data-placement="left"
+					<div class="col text-center">
+						<span id="ace-alg-read-IO" class="cost uncertain">XXX</span>
+					</div>
+				</div>
+				<!-- #Write I/O -->
+				<div class="row">
+					<div class="col text-center">
+						<span id="base-alg-write-IO" class="cost uncertain" data-toggle="tooltip" data-placement="right">XXX</span>
+					</div>
+					<div class="col-2 text-center">
+						<span class="metric-title" data-toggle="tooltip" data-placement="left"
 								  title="The number of times dirty pages were written.">#Write I/O</span>
-						</div>
-						<div class="cost-col col-lg-5 col-md-5 col-sm-5 text-center">
-							<span id="base-alg-write-IO" class="cost uncertain" data-toggle="tooltip" data-placement="right">XXX</span>
-						</div>
 					</div>
-					<!-- #Pages Evicted -->
-					<div class="row">
-						<div class="metrics col-lg-7 col-md-7 col-sm-7">
-							<span class="metric-title" data-toggle="tooltip" data-placement="left"
+					<div class="col text-center">
+						<span id="ace-alg-write-IO" class="cost uncertain">XXX</span>
+					</div>
+				</div>
+				<!-- #Pages Evicted -->
+				<div class="row">
+					<div class="col text-center">
+						<span id="base-alg-pages-evicted" class="cost uncertain" data-toggle="tooltip" data-placement="right">XXX</span>
+					</div>
+					<div class="col-2 text-center">
+						<span class="metric-title" data-toggle="tooltip" data-placement="left"
 								  title="The number of pages evicted from the bufferpool.">#Pages Evicted</span>
-						</div>
-						<div class="cost-col col-lg-5 col-md-5 col-sm-5 text-center">
-							<span id="base-alg-pages-evicted" class="cost uncertain" data-toggle="tooltip" data-placement="right">XXX</span>
-						</div>
 					</div>
-					<!-- #Pages Prefetched -->
-					<div class="row">
-						<div class="metrics col-lg-7 col-md-7 col-sm-7">
-							<span class="metric-title" data-toggle="tooltip" data-placement="left"
-								  title="The number of pages prefetched.">#Pages Prefetched</span>
-						</div>
-						<div class="cost-col col-lg-5 col-md-5 col-sm-5 text-center">
-							<span id="base-alg-pages-prefetched" class="cost uncertain" data-toggle="tooltip" data-placement="right">XXX</span>
-						</div>
-					</div>
-				</div> <!-- END of demo1 cost result -->
-				<!-- Demo2 cost result starts here -->
-				<div class="lsm-cmpct-pp-2-cost-col col-lg-4 col-md-4 col-sm-4">
-					<!-- #ACE buffer misses-->
-					<div class="row">
-						<div class="cost-col col-lg-12 col-md-12 col-sm-12 text-center">
-							<span id="ace-alg-buffer-misses" class="cost uncertain">XXX</span>
-						</div>
-					</div>
-					<!-- #ACE buffer hits-->
-					<div class="row">
-						<div class="cost-col col-lg-12 col-md-12 col-sm-12 text-center">
-							<span id="ace-alg-buffer-hits" class="cost uncertain">XXX</span>
-						</div>
-					</div>
-					<!-- #ACE pages read-->
-					<div class="row">
-						<div class="cost-col col-lg-12 col-md-12 col-sm-12 text-center">
-							<span id="ace-alg-pages-read" class="cost uncertain">XXX</span>
-						</div>
-					</div>
-					<!-- #ACE pages written-->
-					<div class="row">
-						<div class="cost-col col-lg-12 col-md-12 col-sm-12 text-center">
-							<span id="ace-alg-pages-written" class="cost uncertain">XXX</span>
-						</div>
-					</div>
-					<!-- ACE read IO-->
-					<div class="row">
-						<div class="cost-col col-lg-12 col-md-12 col-sm-12 text-center">
-							<span id="ace-alg-read-IO" class="cost uncertain">XXX</span>
-						</div>
-					</div>
-					<!-- ACE write IO-->
-					<div class="row">
-						<div class="cost-col col-lg-12 col-md-12 col-sm-12 text-center">
-							<span id="ace-alg-write-IO" class="cost uncertain">XXX</span>
-						</div>
-					</div>
-					<!-- # ACE pages evicted-->
-					<div class="row">
-						<div class="cost-col col-lg-12 col-md-12 col-sm-12 text-center">
-							<span id="ace-alg-pages-evicted" class="cost uncertain">XXX</span>
-						</div>
-					</div>
-					<!-- # ACE pages prefetched -->
-					<div class="row">
-						<div class="cost-col col-lg-12 col-md-12 col-sm-12 text-center">
-							<span id="ace-alg-pages-prefetched" class="cost uncertain">XXX</span>
-						</div>
-					</div>
-				</div> <!-- END of demo3 cost result -->
-				
-			</div> <!-- END of all cost results -->
-
-			<div id="plot-result" style="width: 100%; text-align: left; padding: 5px; margin: 0 auto; display:none">
-				<hr>
-				<div class="row" style="border: 2px solid #666666; border-radius: 15px;border-style: dotted">
-					<div class="col-lg-4">
-						<div class="row" style="margin-right:0px; margin-left:0px">
-							<div class="col-lg-4" style="border: 2px solid #F5B041;background-color: #F5B041; height: 20px;margin-top:5px;">
-							</div>
-							<div id="lsm-cmpct-pp-1-legend" class="col-lg-8 text-center" style="margin:5px auto">
-								<b>FADE</b>
-							</div>
-						</div>
-					</div>
-					<div class="col-lg-4">
-						<div class="row " style="margin-right:0px; margin-left:0px">
-							<div class="col-lg-4" style="border: 2px solid #52BE80;background-color: #52BE80; height: 20px;margin-top:5px;">
-							</div>
-							<div id="lsm-cmpct-pp-2-legend" class="col-lg-8 text-center" style="margin:5px auto">
-								<b> MinOverlappingRatio</b>
-							</div>
-						</div>
-					</div>
-					<div class="col-lg-4">
-						<div class="row " style="margin-right:0px; margin-left:0px">
-							<div class="col-lg-4" style="border: 2px solid #2E86C1;background-color: #2E86C1; height: 20px;margin-top:5px;">
-							</div>
-							<div id="lsm-cmpct-pp-3-legend" class="col-lg-8 text-center" style="margin:5px auto">
-								<b> Round-Robin</b><!--Hybrid Strategy-->
-							</div>
-						</div>
+					<div class="col text-center">
+						<span id="ace-alg-pages-evicted" class="cost uncertain">XXX</span>
 					</div>
 				</div>
-				<br>
-
-				<div class="row">
-					<div class="col-lg-3">
-						<div id="num_deletes_plot" style="border: 2px solid #666666; border-radius: 15px;border-style: dashed;padding:1px">
-						</div>
-					</div>
-					<div class="col-lg-3">
-						<div id="num_existing_tombstones_plot" style="border: 2px solid #666666; border-radius: 15px;border-style: dashed;padding:1px">
-						</div>
-					</div>
-					<div class="col-lg-3">
-						<div id="num_expired_tombstones_plot" style="border: 2px solid #666666; border-radius: 15px;border-style: dashed;padding:1px">
-						</div>
-					</div>
-					<div class="col-lg-3">
-						<div id="max_obsolete_age_plot" style="border: 2px solid #666666; border-radius: 15px;border-style: dashed;padding:1px">
-						</div>
-					</div>
-				</div>
-				<br>
-				<div class="row">
-					<div class="col-lg-3">
-						<div id="num_compactions_plot" style="border: 2px solid #666666; border-radius: 15px;border-style: dashed;padding:1px">
-						</div>
-					</div>
-					<div class="col-lg-3">
-						<div id="avg_cmpct_lat_plot" style="border: 2px solid #666666; border-radius: 15px;border-style: dashed;padding:1px">
-						</div>
-					</div>
-					<div class="col-lg-3">
-						<div id="avg_cmpct_size_plot" style="border: 2px solid #666666; border-radius: 15px;border-style: dashed;padding:1px">
-						</div>
-					</div>
-					<div class="col-lg-3">
-						<div id="wc_cmpct_lat_plot" style="border: 2px solid #666666; border-radius: 15px;border-style: dashed;padding:1px">
-						</div>
-					</div>
-
-				</div>
-				<br>
-				<div class="row">
-					<div class="col-lg-3">
-						<div id="ingest_cost_plot" style="border: 2px solid #666666; border-radius: 15px;border-style: dashed;padding:1px">
-						</div>
-					</div>
-					<div class="col-lg-3">
-						<div id="write_amp_plot" style="border: 2px solid #666666; border-radius: 15px;border-style: dashed;padding:1px">
-						</div>
-					</div>
-
-					<div class="col-lg-3">
-						<div id="storage_space_plot" style="border: 2px solid #666666; border-radius: 15px;border-style: dashed;padding:1px">
-						</div>
-					</div>
-					<div class="col-lg-3">
-						<div id="memory_footprint_plot" style="border: 2px solid #666666; border-radius: 15px;border-style: dashed;padding:1px">
-						</div>
-					</div>
-				</div>
+			
 			</div>
+			<!-- END of all cost results -->
 
-			<hr class="my-4 row">
-
+			<br>
 			<div class="row" id="show-plot-btn">
-				<div class="col-lg-12 text-right">
+				<div class="col-lg-12 text-left">
 					<div>
-						<a id="graph" class="btn btn-info btn-lg" target="_blank" style="color:#fff">
-							Varied RW% and BP Size
-						</a>
-						
+						<div class = "d-flex flex-row">
+							<a id="graph" class="btn btn-info btn-lg " target="_blank" style="color:#fff">
+								Vary RW% and BP Size
+							</a>
+						</div>
+						<div class="h-100 d-flex align-items-center justify-content-center">
+							<div id="loadingbar"> </div>				
+						</div>
 						<div class="flex-parent-element">
 							
 							<div class="flex-child-element magenta" id="RWplot"></div>
@@ -563,7 +438,7 @@
 							}
 						</style>
 					</div>
-					<div id="loadingbar"> </div>
+					
 				</div>
 			</div>
 

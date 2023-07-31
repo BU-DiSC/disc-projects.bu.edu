@@ -2,12 +2,13 @@ var pauser = false;
 var reloader = 0;
 var delay = 200;
 var playing = false;
-
+var firstWrite = true;
 $(document).ready(function(){
-
+    $("#ACEAlert").css('visibility', 'hidden');;
     const $workload = $('#workload');
     $workload.change(function(){
         finisher();
+        resetStats();
         $("#base-alg-table").remove();
         $("#ACE-alg-table").remove();
     });
@@ -15,6 +16,7 @@ $(document).ready(function(){
     const $alg = $('#baseAlg');
     $alg.change(function(){
         finisher();
+        resetStats();
         $("#base-alg-table").remove();
         $("#ACE-alg-table").remove();
     });
@@ -134,7 +136,12 @@ function calculate(wload, bLen, alpha, baseAlg){
     var baseTotalCells = 0;
     var basetable = $('<table>').attr("id", "base-alg-table").addClass("table cmp-indiv-mp");
     for(var i = 0; i <= bufferLength / 20; i++){
-        var row = $('<tr>').addClass("tablecell");
+        if(i == 0){
+            var row = $('<tr>').addClass("tablecell");
+            row.css("margin-top", "2px");
+        }else{
+            var row = $('<tr>').addClass("tablecell");
+        }
         for(var k = 0; k < 20 && baseTotalCells < Math.ceil(bufferLength); k++){
             row.append($("<td>"));
             baseTotalCells++;
@@ -147,7 +154,14 @@ function calculate(wload, bLen, alpha, baseAlg){
     var ACETotalCells = 0;
     var ACEtable = $('<table>').attr("id", "ACE-alg-table").addClass("table cmp-indiv-mp");
     for(var i = 0; i <= bufferLength / 20; i++){
-        var row = $('<tr>').addClass("tablecell");
+        if(i == 0){
+            var row = $('<tr>').addClass("tablecell");
+            row.css({"border-color": "black", 
+            "border-width":"2px", 
+            "border-style":"solid"});
+        }else{
+            var row = $('<tr>').addClass("tablecell");
+        }
         for(var k = 0; k < 20 && ACETotalCells < Math.ceil(bufferLength); k++){
             row.append($("<td>"));
             ACETotalCells++;
@@ -155,7 +169,7 @@ function calculate(wload, bLen, alpha, baseAlg){
         ACEtable.append(row);
     }
     $('#table2').append(ACEtable);
-           
+
     (function myLoop(i) {
         setTimeout(function() {
             if(reloader == 1){
@@ -167,6 +181,10 @@ function calculate(wload, bLen, alpha, baseAlg){
                 baseDisplay();
                 ACEDisplay();    
                 p++;
+            }
+            if(firstWrite && ACEpagesWritten > 0){
+                $("#ACEAlert").css('visibility', 'visible');
+                firstWrite = false;
             }
           if (--i) myLoop(i); 
         }, delay)
@@ -185,6 +203,24 @@ function finisher(){
     baseDisplay();
     ACEDisplay(); 
     $("#play-button").prop('disabled', false);
+}
+
+function resetStats(){
+    $("#base-alg-buffer-misses").text(0);
+    $("#base-alg-buffer-hits").text(0);
+    $("#base-alg-pages-read").text(0);
+    $("#base-alg-pages-written").text(0);
+    $("#base-alg-read-IO").text(0);
+    $("#base-alg-write-IO").text(0);
+    $("#base-alg-pages-evicted").text(0);
+
+    $("#ace-alg-buffer-misses").text(0);
+    $("#ace-alg-buffer-hits").text(0);
+    $("#ace-alg-pages-read").text(0);
+    $("#ace-alg-pages-written").text(0);
+    $("#ace-alg-read-IO").text(0);
+    $("#ace-alg-write-IO").text(0);
+    $("#ace-alg-pages-evicted").text(0);
 }
 
 function baseDisplay(){
@@ -211,8 +247,6 @@ function baseDisplay(){
     $("#base-alg-pages-written").text(pagesWritten);
     $("#base-alg-read-IO").text(readIO);
     $("#base-alg-write-IO").text(writeIO);
-    $("#base-alg-pages-evicted").text(pagesEvicted);
-    $("#base-alg-pages-prefetched").text(pagesPrefetched);
 }
 
 function ACEDisplay(){
@@ -240,7 +274,6 @@ function ACEDisplay(){
     $("#ace-alg-read-IO").text(ACEreadIO);
     $("#ace-alg-write-IO").text(ACEwriteIO);
     $("#ace-alg-pages-evicted").text(ACEpagesEvicted);
-    $("#ace-alg-pages-prefetched").text(ACEpagesPrefetched);
 }
 
 function baseLRU(p){
