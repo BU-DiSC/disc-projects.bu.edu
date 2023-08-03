@@ -14,12 +14,12 @@ $(document).ready(function(){
     
 
     //[b,n,x,s,d,e,alpha]
-    const workload1 = [100, 5000, 50000, 80, 15, 60, 8];
-    const workload2 = [250, 5000, 50000, 80, 15, 60, 8];
-    const workload3 = [150, 5000, 50000, 80, 15, 90, 8];
-    const workload4 = [150, 5000, 50000, 80, 15, 20, 8];
-    const workload5 = [150, 10000, 50000, 95, 5, 60, 8];
-    const workload6 = [150, 500, 50000, 100, 100, 60, 8];
+    const workload1 = [100, 5000, 50000, 80, 15, 60, 12];
+    const workload2 = [250, 5000, 50000, 80, 15, 60, 12];
+    const workload3 = [150, 5000, 50000, 80, 15, 90, 12];
+    const workload4 = [150, 5000, 50000, 80, 15, 20, 12];
+    const workload5 = [150, 10000, 50000, 95, 5, 60, 12];
+    const workload6 = [150, 500, 50000, 100, 100, 60, 12];
     const test = [5, 50, 20, 80, 15, 40, 4];
     var workloads = [workload1, workload2, workload3, workload4, workload5, workload6, test];
     var inputs = [$b, $n, $x, $s, $d, $e, $alpha];
@@ -472,8 +472,8 @@ function capacity(){
     else if(parseInt(e.value) > 100 || parseInt(e.value) < 0){
         window.alert("read ratio cannot exceed 100%");
     }
-    else if(parseInt(alpha.value) > 8 || parseInt(alpha.value) < 0){
-        window.alert("current SSD concurrency is no more than 8 and postive");
+    else if(parseInt(alpha.value) > 20 || parseInt(alpha.value) < 0){
+        window.alert("current SSD concurrency is too large or invalid");
     }
     else if(parseInt(s.value) > 100 || parseInt(s.value) < 0){
         window.alert("skewness cannot exceed 100% or be negative");

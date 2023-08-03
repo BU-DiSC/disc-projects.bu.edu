@@ -25,6 +25,10 @@ $(document).ready(function(){
         delay = 15;    
     });
     
+    $("#medium-button").click(function(){
+        delay = 200;
+    });
+
     $("#slow-button").click(function(){
         delay = 1000;
     });
@@ -138,7 +142,7 @@ function calculate(wload, bLen, alpha, baseAlg){
     for(var i = 0; i <= bufferLength / 20; i++){
         if(i == 0){
             var row = $('<tr>').addClass("tablecell");
-            row.css("margin-top", "4px");
+            row.css("margin-top", "6px");
         }else{
             var row = $('<tr>').addClass("tablecell");
         }
@@ -181,8 +185,8 @@ function calculate(wload, bLen, alpha, baseAlg){
             }
             if(firstWrite && ACEpagesWritten > 0){
                 $("#ACEAlert").css('visibility', 'visible');
-                $("#ACERow").css({"border-color": "yellow", 
-                "border-width":"3px", 
+                $("#ACERow").css({"border-color": "blue", 
+                "border-width":"4px", 
                 "border-style":"solid"});
                 firstWrite = false;
             }
