@@ -138,7 +138,7 @@ function calculate(wload, bLen, alpha, baseAlg){
     for(var i = 0; i <= bufferLength / 20; i++){
         if(i == 0){
             var row = $('<tr>').addClass("tablecell");
-            row.css("margin-top", "2px");
+            row.css("margin-top", "4px");
         }else{
             var row = $('<tr>').addClass("tablecell");
         }
@@ -155,10 +155,7 @@ function calculate(wload, bLen, alpha, baseAlg){
     var ACEtable = $('<table>').attr("id", "ACE-alg-table").addClass("table cmp-indiv-mp");
     for(var i = 0; i <= bufferLength / 20; i++){
         if(i == 0){
-            var row = $('<tr>').addClass("tablecell");
-            row.css({"border-color": "black", 
-            "border-width":"2px", 
-            "border-style":"solid"});
+            var row = $('<tr>').attr("id", "ACERow").addClass("tablecell");
         }else{
             var row = $('<tr>').addClass("tablecell");
         }
@@ -184,6 +181,9 @@ function calculate(wload, bLen, alpha, baseAlg){
             }
             if(firstWrite && ACEpagesWritten > 0){
                 $("#ACEAlert").css('visibility', 'visible');
+                $("#ACERow").css({"border-color": "yellow", 
+                "border-width":"3px", 
+                "border-style":"solid"});
                 firstWrite = false;
             }
           if (--i) myLoop(i); 
@@ -247,6 +247,7 @@ function baseDisplay(){
     $("#base-alg-pages-written").text(pagesWritten);
     $("#base-alg-read-IO").text(readIO);
     $("#base-alg-write-IO").text(writeIO);
+    $("#base-alg-pages-evicted").text(ACEpagesEvicted);
 }
 
 function ACEDisplay(){
