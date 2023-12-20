@@ -4,13 +4,15 @@ var delay = 200;
 var playing = false;
 var firstWrite = true;
 $(document).ready(function(){
-    $("#ACEAlert").css('visibility', 'hidden');;
+    $("#ACEAlert").css('visibility', 'hidden');
     const $workload = $('#workload');
     $workload.change(function(){
         finisher();
         resetStats();
         $("#base-alg-table").remove();
         $("#ACE-alg-table").remove();
+        $("#ACEAlert").css('visibility', 'hidden');
+        firstWrite = true;
     });
 
     const $alg = $('#baseAlg');

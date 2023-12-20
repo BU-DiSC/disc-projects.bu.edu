@@ -331,19 +331,19 @@ function Bgraph(){
     (function myLoop(i) {
         setTimeout(function() {
             progress++;
-            var LRUstats = IOcalc(generateWorkload(),ops/100*i, a, 0);
+            var LRUstats = IOcalc(generateWorkload(),ops*(i/100), a, 0);
             LRUx1.push(i);
             LRUy1.push(LRUstats[0] * .4);
             LRUx2.push(i);
             LRUy2.push(LRUstats[1] * .4);
 
-            var CFLRUstats = IOcalc(generateWorkload(),i, a, 1);
+            var CFLRUstats = IOcalc(generateWorkload(),ops*(i/100), a, 1);
             CFLRUx1.push(i);
             CFLRUy1.push(CFLRUstats[0] * .4);
             CFLRUx2.push(i);
             CFLRUy2.push(CFLRUstats[1] * .4);
 
-            var LRUWSRstats = IOcalc(generateWorkload(),i, a, 2);
+            var LRUWSRstats = IOcalc(generateWorkload(),ops*(i/100), a, 2);
             LRUWSRx1.push(i);
             LRUWSRy1.push(LRUWSRstats[0] * .4);
             LRUWSRx2.push(i);
