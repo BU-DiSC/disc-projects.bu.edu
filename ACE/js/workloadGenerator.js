@@ -76,17 +76,20 @@ $(document).ready(function(){
     var g = document.createElement("progress");
     var graphDone = false;
     $("#graph").click(function(){
-        
+        if(graphDone){
+            alert("hi there")
+            progress = 0;
+            $("#Bplot").delete();
+            $("#RWplot").delete();
+        }
+
         g.setAttribute("value", progress);
         g.setAttribute("max", "22");
         document.getElementById("loadingbar").appendChild(g);
        
-        
         RWgraph();
         Bgraph();
-            
-        
-        
+        graphDone = true
     });
 
 function update(p){
