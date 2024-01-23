@@ -79,17 +79,18 @@ $(document).ready(function(){
         if(graphDone){
             alert("hi there")
             progress = 0;
-            $("#Bplot").delete();
-            $("#RWplot").delete();
+            $("#Bplot").remove();
+            $("#RWplot").remove();
         }
 
         g.setAttribute("value", progress);
-        g.setAttribute("max", "22");
+        g.setAttribute("max", "23");
         document.getElementById("loadingbar").appendChild(g);
        
         RWgraph();
         Bgraph();
         graphDone = true
+
     });
 
 function update(p){
@@ -305,7 +306,10 @@ function RWgraph(){
             var RWData = [LRUtrace, ACELRUtrace, CFLRUtrace, ACECFLRUtrace, LRUWSRtrace, ACELRUWSRtrace];
             
             Plotly.newPlot('RWplot', RWData, RWlayout);
-            progress++;
+            
+            if(progress==23){
+                $("#loadingbar").empty();
+                }
             }
           }
         }, 100)
@@ -452,7 +456,9 @@ function Bgraph(){
                 };
                 console.log("graph");
                 Plotly.newPlot('Bplot', BData, Blayout);
-                progress++;
+                
+                $("#loadingbar").empty();
+                
             }
           }
         }, 100)
