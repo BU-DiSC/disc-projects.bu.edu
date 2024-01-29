@@ -79,8 +79,8 @@ $(document).ready(function(){
         if(graphDone){
             alert("hi there")
             progress = 0;
-            $("#Bplot").remove();
-            $("#RWplot").remove();
+            $("#Bplot").empty();
+            $("#RWplot").empty();
         }
 
         g.setAttribute("value", progress);
@@ -184,22 +184,35 @@ function RWgraph(){
     var LRUWSRx2 = [];
     var LRUWSRy2 = [];
 
+    var LRUstats = [];
+    var CFLRUstats = [];
+    var LRUWSRstats = [];
+
+    var LRUtrace = {};
+    var ACELRUtrace = {};
+    var CFLRUtrace = {};
+    var ACECFLRUtrace = {};
+    var LRUWSRtrace = {};
+    var ACELRUWSRtrace = {};
+    var RWlayout = {};
+    var RWData = [];
+
     (function myLoop(i) {
         setTimeout(function() {
             progress++;
-            var LRUstats = IOcalc(RWWorkload(i),b, a, 0);
+            LRUstats = IOcalc(RWWorkload(i),b, a, 0);
             LRUx1.push(i);
             LRUy1.push(LRUstats[0] * .4);
             LRUx2.push(i);
             LRUy2.push(LRUstats[1] * .4);
 
-            var CFLRUstats = IOcalc(RWWorkload(i),b, a, 1);
+            CFLRUstats = IOcalc(RWWorkload(i),b, a, 1);
             CFLRUx1.push(i);
             CFLRUy1.push(CFLRUstats[0] * .4);
             CFLRUx2.push(i);
             CFLRUy2.push(CFLRUstats[1] * .4);
 
-            var LRUWSRstats = IOcalc(RWWorkload(i),b, a, 2);
+            LRUWSRstats = IOcalc(RWWorkload(i),b, a, 2);
             LRUWSRx1.push(i);
             LRUWSRy1.push(LRUWSRstats[0] * .4);
             LRUWSRx2.push(i);
@@ -213,102 +226,103 @@ function RWgraph(){
         }
         else if(i == 100){
             {
-            var LRUtrace = {
+                alert("data loaded")
+                LRUtrace = {
 
-                x: LRUx1, 
-                y: LRUy1, 
-                mode:"scatter", 
-                name:"LRU",
-                marker: {
-                    size: 12,
-                    symbol: 'circle-open'
+                    x: LRUx1, 
+                    y: LRUy1, 
+                    mode:"scatter", 
+                    name:"LRU",
+                    marker: {
+                        size: 12,
+                        symbol: 'circle-open'
+                    }
                 }
-            }
-        
-            var ACELRUtrace = {
-        
-                x: LRUx2, 
-                y: LRUy2, 
-                mode:"scatter", 
-                name:"ACELRU",
-                marker: {
-                    size: 12,
-                    symbol: 'diamond-open'
-                }
-            }
-        
-            var CFLRUtrace = {
-        
-                x: CFLRUx1, 
-                y: CFLRUy1, 
-                mode:"scatter", 
-                name:"CFLRU",
-                marker: {
-                    size: 12,
-                    symbol: 'square-open'
-                }
-            }
-        
-            var ACECFLRUtrace = {
-        
-                x: CFLRUx2, 
-                y: CFLRUy2, 
-                mode:"scatter", 
-                name:"ACECFLRU",
-                marker: {
-                    size: 12,
-                    symbol: 'x-open'
-                }
-            }
-        
-            var LRUWSRtrace = {
-        
-                x: LRUWSRx1, 
-                y: LRUWSRy1, 
-                mode:"scatter", 
-                name:"LRUWSR",
-                marker: {
-                    size: 12,
-                    symbol: 'triangle-up-open'
-                }
-            }
-        
-            var ACELRUWSRtrace = {
-        
-                x: LRUWSRx2, 
-                y: LRUWSRy2, 
-                mode:"scatter", 
-                name:"ACELRUWSR",
-                marker: {
-                    size: 12,
-                    symbol: 'triangle-down-open'
-                }
-            }
-        
-            var RWlayout = {
-                xaxis: {
-                    autorange: true,
-                    showgrid: false,
-                    zeroline: false,
-                    showline: true,
-                    title: "%read/write ratio"
-                },
-                yaxis: {
-                    autorange: true,
-                    showgrid: false,
-                    zeroline: false,
-                    showline: true, 
-                    title: "Workload latency (ms)"
-                },
-                title: "Read/Write %"
-            };
             
-            var RWData = [LRUtrace, ACELRUtrace, CFLRUtrace, ACECFLRUtrace, LRUWSRtrace, ACELRUWSRtrace];
+                ACELRUtrace = {
             
-            Plotly.newPlot('RWplot', RWData, RWlayout);
+                    x: LRUx2, 
+                    y: LRUy2, 
+                    mode:"scatter", 
+                    name:"ACELRU",
+                    marker: {
+                        size: 12,
+                        symbol: 'diamond-open'
+                    }
+                }
             
-            if(progress==23){
-                $("#loadingbar").empty();
+                CFLRUtrace = {
+            
+                    x: CFLRUx1, 
+                    y: CFLRUy1, 
+                    mode:"scatter", 
+                    name:"CFLRU",
+                    marker: {
+                        size: 12,
+                        symbol: 'square-open'
+                    }
+                }
+            
+                ACECFLRUtrace = {
+            
+                    x: CFLRUx2, 
+                    y: CFLRUy2, 
+                    mode:"scatter", 
+                    name:"ACECFLRU",
+                    marker: {
+                        size: 12,
+                        symbol: 'x-open'
+                    }
+                }
+            
+                LRUWSRtrace = {
+            
+                    x: LRUWSRx1, 
+                    y: LRUWSRy1, 
+                    mode:"scatter", 
+                    name:"LRUWSR",
+                    marker: {
+                        size: 12,
+                        symbol: 'triangle-up-open'
+                    }
+                }
+            
+                ACELRUWSRtrace = {
+            
+                    x: LRUWSRx2, 
+                    y: LRUWSRy2, 
+                    mode:"scatter", 
+                    name:"ACELRUWSR",
+                    marker: {
+                        size: 12,
+                        symbol: 'triangle-down-open'
+                    }
+                }
+            
+                RWlayout = {
+                    xaxis: {
+                        autorange: true,
+                        showgrid: false,
+                        zeroline: false,
+                        showline: true,
+                        title: "%read/write ratio"
+                    },
+                    yaxis: {
+                        autorange: true,
+                        showgrid: false,
+                        zeroline: false,
+                        showline: true, 
+                        title: "Workload latency (ms)"
+                    },
+                    title: "Read/Write %"
+                };
+                
+                RWData = [LRUtrace, ACELRUtrace, CFLRUtrace, ACECFLRUtrace, LRUWSRtrace, ACELRUWSRtrace];
+                alert("add graph")
+                Plotly.newPlot('RWplot', RWData, RWlayout);
+                
+                if(progress==23){
+                    $("#loadingbar").empty();
                 }
             }
           }
@@ -335,22 +349,35 @@ function Bgraph(){
     var LRUWSRx2 = [];
     var LRUWSRy2 = [];
 
+    var LRUstats = [];
+    var CFLRUstats = [];
+    var LRUWSRstats = [];
+
+    var LRUtrace = {};
+    var ACELRUtrace = {};
+    var CFLRUtrace = {};
+    var ACECFLRUtrace = {};
+    var LRUWSRtrace = {};
+    var ACELRUWSRtrace = {};
+    var BData = [];
+    var Blayout = {};
+
     (function myLoop(i) {
         setTimeout(function() {
             progress++;
-            var LRUstats = IOcalc(generateWorkload(),ops*(i/100), a, 0);
+            LRUstats = IOcalc(generateWorkload(),ops*(i/100), a, 0);
             LRUx1.push(i);
             LRUy1.push(LRUstats[0] * .4);
             LRUx2.push(i);
             LRUy2.push(LRUstats[1] * .4);
 
-            var CFLRUstats = IOcalc(generateWorkload(),ops*(i/100), a, 1);
+            CFLRUstats = IOcalc(generateWorkload(),ops*(i/100), a, 1);
             CFLRUx1.push(i);
             CFLRUy1.push(CFLRUstats[0] * .4);
             CFLRUx2.push(i);
             CFLRUy2.push(CFLRUstats[1] * .4);
 
-            var LRUWSRstats = IOcalc(generateWorkload(),ops*(i/100), a, 2);
+            LRUWSRstats = IOcalc(generateWorkload(),ops*(i/100), a, 2);
             LRUWSRx1.push(i);
             LRUWSRy1.push(LRUWSRstats[0] * .4);
             LRUWSRx2.push(i);
@@ -363,7 +390,7 @@ function Bgraph(){
         }
         else if(i > 20){
             {
-                var LRUtrace = {
+                LRUtrace = {
 
                     x: LRUx1, 
                     y: LRUy1, 
@@ -375,7 +402,7 @@ function Bgraph(){
                     }
                 }
                 
-                var ACELRUtrace = {
+                ACELRUtrace = {
             
                     x: LRUx2, 
                     y: LRUy2, 
@@ -387,7 +414,7 @@ function Bgraph(){
                     }
                 }
             
-                var CFLRUtrace = {
+                CFLRUtrace = {
             
                     x: CFLRUx1, 
                     y: CFLRUy1, 
@@ -399,7 +426,7 @@ function Bgraph(){
                     }
                 }
             
-                var ACECFLRUtrace = {
+                ACECFLRUtrace = {
             
                     x: CFLRUx2, 
                     y: CFLRUy2, 
@@ -411,7 +438,7 @@ function Bgraph(){
                     }
                 }
             
-                var LRUWSRtrace = {
+                LRUWSRtrace = {
             
                     x: LRUWSRx1, 
                     y: LRUWSRy1, 
@@ -423,7 +450,7 @@ function Bgraph(){
                     }
                 }
             
-                var ACELRUWSRtrace = {
+                ACELRUWSRtrace = {
             
                     x: LRUWSRx2, 
                     y: LRUWSRy2, 
@@ -435,9 +462,9 @@ function Bgraph(){
                     }
                 }
             
-                var BData = [LRUtrace, ACELRUtrace, CFLRUtrace, ACECFLRUtrace, LRUWSRtrace, ACELRUWSRtrace];
+                BData = [LRUtrace, ACELRUtrace, CFLRUtrace, ACECFLRUtrace, LRUWSRtrace, ACELRUWSRtrace];
                 
-                var Blayout = {
+                Blayout = {
                     xaxis: {
                         autorange: true,
                         showgrid: false,
