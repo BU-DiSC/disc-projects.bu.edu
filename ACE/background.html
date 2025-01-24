@@ -111,11 +111,10 @@
       <div class="row">
         <p>
           <img class="img-responsive img-centered" src="./img/compactionary-lsm-everywhere.png" alt="" align="left" width=20% style="margin-left:10%;margin-right:10%" />
-          <b>ACE</b> is a new bufferpool manager that adresses two challenged of state-of-the-art bufferpool managers. 
-          First, existing bufferpool managers often assume that the underlying devices have no concurrency.
-          When writing dirty pages to disk, state-of-the-art bufferpool managers write(evict) one page at a time, 
-          missing the opputinity to exploit the device's concurrency. Second, page replacement policies generally do not consider the device asymmetry,
-          instead, they treat read and write request equally.
+          <b>ACE</b> is a new bufferpool manager that addresses two challenges of the state-of-the-art bufferpool managers. 
+          First, existing bufferpool managers often assume that the underlying devices have no concurrency. As a result,
+          they write (evict) one page at a time, missing the opportunity to exploit the device's ability to handle parallel writes.
+          Second, page replacement policies generally do not consider the device asymmetry, instead, they treat read and write requests equally.
           </p>
     		</div>
       <hr >
@@ -141,7 +140,7 @@
 				<div>
           <br>
           <p>
-            To adress these issues, we propose ACE, a bufferpool manager that utilizes the underlying device concurrency to bridge the device assymetry. 
+            To address these issues, we propose ACE, a bufferpool manager that utilizes the underlying device concurrency and assymetry. 
             Our approach uses asymmetry/concurrency-aware write-back and eviction policies. 
             The write-back policy always writes multiple pages concurrently, hence amortizing the write cost. 
             The eviction policy evicts one or multiple pages at the same time from the bufferpool to enable prefetching.

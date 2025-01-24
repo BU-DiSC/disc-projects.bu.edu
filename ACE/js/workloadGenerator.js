@@ -244,7 +244,7 @@ function RWgraph(){
                     x: LRUx2, 
                     y: LRUy2, 
                     mode:"scatter", 
-                    name:"ACELRU",
+                    name:"ACE-LRU",
                     marker: {
                         size: 12,
                         symbol: 'diamond-open'
@@ -268,7 +268,7 @@ function RWgraph(){
                     x: CFLRUx2, 
                     y: CFLRUy2, 
                     mode:"scatter", 
-                    name:"ACECFLRU",
+                    name:"ACE-CFLRU",
                     marker: {
                         size: 12,
                         symbol: 'x-open'
@@ -280,7 +280,7 @@ function RWgraph(){
                     x: LRUWSRx1, 
                     y: LRUWSRy1, 
                     mode:"scatter", 
-                    name:"LRUWSR",
+                    name:"LRU-WSR",
                     marker: {
                         size: 12,
                         symbol: 'triangle-up-open'
@@ -292,7 +292,7 @@ function RWgraph(){
                     x: LRUWSRx2, 
                     y: LRUWSRy2, 
                     mode:"scatter", 
-                    name:"ACELRUWSR",
+                    name:"ACE-LRU-WSR",
                     marker: {
                         size: 12,
                         symbol: 'triangle-down-open'
@@ -332,7 +332,7 @@ function RWgraph(){
 
 //generate graph for varying Buffer size
 function Bgraph(){
-
+    var diskSize = parseInt($('#n').val()); // Disk size
     var ops = parseInt($('#x').val());
     var a = parseInt($("#alpha").val());
 
@@ -365,19 +365,19 @@ function Bgraph(){
     (function myLoop(i) {
         setTimeout(function() {
             progress++;
-            LRUstats = IOcalc(generateWorkload(),ops*(i/100), a, 0);
+            LRUstats = IOcalc(generateWorkload(),diskSize*(i/100), a, 0);
             LRUx1.push(i);
             LRUy1.push(LRUstats[0] * .4);
             LRUx2.push(i);
             LRUy2.push(LRUstats[1] * .4);
 
-            CFLRUstats = IOcalc(generateWorkload(),ops*(i/100), a, 1);
+            CFLRUstats = IOcalc(generateWorkload(),diskSize*(i/100), a, 1);
             CFLRUx1.push(i);
             CFLRUy1.push(CFLRUstats[0] * .4);
             CFLRUx2.push(i);
             CFLRUy2.push(CFLRUstats[1] * .4);
 
-            LRUWSRstats = IOcalc(generateWorkload(),ops*(i/100), a, 2);
+            LRUWSRstats = IOcalc(generateWorkload(),diskSize*(i/100), a, 2);
             LRUWSRx1.push(i);
             LRUWSRy1.push(LRUWSRstats[0] * .4);
             LRUWSRx2.push(i);
@@ -407,7 +407,7 @@ function Bgraph(){
                     x: LRUx2, 
                     y: LRUy2, 
                     mode:"scatter", 
-                    name:"ACELRU",
+                    name:"ACE-LRU",
                     marker: {
                         size: 12,
                         symbol: 'diamond-open'
@@ -431,7 +431,7 @@ function Bgraph(){
                     x: CFLRUx2, 
                     y: CFLRUy2, 
                     mode:"scatter", 
-                    name:"ACECFLRU",
+                    name:"ACE-CFLRU",
                     marker: {
                         size: 12,
                         symbol: 'x-open'
@@ -443,7 +443,7 @@ function Bgraph(){
                     x: LRUWSRx1, 
                     y: LRUWSRy1, 
                     mode:"scatter", 
-                    name:"LRWSR",
+                    name:"LRU-WSR",
                     marker: {
                         size: 12,
                         symbol: 'triangle-up-open'
@@ -455,7 +455,7 @@ function Bgraph(){
                     x: LRUWSRx2, 
                     y: LRUWSRy2, 
                     mode:"scatter", 
-                    name:"ACELRUWSR",
+                    name:"ACE-LRU-WSR",
                     marker: {
                         size: 12,
                         symbol: 'triangle-down-open'
@@ -470,7 +470,7 @@ function Bgraph(){
                         showgrid: false,
                         zeroline: false,
                         showline: true,
-                        title: "Bufferpool size (% of Workload)"
+                        title: "Bufferpool size (% of disk size)"
                     },
                     yaxis: {
                         autorange: true,
