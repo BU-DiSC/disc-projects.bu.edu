@@ -292,7 +292,7 @@ function RWgraph(){
                     x: LRUWSRx2, 
                     y: LRUWSRy2, 
                     mode:"scatter", 
-                    name:"ACE-LRU-WSR",
+                    name:"ACE-LRUWSR",
                     marker: {
                         size: 12,
                         symbol: 'triangle-down-open'
@@ -455,7 +455,7 @@ function Bgraph(){
                     x: LRUWSRx2, 
                     y: LRUWSRy2, 
                     mode:"scatter", 
-                    name:"ACE-LRU-WSR",
+                    name:"ACE-LRUWSR",
                     marker: {
                         size: 12,
                         symbol: 'triangle-down-open'
