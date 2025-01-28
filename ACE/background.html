@@ -110,7 +110,7 @@
 			</div>
       <div class="row">
         <p>
-          <img class="img-responsive img-centered" src="./img/compactionary-lsm-everywhere.png" alt="" align="left" width=20% style="margin-left:10%;margin-right:10%" />
+          <img class="img-responsive img-centered" src="./img/modern_devices.png" alt="" align="left" width=20% style="margin-left:10%;margin-right:10%" />
           <b>ACE</b> is a new bufferpool manager that addresses two challenges of the state-of-the-art bufferpool managers. 
           First, existing bufferpool managers often assume that the underlying devices have no concurrency. As a result,
           they write (evict) one page at a time, missing the opportunity to exploit the device's ability to handle parallel writes.
@@ -122,19 +122,19 @@
         <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 mt-3"  >
           <div class="row section-title text-center" style="border-width:5px;border-radius: 20px;
     border-style:dotted;">
-    				<h3> Default </h3>
+    				<h3> Classical buffer pool design space </h3>
     			</div>
         </div>
         <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 mt-3">
           <div class="row section-title text-center" style="border-width:5px;border-radius: 20px;
     border-style:dotted;">
-    				<h3> ACE </h3>
+    				<h3> ACE buffer pool design space </h3>
     			</div>
         </div>
       </div>
       <div class="row text-center" style="margin-top:-30px">
-        <img class="img-responsive img-centered" src="./img/defualt-design1024_1.png" alt="" width=50% />
-        <img class="img-responsive img-centered" src="./img/new-design1024_1.png" alt = "" width="50%" />
+        <img class="img-responsive img-centered" src="./img/old_design.png" alt="" width=50% />
+        <img class="img-responsive img-centered" src="./img/new_design.png" alt = "" width="50%" />
       </div>
 			<div class="row">
 				<div>
@@ -171,7 +171,7 @@
           When prefetching is enabled, ACE evicts ne pages in order to prefetch ne - 1 pages exploiting the read concurrency of the device.
         </p>
         <br>
-        <img class="img-responsive img-centered" src="./img/design-space1024_1.png" alt="" width="1000px">
+        <img class="img-responsive img-centered" src="./img/ace-architecture.png" alt="" width="1000px">
         <br>
       </div>
 
@@ -191,7 +191,7 @@
                 </div>
             </div>
             <div class="col-lg-12 text-center">
-                      <img class="img-responsive img-centered" src="./img/example of ACE.png" alt="" width="650px">
+                      <img class="img-responsive img-centered" src="./img/ace_example.png" alt="" width="650px">
                   </div>
                   <div class="row">
                       <div class="col-lg-12">
