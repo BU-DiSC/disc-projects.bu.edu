@@ -77,7 +77,6 @@ $(document).ready(function(){
     var graphDone = false;
     $("#graph").click(function(){
         if(graphDone){
-            alert("hi there")
             progress = 0;
             $("#Bplot").empty();
             $("#RWplot").empty();
@@ -226,7 +225,6 @@ function RWgraph(){
         }
         else if(i == 100){
             {
-                alert("data loaded")
                 LRUtrace = {
 
                     x: LRUx1, 
@@ -318,7 +316,6 @@ function RWgraph(){
                 };
                 
                 RWData = [LRUtrace, ACELRUtrace, CFLRUtrace, ACECFLRUtrace, LRUWSRtrace, ACELRUWSRtrace];
-                alert("add graph")
                 Plotly.newPlot('RWplot', RWData, RWlayout);
                 
                 if(progress==23){
