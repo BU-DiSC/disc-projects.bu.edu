@@ -191,7 +191,6 @@ font-size: 1.5em;
 
 .input-group > input {
 	text-align: right;
-	border-right-style: hidden;
 }
 .incrementer {
 	display: flex;
@@ -679,4 +678,3 @@ footer .footer-below {
     /* padding-bottom: -5px; */
     /*background-color: #ecf0f1;*/ /*#233140;*/
 }
-

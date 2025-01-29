@@ -20,6 +20,8 @@
 	<!-- Google Material Icon-->
 	<link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet">
 	<link href="https://fonts.googleapis.com/css2?family=Material+Icons+Outlined" rel="stylesheet">
+	<script src="js/plotly.js"></script>
+
 	<!-- <script>
 		window.onload = function(){
 		  if (navigator.userAgent.match(/Chrome|AppleWebKit/)) {
@@ -129,7 +131,7 @@
 				<h2>
 					<a target="_blank" href="https://disc-projects.bu.edu/compactionary/files/LSM_Compact_Demo.mp4">
 						<span class="metric-title" data-toggle="tooltip" data-placement="right"
-							  title="Watch walkthrough this video" style="color:#000"> ACE </span>
+							  title="Watch walkthrough this video" style="color:#000"> ACE buffer pool manager in action </span>
 					</a>
 				</h2>
 			</div>
@@ -159,6 +161,16 @@
 					<div class="col-lg-3">
 						<div class="input-group mb-3">
 							<div class="input-group-prepend">
+								<span class="input-group-text">Disk size</span>
+							</div>
+							<input type="number" class="form-control" id="n" value=5000 min=0 disabled>
+						</div>
+					</div>
+
+
+					<div class="col-lg-3">
+						<div class="input-group mb-3">
+							<div class="input-group-prepend">
 								<span class="input-group-text">Buffer size</span>
 							</div>
 							<input type="number" class="form-control" id="b" value=100 min=0 disabled>
@@ -169,16 +181,7 @@
 					<div class="col-lg-3">
 						<div class="input-group mb-3">
 							<div class="input-group-prepend">
-								<span class="input-group-text">Disk size</span>
-							</div>
-							<input type="number" class="form-control" id="n" value=5000 min=0 disabled>
-						</div>
-					</div>
-
-					<div class="col-lg-3">
-						<div class="input-group mb-3">
-							<div class="input-group-prepend">
-								<span class="input-group-text">Read Percentage</span>
+								<span class="input-group-text">Read ratio</span>
 							</div>
 							<input type="number" class="form-control" id="e" value=60 min=0 disabled>
 							<div class="input-group-append">
@@ -193,11 +196,16 @@
 					<div class="col-lg-3">
 						<div class="input-group mb-3">
 							<div class="input-group-prepend">
-								<span class="input-group-text"># of Operations</span>
+								<span class="input-group-text">Algorithm</span>
 							</div>
-							<input type="number" class="form-control" id="x" value=50000 min=0 max=100000 disabled>
-						</div>
-					</div>
+							<select class="form-control" id="baseAlg">
+								<option value=0>LRU</option>
+								<option value=1>CFLRU</option>
+								<option value=2 >LRU-WSR</option>
+							</select>
+						</div>	
+					</div>	
+
 
 					<div class="col-lg-3">
 						<div class="input-group mb-3">
@@ -208,33 +216,33 @@
 						</div>
 					</div>
 
-					<div class="col-lg-6">
+
+					<div class="col-lg-3">
+						<div class="input-group mb-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Operations</span>
+							</div>
+							<input type="number" class="form-control" id="x" value=50000 min=0 max=100000 disabled>
+						</div>
+					</div>
+
+
+					<div class="col-lg-3">
 						<div class="input-group mb-3">
 
 							<div class="input-group-prepend">
-								<span class="input-group-text">Skewness</span>
+								<span class="input-group-text">Skew</span>
 							</div>
 							<input type="number" class="form-control" value=80 id="s" min=0 disabled>
 							<div class="input-group-append">
 								<span class="input-group-text">%</span>
 							</div>
 							<div class="input-group-append">
-								<span class="input-group-text">on data</span>
+								<span class="input-group-text">on</span>
 							</div>
 							<input type="number" class="form-control" value=15 id="d" min=0 disabled>
 							<div class="input-group-append">
 								<span class="input-group-text">%</span>
-							</div>
-							
-							<div class="input-group mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Algorithm</span>
-								</div>
-								<select class="form-control" id="baseAlg">
-									<option value=0>LRU</option>
-									<option value=1>CFLRU</option>
-									<option value=2 >LRU-WSR</option>
-								</select>
 							</div>
 						</div>
 					</div>
@@ -312,22 +320,9 @@
 
 			<!-- Cost result starts here -->
 			<div id="cost-result" class="container">
-				<div class="row">
-					<div class="col-lg-3">
-						<div id="write_batches_plot" style="border: 2px solid #666; border-radius: 15px; padding: 5px;"></div>
-					</div>
-					<div class="col-lg-3">
-						<div id="disk_pages_read_plot" style="border: 2px solid #666; border-radius: 15px; padding: 5px;"></div>
-					</div>
-					<div class="col-lg-3">
-						<div id="disk_pages_written_plot" style="border: 2px solid #666; border-radius: 15px; padding: 5px;"></div>
-					</div>
-					<div class="col-lg-3">
-						<div id="buffer_misses_plot" style="border: 2px solid #666; border-radius: 15px; padding: 5px;"></div>
-					</div>
-				</div>
+				
 				<!-- #Write I/O -->
-				<!-- <div class="row">
+				<div class="row">
 					<div class="col text-center">
 						<span id="base-alg-write-IO" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
 					</div>
@@ -338,10 +333,10 @@
 					<div class="col text-center">
 						<span id="ace-alg-write-IO" class="cost uncertain">0</span>
 					</div>
-				</div> -->
+				</div>
 
 				<!-- #Disk Pages Read-->
-				<!-- <div class="row">
+				<div class="row">
 					<div class="col text-center">
 						<span id="base-alg-pages-read" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
 					</div>
@@ -352,9 +347,9 @@
 					<div class="col text-center">
 						<span id="ace-alg-pages-read" class="cost uncertain">0</span>
 					</div>
-				</div> -->
+				</div>
 				<!-- #Disk Pages Written-->
-				<!-- <div class="row">
+				<div class="row">
 					<div class="col text-center">
 						<span id="base-alg-pages-written" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
 					</div>
@@ -365,10 +360,10 @@
 					<div class="col text-center">
 						<span id="ace-alg-pages-written" class="cost uncertain">0</span>
 					</div>
-				</div> -->
+				</div>
 
 				<!-- #Buffer Misses -->
-				<!-- <div class="row">
+				<div class="row">
 					<div class="col text-center">
 						<span id="base-alg-buffer-misses" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
 					</div>
@@ -379,9 +374,9 @@
 					<div class="col text-center">
 						<span id="ace-alg-buffer-misses" class="cost uncertain">0</span>
 					</div>
-				</div> -->
+				</div>
 				<!-- #Buffer Hits-->
-				<!-- <div class="row">
+				<div class="row">
 					<div class="col text-center">
 						<span id="base-alg-buffer-hits" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
 					</div>
@@ -392,7 +387,7 @@
 					<div class="col text-center">
 						<span id="ace-alg-buffer-hits" class="cost uncertain">0</span>
 					</div>
-				</div> -->
+				</div>
 
 				<!-- #Read I/O-->
 				<!-- <div class="row">
@@ -409,7 +404,7 @@
 				</div> -->
 
 				<!-- #Pages Evicted -->
-				<!-- <div class="row">
+				<div class="row">
 					<div class="col text-center">
 						<span id="base-alg-pages-evicted" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
 					</div>
@@ -420,7 +415,7 @@
 					<div class="col text-center">
 						<span id="ace-alg-pages-evicted" class="cost uncertain">0</span>
 					</div>
-				</div> -->
+				</div>
 			
 			</div>
 			<!-- END of all cost results -->
@@ -665,7 +660,6 @@
 			</div>
 		</div>
 	</footer>
-
 </body>
 
 </html>
