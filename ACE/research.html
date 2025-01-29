@@ -58,37 +58,31 @@
 
 <body>
 	<header id="page-top">
-		<nav class="navbar navbar-expand-lg navbar-dark navbar-fixed-top bg-dark fixed-top" style="background-color:#028A0F !important">
+		<nav class="navbar navbar-expand-lg navbar-dark navbar-fixed-top bg-dark fixed-top" style="background-color:#892417 !important">
 			<div class="container">
-
-				<a class="navbar-brand" href="#page-top">
-					&nbsp; ACE<span class="sr-only">(current)</span>
-				</a></a>
+				<a class="navbar-brand" href="#page-top">ACE<span class="sr-only">(current)</span></a>
 				<button id="navbarToggle" class="navbar-toggler" type="button" data-toggle="collapse"
-						data-target="#collapsable-nav" aria-controls="collapsable-nav" aria-expanded="false"
-						aria-label="Toggle navigation">
+					data-target="#collapsable-nav" aria-controls="collapsable-nav" aria-expanded="false"
+					aria-label="Toggle navigation">
 					<span class="navbar-toggler-icon"></span>
 				</button>
-
-				<div id="collapsable-nav" class="collapse navbar-collapse" id="collapsable-nav">
+		
+				<div class="collapse navbar-collapse" id="collapsable-nav">
 					<ul class="nav navbar-nav ml-auto">
-						<!-- <li class="nav-item">
-							<a class="nav-link" href="#problem">Problem</a>
+						<li class="nav-item">
+							<a class="nav-link" href="index.html">Home</a>
 						</li>
 						<li class="nav-item">
-							<a class="nav-link" href="#research">Research</a>
+							<a class="nav-link" href="background.html">Background</a>
 						</li>
 						<li class="nav-item">
-							<a class="nav-link" href="#interactiveDemo">Compactionary</a>
-						</li> -->
-						<li class="nav-item">
-							<a class="nav-link" href="#publication">Publications</a>
+							<a class="nav-link" href="research.html#problem">ACE demo</a>
 						</li>
 						<li class="nav-item">
-							<a class="nav-link" href="#authors">The Team</a>
+							<a class="nav-link" href="research.html#publication">Publications</a>
 						</li>
 						<li class="nav-item">
-							<a class="nav-link" href="#sponsors">Sponsors</a>
+							<a class="nav-link" href="research.html#authors">The Team</a>
 						</li>
 					</ul>
 				</div>
@@ -107,7 +101,7 @@
 
 	</header>
 
-	<div class="fixed">
+	<!-- <div class="fixed">
 		<div class="rcorners-1" style="background-color:#028A0F">
 			<a href="research.html"><span class="rcorners-click"></span></a>
 			<div class="rcorners-text-1"><a href="index.html" style="text-decoration:none; color: rgba(255, 255, 255, 0.88)">Home</a></div>
@@ -120,7 +114,7 @@
 			<a href="research.html#problem"><span class="rcorners-click"></span></a>
 			<div class="rcorners-text-3"><a href="research.html" style="text-decoration:none; color: rgba(255, 255, 255, 0.88)">ACE</a></div>
 		</div>
-	</div>
+	</div> -->
 
 	<div class="loading" id="loader" style="display:none">Loading&#8230;</div>
 
@@ -135,390 +129,493 @@
 					</a>
 				</h2>
 			</div>
-
-			<!-- Comparative configuration starts here -->
-			<div id="cmp-conf-row" class="row">
-				<div class="row" id="inputs">
-					<div class="col-lg-3">
-						<div class="input-group mb-3">
-							<div class="input-group-prepend">
-								<span class="input-group-text">Workload</span>
-							</div>
-							<select class="form-control" id="workload">
-								<option value=1 selected>Workload 1 (Small buffer)</option>
-								<option value=2>Workload 2 (Large buffer)</option>
-								<option value=3>Workload 3 (Read-heavy)</option>
-								<option value=4>Workload 4 (Write-heavy)</option>
-								<option value=5>Workload 5 (Very Skewed)</option>
-								<option value=6>Workload 6 (Uniform)</option>
-								<option value=7 disabled >Test Workload</option>
-								<option value=0>Custom Workload</option>
-							</select>
-						</div>
-
-					</div>
-
-					<div class="col-lg-3">
-						<div class="input-group mb-3">
-							<div class="input-group-prepend">
-								<span class="input-group-text">Disk size</span>
-							</div>
-							<input type="number" class="form-control" id="n" value=5000 min=0 disabled>
-						</div>
-					</div>
-
-
-					<div class="col-lg-3">
-						<div class="input-group mb-3">
-							<div class="input-group-prepend">
-								<span class="input-group-text">Buffer size</span>
-							</div>
-							<input type="number" class="form-control" id="b" value=100 min=0 disabled>
-						</div>
-
-					</div>
-
-					<div class="col-lg-3">
-						<div class="input-group mb-3">
-							<div class="input-group-prepend">
-								<span class="input-group-text">Read ratio</span>
-							</div>
-							<input type="number" class="form-control" id="e" value=60 min=0 disabled>
-							<div class="input-group-append">
-								<span class="input-group-text">%</span>
-							</div>
-						</div>
-					</div>
-
-				</div>
-
-				<div class="row" id="inputs">
-					<div class="col-lg-3">
-						<div class="input-group mb-3">
-							<div class="input-group-prepend">
-								<span class="input-group-text">Algorithm</span>
-							</div>
-							<select class="form-control" id="baseAlg">
-								<option value=0>LRU</option>
-								<option value=1>CFLRU</option>
-								<option value=2 >LRU-WSR</option>
-							</select>
-						</div>	
-					</div>	
-
-
-					<div class="col-lg-3">
-						<div class="input-group mb-3">
-							<div class="input-group-prepend">
-								<span class="input-group-text">Concurrency</span>
-							</div>
-							<input type="number" class="form-control" min=0  id="alpha" value=12 disabled>
-						</div>
-					</div>
-
-
-					<div class="col-lg-3">
-						<div class="input-group mb-3">
-							<div class="input-group-prepend">
-								<span class="input-group-text">Operations</span>
-							</div>
-							<input type="number" class="form-control" id="x" value=50000 min=0 max=100000 disabled>
-						</div>
-					</div>
-
-
-					<div class="col-lg-3">
-						<div class="input-group mb-3">
-
-							<div class="input-group-prepend">
-								<span class="input-group-text">Skew</span>
-							</div>
-							<input type="number" class="form-control" value=80 id="s" min=0 disabled>
-							<div class="input-group-append">
-								<span class="input-group-text">%</span>
-							</div>
-							<div class="input-group-append">
-								<span class="input-group-text">on</span>
-							</div>
-							<input type="number" class="form-control" value=15 id="d" min=0 disabled>
-							<div class="input-group-append">
-								<span class="input-group-text">%</span>
-							</div>
-						</div>
+			
+				<!-- Radio Buttons for Switching Views (Side by Side & Highlighted) -->
+				<div class="row justify-content-center mb-5">
+					<div class="btn-group btn-group-toggle" data-toggle="buttons">
+						<label class="btn btn-outline-primary active" id="label-individual">
+							<input id="customRadio2" type="radio" name="customRadio" class="custom-control-input" checked> Individual Analysis
+						</label>
+						<label class="btn btn-outline-primary" id="label-comparative">
+							<input id="customRadio1" type="radio" name="customRadio" class="custom-control-input"> Comparative Analysis
+						</label>
 					</div>
 				</div>
 
-				
-			</div>
-			<!-- END of comparative configurations of Interactive Demo -->
+				<!-- Individual Analysis Content -->
+				<div id="individual-analysis">
 
-			<br>
+					<!-- Input Panel -->
+					<div id="cmp-conf-row" class="row">
+						<div class="row" id="inputs">
+							<div class="col-lg-3">
+								<div class="input-group mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Workload</span>
+									</div>
+									<select class="form-control" id="workload">
+										<option value=1 selected>Workload 1 (Small buffer)</option>
+										<option value=2>Workload 2 (Large buffer)</option>
+										<option value=3>Workload 3 (Read-heavy)</option>
+										<option value=4>Workload 4 (Write-heavy)</option>
+										<option value=5>Workload 5 (Very Skewed)</option>
+										<option value=6>Workload 6 (Uniform)</option>
+										<option value=0>Custom Workload</option>
+									</select>
+								</div>
+							</div>
 
-			<div id="control-panel" class="">
-				<div class="container-fluid">
-					<div class="row justify-content-center">
-						<div id="lsm-button-group" class="row col-4 ">
-							<div class="btn-group" role="group" aria-label="progress-control">
+							<div class="col-lg-3">
+								<div class="input-group mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Disk size</span>
+									</div>
+									<input type="number" class="form-control" id="n" value=5000 min=0 disabled>
+								</div>
+							</div>
+
+							<div class="col-lg-3">
+								<div class="input-group mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Buffer size</span>
+									</div>
+									<input type="number" class="form-control" id="b" value=100 min=0 disabled>
+								</div>
+							</div>
+
+							<div class="col-lg-3">
+								<div class="input-group mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Read ratio</span>
+									</div>
+									<input type="number" class="form-control" id="e" value=60 min=0 disabled>
+									<div class="input-group-append">
+										<span class="input-group-text">%</span>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="row" id="inputs">
+							<div class="col-lg-3">
+								<div class="input-group mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Algorithm</span>
+									</div>
+									<select class="form-control" id="baseAlg">
+										<option value=0>LRU</option>
+										<option value=1>CFLRU</option>
+										<option value=2>LRU-WSR</option>
+									</select>
+								</div>
+							</div>
+
+							<div class="col-lg-3">
+								<div class="input-group mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Concurrency</span>
+									</div>
+									<input type="number" class="form-control" min=0 id="alpha" value=12 disabled>
+								</div>
+							</div>
+
+							<div class="col-lg-3">
+								<div class="input-group mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Operations</span>
+									</div>
+									<input type="number" class="form-control" id="x" value=50000 min=0 max=100000 disabled>
+								</div>
+							</div>
+
+							<div class="col-lg-3">
+								<div class="input-group mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Skew</span>
+									</div>
+									<input type="number" class="form-control" value=80 id="s" min=0 disabled>
+									<div class="input-group-append">
+										<span class="input-group-text">%</span>
+									</div>
+									<div class="input-group-append">
+										<span class="input-group-text">on</span>
+									</div>
+									<input type="number" class="form-control" value=15 id="d" min=0 disabled>
+									<div class="input-group-append">
+										<span class="input-group-text">%</span>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Combined Control Panel & Progress Bar -->
+					<div id="control-panel-wrapper">
+						<div id="control-panel" class="d-flex align-items-center justify-content-between">
+							
+							<!-- Control Buttons -->
+							<div id="lsm-button-group" class="btn-group" role="group" aria-label="progress-control">
 								<button id="play-button" type="button" class="btn btn-info">
-									<img src="img/play:pause.png" width="50" height="50">
+									<img src="img/play:pause.png" width="40" height="40">
 								</button>
 								<button id="fast-button" type="button" class="btn btn-warning">Fast</button>
 								<button id="medium-button" type="button" class="btn btn-success">Medium</button>
 								<button id="slow-button" type="button" class="btn btn-secondary">Slow</button>
 								<button id="finish-button" type="button" class="btn btn-danger">Finish</button>
 							</div>
+
+							<!-- Progress Bar Container -->
+							<div class="progress-container input-group">
+								<!-- Progress Label -->
+								<div class="input-group-prepend">
+									<span class="input-group-text progress-box">Progress</span>
+								</div>
+								
+								<!-- White Box around Progress Bar -->
+								<div class="progress-wrapper">
+									<input type="range" id="progress-bar" min="0" max="100" value="0" class="form-control slider">
+								</div>
+
+								<!-- Progress Percentage -->
+								<div class="input-group-append">
+									<span id="progress-label" class="input-group-text progress-percent"><strong>0%</strong></span>
+								</div>
+							</div>
 						</div>
+					</div>
+
+					
+					<!-- Simulation Panel -->
+					<div id="indiv-bush-row" class="row">
+						<div class="col-sm">
+							<div id="cmp-lsm-cmpct-pp-1-mp" class="row cmp-indiv-mp">
+								<div class="lsm-title">
+									<span id="base-alg-table-title" class="row cmp-indiv-mp">LRU</span>
+								</div>
+								<br>
+							</div>
+							<div id="table1"></div>
+						</div>
+						<div class="col-sm">
+							<div id="cmp-lsm-cmpct-pp-2-mp" class="row cmp-indiv-mp">
+								<div class="lsm-title">
+									<span id="ACE-alg-table-title" class="row cmp-indiv-mp">ACE-LRU</span>
+								</div>
+								<span id="ACEAlert">Notice the streaks of clean pages formed by concurrently writing dirty pages</span>
+							</div>
+							<div id="table2"></div>
+						</div>
+					</div>
+
+					<!-- Performance Metrics Panel -->
+					<div id="cost-result" class="container">
+						<!-- #Write I/O -->
+						<div class="row">
+							<div class="col text-right">
+								<span id="base-alg-write-IO" class="cost uncertain">0</span>
+							</div>
+							<div class="col-2 text-center">
+								<span class="metric-title">#Write batches</span>
+							</div>
+							<div class="col text-left">
+								<span id="ace-alg-write-IO" class="cost uncertain">0</span>
+							</div>
+						</div>
+						
+
+						<!-- #Disk Pages Read-->
+						<div class="row">
+							<div class="col text-right">
+								<span id="base-alg-pages-read" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
+							</div>
+							<div class="col-2 text-center">
+								<span class="metric-title" data-toggle="tooltip" data-placement="left"
+									title="The number of pages processed from a workload.">#Disk Pages Read</span>
+							</div>
+							<div class="col text-left">
+								<span id="ace-alg-pages-read" class="cost uncertain">0</span>
+							</div>
+						</div>
+
+						<!-- #Disk Pages Written-->
+						<div class="row">
+							<div class="col text-right">
+								<span id="base-alg-pages-written" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
+							</div>
+							<div class="col-2 text-center">
+								<span class="metric-title" data-toggle="tooltip" data-placement="left"
+									title="The number of dirty pages written.">#Disk Pages Written</span>
+							</div>
+							<div class="col text-left">
+								<span id="ace-alg-pages-written" class="cost uncertain">0</span>
+							</div>
+						</div>
+
+						<!-- #Buffer Misses -->
+						<div class="row">
+							<div class="col text-right">
+								<span id="base-alg-buffer-misses" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
+							</div>
+							<div class="col-2 text-center">
+								<span class="metric-title" data-toggle="tooltip" data-placement="left"
+									title="The number of times a requested page is not found in the bufferpool.">#Buffer Misses</span>
+							</div>
+							<div class="col text-left">
+								<span id="ace-alg-buffer-misses" class="cost uncertain">0</span>
+							</div>
+						</div>
+
+						<!-- #Buffer Hits-->
+						<div class="row">
+							<div class="col text-right">
+								<span id="base-alg-buffer-hits" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
+							</div>
+							<div class="col-2 text-center">
+								<span class="metric-title" data-toggle="tooltip" data-placement="left"
+									title="The number of times a requested page is in the bufferpool.">#Buffer Hits</span>
+							</div>
+							<div class="col text-left">
+								<span id="ace-alg-buffer-hits" class="cost uncertain">0</span>
+							</div>
+						</div>
+
+						<!-- #Pages Evicted -->
+						<div class="row">
+							<div class="col text-right">
+								<span id="base-alg-pages-evicted" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
+							</div>
+							<div class="col-2 text-center">
+								<span class="metric-title" data-toggle="tooltip" data-placement="left"
+									title="The number of pages evicted from the bufferpool.">#Pages Evicted</span>
+							</div>
+							<div class="col text-left">
+								<span id="ace-alg-pages-evicted" class="cost uncertain">0</span>
+							</div>
+						</div>
+
 					</div>
 				</div>
-			</div>
 
-			<br>
-			<br>
 
-			<!-- Interactive Demo result starts here -->
-			<!-- Diagram result starts here -->
-			<style>
-				.tablecell{
-					display: table-cell;
-					vertical-align: inherit;
-				}
-				table { 
-    				border-collapse: collapse; 
-				}
-			</style>
+				<!-- Comparative Analysis Content -->
+					<div id="comparative-analysis" style="display: none;">
+						<!-- Comparative Analysis Input Panel -->
 
-			</div>
-			<div id="indiv-bush-row" class="row">
-				<!-- Vanilla LSM-Tree bush results starts here lsm-cmpct-pp-1-->
-				<div class="col-sm">
-					<div id="cmp-lsm-cmpct-pp-1-mp" class="row cmp-indiv-mp">
-						<div  class="lsm-title">
-							<span id="base-alg-table-title" class="row cmp-indiv-mp">LRU</span>
+					<!-- Headings for both experiments -->
+					<div class="row">
+						<div class="col-lg-6 border-right">
+							<h5 class="text-center"><strong>Vary Read/Write Ratio</strong></h5>
 						</div>
-						<br>
-					</div>
-					<div id="table1">
-					</div>
-				</div> <!-- END of lsm-cmpct-pp-1-bush-col result -->
-				<br>
-				<div class="col-sm">
-					<div id="cmp-lsm-cmpct-pp-2-mp" class="row cmp-indiv-mp">
-						<div  class="lsm-title">
-							<span id="ACE-alg-table-title" class="row cmp-indiv-mp">ACE-LRU</span>
+						<div class="col-lg-6">
+							<h5 class="text-center"><strong>Vary Buffer Pool Size</strong></h5>
 						</div>
-						<span id="ACEAlert">notice the streaks of clean pages formed by concurrently writing dirty pages</span>
 					</div>
-						<div id = "table2"></div>
-						
+
+
+					<!-- First Row: Workload & Concurrency -->
+					<div class="row">
+						<div class="col-lg-3">
+							<div class="input-group mb-2">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Workload</span>
+								</div>
+								<select class="form-control" id="cmp-workload-rw">
+									<option value=1 selected>Small buffer</option>
+									<option value=2>Large buffer</option>
+									<option value=5>Very Skewed</option>
+									<option value=6>Uniform</option>
+								</select>
+							</div>
+						</div>
+						<div class="col-lg-3">
+							<div class="input-group mb-2">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Concurrency</span>
+								</div>
+								<input type="number" class="form-control" id="cmp-alpha-rw" value=12 min=0>
+							</div>
+						</div>
+
+						<div class="col-lg-3">
+							<div class="input-group mb-2">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Workload</span>
+								</div>
+								<select class="form-control" id="cmp-workload-bp">
+									<option value=3>Read-heavy</option>
+									<option value=4>Write-heavy</option>
+									<option value=5>Very Skewed</option>
+									<option value=6>Uniform</option>
+								</select>
+							</div>
+						</div>
+						<div class="col-lg-3">
+							<div class="input-group mb-2">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Concurrency</span>
+								</div>
+								<input type="number" class="form-control" id="cmp-alpha-bp" value=12 min=0>
+							</div>
+						</div>
+					</div>
+
+					<!-- Second Row: Buffer Size (Read-Write) & Read % (Buffer Pool) | Disk Size -->
+					<div class="row">
+						<div class="col-lg-3">
+							<div class="input-group mb-2">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Buffer Size</span>
+								</div>
+								<input type="number" class="form-control" id="cmp-b-rw" value=100 min=0>
+							</div>
+						</div>
+						<div class="col-lg-3">
+							<div class="input-group mb-2">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Disk Size</span>
+								</div>
+								<input type="number" class="form-control" id="cmp-n-rw" value=5000 min=0>
+							</div>
+						</div>
+
+						<div class="col-lg-3">
+							<div class="input-group mb-2">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Read %</span>
+								</div>
+								<input type="number" class="form-control" id="cmp-e-bp" value=60 min=0 max=100>
+								<div class="input-group-append">
+									<span class="input-group-text">%</span>
+								</div>
+							</div>
+						</div>
+						<div class="col-lg-3">
+							<div class="input-group mb-2">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Disk Size</span>
+								</div>
+								<input type="number" class="form-control" id="cmp-n-bp" value=5000 min=0>
+							</div>
+						</div>
+					</div>
+
+					<!-- Third Row: Operations & Skewness % on % -->
+					<div class="row">
+						<div class="col-lg-3">
+							<div class="input-group mb-2">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Operations</span>
+								</div>
+								<input type="number" class="form-control" id="cmp-x-rw" value=50000 min=0 max=100000>
+							</div>
+						</div>
+						<div class="col-lg-3">
+							<div class="input-group mb-2">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Skew</span>
+								</div>
+								<input type="number" class="form-control" id="cmp-s-rw" value=80 min=0 max=100>
+								<div class="input-group-append">
+									<span class="input-group-text">%</span>
+								</div>
+								<div class="input-group-append">
+									<span class="input-group-text">on</span>
+								</div>
+								<input type="number" class="form-control" id="cmp-d-rw" value=15 min=0 max=100>
+								<div class="input-group-append">
+									<span class="input-group-text">%</span>
+								</div>
+							</div>
+						</div>
+
+						<div class="col-lg-3">
+							<div class="input-group mb-2">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Operations</span>
+								</div>
+								<input type="number" class="form-control" id="cmp-x-bp" value=50000 min=0 max=100000>
+							</div>
+						</div>
+						<div class="col-lg-3">
+							<div class="input-group mb-2">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Skew</span>
+								</div>
+								<input type="number" class="form-control" id="cmp-s-bp" value=80 min=0 max=100>
+								<div class="input-group-append">
+									<span class="input-group-text">%</span>
+								</div>
+								<div class="input-group-append">
+									<span class="input-group-text">on</span>
+								</div>
+								<input type="number" class="form-control" id="cmp-d-bp" value=15 min=0 max=100>
+								<div class="input-group-append">
+									<span class="input-group-text">%</span>
+								</div>
+							</div>
+						</div>
 					</div>
 					
-				</div>
-			</div>
-			<br>
 
-			<br>
 
-			<!-- Cost result starts here -->
-			<div id="cost-result" class="container">
-				
-				<!-- #Write I/O -->
-				<div class="row">
-					<div class="col text-center">
-						<span id="base-alg-write-IO" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
-					</div>
-					<div class="col-2 text-center">
-						<span class="metric-title" data-toggle="tooltip" data-placement="left"
-								  title="The number of times dirty pages were written.">#Write batches</span>
-					</div>
-					<div class="col text-center">
-						<span id="ace-alg-write-IO" class="cost uncertain">0</span>
-					</div>
-				</div>
+						<!-- Comparative Experiment Output -->
+						<div class="container">
+							<div class="row" id="show-plot-btn">
+								<div class="col-lg-12 text-center">
+									<!-- Button -->
+									<!-- Description Box -->
+									<!-- Description (Subtle Highlighting) -->
+									<div class="text-center mt-4" style="font-weight: bold; font-size: 1.1rem; color: #555;"> 
+										This experiment compares LRU, CFLRU and LRU-WSR with their ACE implementations
+									</div>
 
-				<!-- #Disk Pages Read-->
-				<div class="row">
-					<div class="col text-center">
-						<span id="base-alg-pages-read" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
-					</div>
-					<div class="col-2 text-center">
-						<span class="metric-title" data-toggle="tooltip" data-placement="left"
-								  title="The number of pages processed from a workload.">#Disk Pages Read</span>
-					</div>
-					<div class="col text-center">
-						<span id="ace-alg-pages-read" class="cost uncertain">0</span>
-					</div>
-				</div>
-				<!-- #Disk Pages Written-->
-				<div class="row">
-					<div class="col text-center">
-						<span id="base-alg-pages-written" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
-					</div>
-					<div class="col-2 text-center">
-						<span class="metric-title" data-toggle="tooltip" data-placement="left"
-								  title="The number of dirty pages written.">#Disk Pages Written</span>
-					</div>
-					<div class="col text-center">
-						<span id="ace-alg-pages-written" class="cost uncertain">0</span>
-					</div>
-				</div>
+									<div class="d-flex flex-row justify-content-center mt-4">
+										<a id="graph" class="btn btn-primary btn-lg run-button" target="_blank"
+										style="color: white !important; font-size: 1rem;">
+										Run experiments
+									</a>
+									</div>
+									
+									<!-- Loading Bar -->
+									<div id="loadingbar" class="d-flex justify-content-center align-items-center" style="margin-top: 10px;"></div> <!-- Reduced margin -->
 
-				<!-- #Buffer Misses -->
-				<div class="row">
-					<div class="col text-center">
-						<span id="base-alg-buffer-misses" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
-					</div>
-					<div class="col-2 text-center">
-						<span class="metric-title" data-toggle="tooltip" data-placement="left"
-										title="The number of times a requested page is not found in the bufferpool.">#Buffer Misses</span>
-					</div>
-					<div class="col text-center">
-						<span id="ace-alg-buffer-misses" class="cost uncertain">0</span>
-					</div>
-				</div>
-				<!-- #Buffer Hits-->
-				<div class="row">
-					<div class="col text-center">
-						<span id="base-alg-buffer-hits" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
-					</div>
-					<div class="col-2 text-center">
-						<span class="metric-title" data-toggle="tooltip" data-placement="left"
-								  title="The number of times a requested page is in the bufferpool.">#Buffer Hits</span>
-					</div>
-					<div class="col text-center">
-						<span id="ace-alg-buffer-hits" class="cost uncertain">0</span>
-					</div>
-				</div>
+									<!-- Add a Spacer -->
+									<div style="height: 30px;"></div>
 
-				<!-- #Read I/O-->
-				<!-- <div class="row">
-					<div class="col text-center">
-						<span id="base-alg-read-IO" class="cost uncertain">0</span>
-					</div>
-					<div class="col-2 text-center">
-						<span class="metric-title" data-toggle="tooltip" data-placement="left"
-								  title="The number of times pages were added to the bufferpool.">#Read I/O</span>
-					</div>
-					<div class="col text-center">
-						<span id="ace-alg-read-IO" class="cost uncertain">0</span>
-					</div>
-				</div> -->
-
-				<!-- #Pages Evicted -->
-				<div class="row">
-					<div class="col text-center">
-						<span id="base-alg-pages-evicted" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
-					</div>
-					<div class="col-2 text-center">
-						<span class="metric-title" data-toggle="tooltip" data-placement="left"
-								  title="The number of pages evicted from the bufferpool.">#Pages Evicted</span>
-					</div>
-					<div class="col text-center">
-						<span id="ace-alg-pages-evicted" class="cost uncertain">0</span>
-					</div>
-				</div>
-			
-			</div>
-			<!-- END of all cost results -->
-
-			<br>
-			<hr>
-			<br>
-
-			<div class="row" id="show-plot-btn">
-				<div class="col-lg-12 text-left">
-					<div>
-						
-						<div class = "d-flex flex-row justify-content-center">
-							<a id="graph" class="btn btn-info btn-lg " target="_blank" style="color:#fff">
-								Vary RW% and BP Size
-							</a>
+									<!-- Plots -->
+									<div class="flex-parent-element" style="margin-top: 0px !important; padding-top: 0px !important;">
+										<div class="flex-child-element" id="RWplot"></div>
+										<div class="flex-child-element" id="Bplot"></div>
+									</div>
+								</div>
+							</div>
 						</div>
-						<div class="h-100 d-flex align-items-center justify-content-center">
-							<div id="loadingbar"> </div>				
-						</div>
-						
-						<div class="flex-parent-element">
-							
-							<div class="flex-child-element magenta" id="RWplot"></div>
-							<div class="flex-child-element green" id="Bplot"></div>
-						  </div>
+
 						<style>
 							.flex-parent-element {
-							display: flex;
-							width: 100%;
+								display: flex;
+								flex-wrap: wrap;
+								justify-content: center;
+								align-items: flex-start;
+								width: 100%;
+								margin-top: 20px; /* Space between button and plots */
 							}
 
 							.flex-child-element {
-							flex: 1;
-							margin: 10px;
-							}
-
-							.flex-child-element:first-child {
-							margin-right: 20px;
+								flex: 1 1 48%;
+								min-width: 500px; /* Wider */
+								height: 400px; /* Ensures proper height */
+								background-color: transparent; /* Removes box background */
+								border: none; /* Removes border */
+								margin: 3px;
+								padding: 0px;
 							}
 						</style>
-					</div>
-					
-				</div>
-			</div>
+
+
+			        </div>
 			
-		</div>
 	</section>
-	<!-- <section id="selected-takeaways" class="bg-light">
-	  <div class="container">
-		<div class="row ection-title text-center">
-				  <h2> Selected Takeaways </h2>
-		</div>
-
-		  <div class="row" style="padding-top:40px">
-			<div class="col-lg-6">
-			  <img class="img-responsive img-centered" style="border: 5px solid #ddd;border-radius: 8px;padding: 5px;margin-left:10%" src="./img/compaction-takeaway-data-moved.png" alt="" width=80%/>
-			</div>
-			<div class="col-lg-6">
-			  <img class="img-responsive img-centered" style="border: 5px solid #ddd;border-radius: 8px;padding: 5px;margin-left:10%" src="./img/compaction-takeaway-tail-cmpt-latency.png" alt="" width=80%/>
-			</div>
-		  </div>
-
-		  <div class="row text-center">
-			<div class="col-lg-6">
-			  <div class="text-center" style="margin:10px auto">
-				<img class="img-responsive img-centered" src="./img/shining-bulbs.png" width="30px">
-				<span>Compacting data at smaller granularity reduces data movement. </span>
-			  </div>
-			</div>
-			<div class="col-lg-6">
-			  <div class="text-center" style="margin:10px auto">
-				<img class="img-responsive img-centered" src="./img/shining-bulbs.png" width="30px">
-				<span>"Tiering" moves the least data but incurs the highest tail write latency.</span>
-			  </div>
-			</div>
-		  </div>
-
-		  <div class="row" style="padding-top:20px">
-			<div class="col-lg-6">
-			  <img class="img-responsive img-centered" style="border: 5px solid #ddd;border-radius: 8px;padding: 5px;margin-left:10%" src="./img/compaction-takeaway-point-lookup.png" alt="" width=80%/>
-			</div>
-			<div class="col-lg-6">
-			  <img class="img-responsive img-centered" style="border: 5px solid #ddd;border-radius: 8px;padding: 5px;margin-left:20%" src="./img/compaction-takeaway-update.png" alt="" width=60%/>
-			</div>
-		  </div>
-
-		  <div class="row text-center">
-			<div class="col-lg-6">
-			  <div class="text-center" style="margin:10px auto">
-				<img class="img-responsive img-centered" src="./img/shining-bulbs.png" width="30px">
-				<span>Hybrid layouts (e.g., 1-leveling) dominate point lookup performance. </span>
-			  </div>
-			</div>
-			<div class="col-lg-6">
-			  <div class="text-center" style="margin:10px auto">
-				<img class="img-responsive img-centered" src="./img/shining-bulbs.png" width="30px">
-				<span>"Tiering" dominates other strategies for update-intensive workloads.</span>
-			  </div>
-			</div>
-		  </div>
-	  </div>
-	</section> -->
 	<section id="publication" class="bg-light" style="padding-top:50px">
 		<div class="container" style="margin-top:-150px">
 			<div class="row" style="text-align: center">
@@ -660,6 +757,57 @@
 			</div>
 		</div>
 	</footer>
+	<script>
+		document.addEventListener("DOMContentLoaded", function () {
+			const comparativeAnalysis = document.getElementById("comparative-analysis");
+			const individualAnalysis = document.getElementById("individual-analysis");
+			const radioComparative = document.getElementById("customRadio1");
+			const radioIndividual = document.getElementById("customRadio2");
+			const labelComparative = document.getElementById("label-comparative");
+			const labelIndividual = document.getElementById("label-individual");
+
+			function toggleView(selected) {
+				if (selected === "comparative") {
+					comparativeAnalysis.style.display = "block";
+					individualAnalysis.style.display = "none";
+
+					radioComparative.checked = true;
+					radioIndividual.checked = false;
+
+					labelComparative.classList.add("btn-primary");
+					labelComparative.classList.remove("btn-outline-primary");
+
+					labelIndividual.classList.add("btn-outline-primary");
+					labelIndividual.classList.remove("btn-primary");
+				} else {
+					comparativeAnalysis.style.display = "none";
+					individualAnalysis.style.display = "block";
+
+					radioComparative.checked = false;
+					radioIndividual.checked = true;
+
+					labelIndividual.classList.add("btn-primary");
+					labelIndividual.classList.remove("btn-outline-primary");
+
+					labelComparative.classList.add("btn-outline-primary");
+					labelComparative.classList.remove("btn-primary");
+				}
+			}
+
+			// Attach event listeners to labels (fixes click issue)
+			labelComparative.addEventListener("click", function () {
+				toggleView("comparative");
+			});
+
+			labelIndividual.addEventListener("click", function () {
+				toggleView("individual");
+			});
+
+			// Initialize correct visibility on page load
+			toggleView("individual");
+		});
+
+		</script>
 </body>
 
 </html>

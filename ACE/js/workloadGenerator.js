@@ -1,4 +1,7 @@
 $(document).ready(function(){
+    $("#b, #n, #x, #s, #d, #e, #alpha").prop("disabled", false);
+    $("#cmp-b-rw, #cmp-n-rw, #cmp-x-rw, #cmp-s-rw, #cmp-d-rw, #cmp-e-rw, #cmp-alpha-rw").prop("disabled", false);
+    $("#cmp-b-bp, #cmp-n-bp, #cmp-x-bp, #cmp-s-bp, #cmp-d-bp, #cmp-e-bp, #cmp-alpha-bp").prop("disabled", false);
     var playing = false;
 
 	/*First & Second Graphs*/
@@ -9,9 +12,7 @@ $(document).ready(function(){
     const $e = $('#e'); //read percentage
     const $alpha = $('#alpha'); //asymmetry
     const $s = $('#s'); //skewness
-    const $d = $('#d'); //skewness data
-
-    
+    const $d = $('#d'); // skewness data
 
     //[b,n,x,s,d,e,alpha]
     const workload1 = [100, 5000, 50000, 80, 15, 60, 12];
@@ -25,48 +26,92 @@ $(document).ready(function(){
     var inputs = [$b, $n, $x, $s, $d, $e, $alpha];
     
     //Workload Changes
-    const $workload = $('#workload');
-    $workload.change(function(){
-    	var workloadIndex = parseInt($(this).val());
-    	if (workloadIndex > 0){
-    		var workload = workloads[workloadIndex - 1];
-    		inputs.forEach((element, index) => {
-                element.prop("disabled",true); 
-                element.val(workload[index]);
-            });
-    	}
-    	else{
-    		inputs.forEach((element) => element.prop("disabled",false));
-    	}
-        playing = false;
-    });
+// Workload Changes
+// Workload Changes for Interactive & Comparative Experiments
+// Workload Changes for Interactive & Comparative Experiments
+$(document).on("change", "#workload, #cmp-workload-rw, #cmp-workload-bp", function() {
+    var workloadIndex = parseInt($(this).val());
+    var id = $(this).attr("id");
+
+    console.log("Workload changed:", id, "Index:", workloadIndex);
+
+    var ids = [];
     
-    /*Change table titles*/
-    const $alg = $('#baseAlg');
-    $alg.change(function(){
-    	var algx = parseInt($(this).val());
-    	if (algx ==  0){
-    		$("#base-alg-table-title").text("LRU");
-            $("#ACE-alg-table-title").text("ACE-LRU");
-    	}
-    	else if(algx == 1){
-            $("#base-alg-table-title").text("CFLRU");
-            $("#ACE-alg-table-title").text("ACE-CFLRU");
-        }else{
-            $("#base-alg-table-title").text("LRUWSR");
-            $("#ACE-alg-table-title").text("ACE-LRUWSR");
+    if (id === "workload") {
+        ids = ["b", "n", "x", "s", "d", "e", "alpha"];
+    } else if (id === "cmp-workload-rw") {
+        ids = ["cmp-b-rw", "cmp-n-rw", "cmp-x-rw", "cmp-s-rw", "cmp-d-rw", "cmp-e-rw", "cmp-alpha-rw"];
+    } else if (id === "cmp-workload-bp") {
+        ids = ["cmp-b-bp", "cmp-n-bp", "cmp-x-bp", "cmp-s-bp", "cmp-d-bp", "cmp-e-bp", "cmp-alpha-bp"];
+    }
+
+    if (workloadIndex > 0 && workloadIndex <= workloads.length) {
+        var workload = workloads[workloadIndex - 1];
+
+        console.log("Selected Workload Values:", workload);
+
+        ids.forEach((fieldId, index) => {
+            var element = $("#" + fieldId);
+            if (element.length) {
+                element.val(workload[index]); // ✅ Set workload values
+                element.prop("disabled", false); // ✅ Keep fields editable
+                console.log(`Updated ${fieldId} → ${workload[index]}`);
+            } else {
+                console.warn(`Field ${fieldId} not found!`);
+            }
+        });
+
+        console.log("Workload updated successfully.");
+    } else {
+        // Enable manual input if "Custom Workload" is selected
+        ids.forEach((fieldId) => $("#" + fieldId).prop("disabled", false));
+    }
+
+    playing = false;
+});
+
+
+
+
+    
+    // Change table titles when algorithm changes
+    $(document).on("change", "#baseAlg, #cmp-baseAlg", function(){
+        var isComparative = $("#comparative-analysis").is(":visible");
+        var selectedAlg = parseInt($(this).val());
+
+        if (isComparative) {
+            $("#cmp-baseAlg").val(selectedAlg);
+        } else {
+            $("#baseAlg").val(selectedAlg);
         }
+
+        var titles = {
+            0: ["LRU", "ACE-LRU"],
+            1: ["CFLRU", "ACE-CFLRU"],
+            2: ["LRUWSR", "ACE-LRUWSR"]
+        };
+
+        $("#base-alg-table-title").text(titles[selectedAlg][0]);
+        $("#ACE-alg-table-title").text(titles[selectedAlg][1]);
+
         playing = false;
     });
 
-    $("#play-button").click(function(){
-        if(capacity()){
-            if(!playing){
-                calculate(generateWorkload(),parseInt(b.value), parseInt(alpha.value), parseInt($("#baseAlg").val()));
-            }
-            playing = true;
+    // Play button handler
+$("#play-button").click(function(){
+    if(capacity()){
+        if (!playing) { // ✅ Prevent unnecessary resets
+            var isComparative = $("#comparative-analysis").is(":visible");
+            var b_val = parseInt($(isComparative ? "#cmp-b" : "#b").val());
+            var alpha_val = parseInt($(isComparative ? "#cmp-alpha" : "#alpha").val());
+            var baseAlg = parseInt($(isComparative ? "#cmp-baseAlg" : "#baseAlg").val());
+
+            playing = true; // ✅ Set BEFORE calling calculate()
+            calculate(generateWorkload(), b_val, alpha_val, baseAlg);
         }
-    });
+    }
+});
+
 
     $("#finish-button").click(function(){
         playing = false;
@@ -75,100 +120,123 @@ $(document).ready(function(){
     var progress = 0;
     var g = document.createElement("progress");
     var graphDone = false;
-    $("#graph").click(function(){
-        if(graphDone){
-            progress = 0;
-            $("#Bplot").empty();
-            $("#RWplot").empty();
-        }
-
+    $("#graph").click(function() {
+        console.log("User clicked 'Run Experiment'. Generating updated plots...");
+    
+        progress = 0;  // Reset progress
+    
+        // 🔹 Do NOT clear the previous graphs
+        // $("#Bplot").empty();
+        // $("#RWplot").empty();
+    
         g.setAttribute("value", progress);
         g.setAttribute("max", "23");
         document.getElementById("loadingbar").appendChild(g);
-       
-        RWgraph();
-        Bgraph();
-        graphDone = true
-
+    
+        RWgraph();  // Now the RW plot updates only when the user clicks the button
+        Bgraph();   // Buffer pool graph updates only when the user clicks the button
     });
+    
+    
 
 function update(p){
     g.setAttribute("value", p);
 }
 
 function generateWorkload(){
+    var isComparative = $("#comparative-analysis").is(":visible");
+    var isRW = $("#cmp-workload-rw").is(":visible");
+    var isBP = $("#cmp-workload-bp").is(":visible");
 
-    var b_val = parseInt(b.value);
-    var n_val = parseInt(n.value);
-    var x_val = parseInt(x.value);
-    var e_val = parseInt(e.value);
-    var s_val = parseInt(s.value);
-    var d_val = parseInt(d.value);
+    var b_val, n_val, x_val, e_val, s_val, d_val;
 
-    //generate workload
+    if (isComparative) {
+        if (isRW) {
+            b_val = parseInt($("#cmp-b-rw").val());
+            n_val = parseInt($("#cmp-n-rw").val());
+            x_val = parseInt($("#cmp-x-rw").val());
+            e_val = parseInt($("#cmp-e-rw").val());
+            s_val = parseInt($("#cmp-s-rw").val());
+            d_val = parseInt($("#cmp-d-rw").val());
+        } else if (isBP) {
+            b_val = parseInt($("#cmp-b-bp").val());
+            n_val = parseInt($("#cmp-n-bp").val());
+            x_val = parseInt($("#cmp-x-bp").val());
+            e_val = parseInt($("#cmp-e-bp").val());
+            s_val = parseInt($("#cmp-s-bp").val());
+            d_val = parseInt($("#cmp-d-bp").val());
+        }
+    } else {
+        // Individual experiment
+        b_val = parseInt($("#b").val());
+        n_val = parseInt($("#n").val());
+        x_val = parseInt($("#x").val());
+        e_val = parseInt($("#e").val());
+        s_val = parseInt($("#s").val());
+        d_val = parseInt($("#d").val());
+    }
+
+    // Generate workload
     var pageId;
-    var endPageId = n_val*(d_val/100);
+    var endPageId = n_val * (d_val / 100);
     var workload = [];
 
-    for(i = 0; i < x_val; i++){
-
-        const typeDecider = Math.random()*100;
-        const skewed = Math.random()*100;
+    for (let i = 0; i < x_val; i++) {
+        const typeDecider = Math.random() * 100;
+        const skewed = Math.random() * 100;
 
         if (skewed < s_val)
-            pageId = Math.ceil(Math.random()*endPageId);
+            pageId = Math.ceil(Math.random() * endPageId);
         else
-            pageId = Math.ceil(Math.random()*(n_val - endPageId) + endPageId);
+            pageId = Math.ceil(Math.random() * (n_val - endPageId) + endPageId);
 
         if (typeDecider < e_val)
             workload.push(['R', pageId]);
         else
             workload.push(['W', pageId]);
-
     }
     return workload;
-
 }
+
+
 
 //Generate workload with read/write ratio as parameter
-function RWWorkload(e_val){
+function RWWorkload(e_val) {
+    var isComparative = $("#comparative-analysis").is(":visible");
 
-    var b_val = parseInt(b.value);
-    var n_val = parseInt(n.value);
-    var x_val = parseInt(x.value);
-    var s_val = parseInt(s.value);
-    var d_val = parseInt(d.value);
+    var b_val = parseInt($(isComparative ? "#cmp-b-rw" : "#b").val());
+    var n_val = parseInt($(isComparative ? "#cmp-n-rw" : "#n").val());
+    var x_val = parseInt($(isComparative ? "#cmp-x-rw" : "#x").val());
+    var s_val = parseInt($(isComparative ? "#cmp-s-rw" : "#s").val());
+    var d_val = parseInt($(isComparative ? "#cmp-d-rw" : "#d").val());
 
-    //generate workload
     var pageId;
-    var endPageId = n_val*(d_val/100);
+    var endPageId = n_val * (d_val / 100);
     var workload = [];
 
-    for(i = 0; i < x_val; i++){
+    for (let i = 0; i < x_val; i++) {
+        const typeDecider = Math.random() * 100;
+        const skewed = Math.random() * 100;
 
-        const typeDecider = Math.random()*100;
-        const skewed = Math.random()*100;
+        pageId = (skewed < s_val) ? 
+            Math.ceil(Math.random() * endPageId) : 
+            Math.ceil(Math.random() * (n_val - endPageId) + endPageId);
 
-        if (skewed < s_val)
-            pageId = Math.ceil(Math.random()*endPageId);
-        else
-            pageId = Math.ceil(Math.random()*(n_val - endPageId) + endPageId);
-
-        if (typeDecider < e_val)
-            workload.push(['R', pageId]);
-        else
-            workload.push(['W', pageId]);
-
+        workload.push(typeDecider < e_val ? ['R', pageId] : ['W', pageId]);
     }
     return workload;
-
 }
+
+
 
 //generate graph for varying Read/Write ratio
 function RWgraph(){
 
-    var b = parseInt($("#b").val())
-    var a = parseInt($("#alpha").val());
+    var isComparative = $("#comparative-analysis").is(":visible");
+    var b = parseInt($(isComparative ? "#cmp-b-rw" : "#b").val());
+    var a = parseInt($(isComparative ? "#cmp-alpha-rw" : "#alpha").val());
+
+    
 
     var LRUx1 = [];
     var LRUy1 = [];
@@ -329,9 +397,12 @@ function RWgraph(){
 
 //generate graph for varying Buffer size
 function Bgraph(){
-    var diskSize = parseInt($('#n').val()); // Disk size
-    var ops = parseInt($('#x').val());
-    var a = parseInt($("#alpha").val());
+    
+    var isComparative = $("#comparative-analysis").is(":visible");
+    var diskSize = parseInt($(isComparative ? "#cmp-n-bp" : "#n").val());
+    var a = parseInt($(isComparative ? "#cmp-alpha-bp" : "#alpha").val());
+    
+    
 
     var LRUx1 = [];
     var LRUy1 = [];
@@ -491,37 +562,43 @@ function Bgraph(){
 }
 
 //check if input values are too high
-function capacity(){
+function capacity() {
+    var isComparative = $("#comparative-analysis").is(":visible");
+    
+    var b_val = parseInt($(isComparative ? "#cmp-b" : "#b").val());
+    var n_val = parseInt($(isComparative ? "#cmp-n" : "#n").val());
+    var x_val = parseInt($(isComparative ? "#cmp-x" : "#x").val());
+    var e_val = parseInt($(isComparative ? "#cmp-e" : "#e").val());
+    var alpha_val = parseInt($(isComparative ? "#cmp-alpha" : "#alpha").val());
+    var s_val = parseInt($(isComparative ? "#cmp-s" : "#s").val());
 
-    if( parseInt(b.value) > 500 || parseInt(b.value) < 0){
-        window.alert("buffer pool size is too large or invalid");
+    if (b_val > 500 || b_val < 0) {
+        window.alert("Buffer pool size is too large or invalid");
+        return false;
     }
-    else if(parseInt(n.value) > 10000 || parseInt(n.value) < parseInt(b.value)){
-        window.alert("disk size is too large");
+    if (n_val > 10000 || n_val < b_val) {
+        window.alert("Disk size is too large or smaller than the buffer size");
+        return false;
     }
-    else if(parseInt(x.value) > 100000 || parseInt(x.value) < parseInt(b.value)){
-        window.alert("workload size is too large");
+    if (x_val > 100000 || x_val < b_val) {
+        window.alert("Workload size is too large or smaller than the buffer");
+        return false;
     }
-    else if(parseInt(e.value) > 100 || parseInt(e.value) < 0){
-        window.alert("read ratio cannot exceed 100%");
+    if (e_val > 100 || e_val < 0) {
+        window.alert("Read ratio cannot exceed 100%");
+        return false;
     }
-    else if(parseInt(alpha.value) > 20 || parseInt(alpha.value) < 0){
-        window.alert("current SSD concurrency is too large or invalid");
+    if (alpha_val > 20 || alpha_val < 0) {
+        window.alert("Current SSD concurrency is too large or invalid");
+        return false;
     }
-    else if(parseInt(s.value) > 100 || parseInt(s.value) < 0){
-        window.alert("skewness cannot exceed 100% or be negative");
-    }
-    else if(true){
-        return true;
+    if (s_val > 100 || s_val < 0) {
+        window.alert("Skewness cannot exceed 100% or be negative");
+        return false;
     }
 
-    inputs.forEach((element, index) => {
-        element.prop("disabled",true); 
-        element.val(workload1[index]);
-    });
+    return true;
 }
 
+
 })
-
-
-  

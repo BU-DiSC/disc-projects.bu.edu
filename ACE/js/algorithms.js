@@ -5,6 +5,7 @@ var playing = false;
 var firstWrite = true;
 $(document).ready(function(){
     $("#ACEAlert").css('visibility', 'hidden');
+    
     const $workload = $('#workload');
     $workload.change(function(){
         finisher();
@@ -13,6 +14,7 @@ $(document).ready(function(){
         $("#ACE-alg-table").remove();
         $("#ACEAlert").css('visibility', 'hidden');
         firstWrite = true;
+        updateProgress(0, 100);  // Reset progress bar
     });
 
     const $alg = $('#baseAlg');
@@ -21,6 +23,7 @@ $(document).ready(function(){
         resetStats();
         $("#base-alg-table").remove();
         $("#ACE-alg-table").remove();
+        updateProgress(0, 100);  // Reset progress bar
     });
 
     $("#fast-button").click(function(){
@@ -40,21 +43,33 @@ $(document).ready(function(){
     });
 
     $("#play-button").click(function(){
-        
         if(playing){
-            if(!pauser){
-                pauser = true;
-            }else{
-                pauser= false;
-            }
+            pauser = !pauser; // Toggle pause/play
         }
         if(!playing){
             playing = true;
         }
-        
     });
-});
 
+    // Handle manual progress adjustment via slider
+    function updateProgress(currentStep, totalSteps) {
+        let progressPercent = Math.round((currentStep / totalSteps) * 100);
+        
+        console.log("Updating progress:", progressPercent + "%");  // ✅ Debugging
+    
+        $("#progress-bar").val(progressPercent);  // ✅ Update slider
+        $("#progress-label").text(progressPercent + "%");  // ✅ Update text
+    
+        $("#progress-bar").trigger('input');  // ✅ Force UI refresh
+    }
+});
+/* Progress Bar Update Function */
+function updateProgress(currentStep, totalSteps) {
+    let progressPercent = Math.round((currentStep / totalSteps) * 100);
+    $("#progress-bar").val(progressPercent);  // Update slider value
+    $("#progress-label").text(progressPercent + "%");  // Update label
+    $("#progress-bar").trigger('change');  // Force DOM refresh
+}
 /*Base Variables*/
 var buffer;
 var dirty;
@@ -103,6 +118,9 @@ function calculate(wload, bLen, alpha, baseAlg){
     bufferLength = bLen;
     alphaVal = alpha;
     p = 0;
+    let totalSteps = workload.length;
+    console.log("Starting simulation..."); // ✅ Debug log
+    updateProgress(0, totalSteps); // Reset progress bar
     //assign selected algorithm
     const ACEalgorithms = [ACELRU, ACECFLRU, ACELRUWSR];
     ACEAlgorithm = ACEalgorithms[baseAlg];
@@ -183,6 +201,7 @@ function calculate(wload, bLen, alpha, baseAlg){
                 ACEAlgorithm(p);
                 baseDisplay();
                 ACEDisplay();    
+                updateProgress(p, totalSteps);
                 p++;
             }
             if(firstWrite && ACEpagesWritten > 0){
@@ -231,17 +250,18 @@ function resetStats(){
 
 function baseDisplay(){
     //update end of buffer pool
+    console.log("Updating baseDisplay...");  // Debugging log
     let i = 0;
     $("#base-alg-table tr").each(function () {
         $('td', this).each(function () {
             if(dirty.includes(buffer[i])){
-                $(this).css("background-color", "#8B0000");
+                $(this).css("background-color", "#892417");  // Dark Red (Navbar)
             }
             else if(buffer[i] == null){
-                $(this).css("background-color", "grey");
+                $(this).css("background-color", "#F2F3F4");  // Super Light Grey
             }
             else{
-                $(this).css("background-color", "#028A0F");
+                $(this).css("background-color", "#5D6D7E");  // Blue-Grey for Clean Pages
             }
             i++;
         });
@@ -262,17 +282,18 @@ function ACEDisplay(){
     $("#ACE-alg-table tr").each(function () {
         $('td', this).each(function () {
             if(ACEdirty.includes(ACEbuffer[i])){
-                $(this).css("background-color", "#8B0000");
+                $(this).css("background-color", "#892417");  // Dark Red (Navbar)
             }
             else if(ACEbuffer[i] == null){
-                $(this).css("background-color", "grey");
+                $(this).css("background-color", "#F2F3F4");  // Super Light Grey
             }
             else{
-                $(this).css("background-color", "#028A0F");
+                $(this).css("background-color", "#5D6D7E");  // Blue-Grey for Clean Pages
             }
             i++;
         });
     });
+
     //update metrics
     $("#ace-alg-buffer-misses").text(ACEbufferMiss);
     $("#ace-alg-buffer-hits").text(ACEbufferHit);
@@ -750,4 +771,6 @@ function IOcalc(wload, bLen, alpha, baseAlg){
     }
     return [writeIO + readIO, ACEwriteIO + ACEreadIO];
 }
+
+
 

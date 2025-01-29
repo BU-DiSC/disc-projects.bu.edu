@@ -653,28 +653,217 @@ div.row h4 {
     height: 100px;
 }
 
+/* Footer Styling */
 footer {
-    color: #fff;
-}
-
-footer h3 {
-    margin-bottom: 30px;
-}
-
-footer .footer-above {
+    background-color: #2C3E50 !important; /* Same color as run-button */
+    color: white;
     padding-top: 20px;
-    /*background-color: #202020;*/  /*#2c3e50*/
-    background-color: #a2a2a2;
+    padding-bottom: 10px;
 }
 
-footer .footer-col {
-    margin-bottom: 20px;
+.footer-below {
+    background-color: #2C3E50 !important; /* Ensure consistency */
+    padding-top: 10px;
+    padding-bottom: 5px;
 }
 
-footer .footer-below {
-    /* padding-top: 25px; */
-    top: -150px;
-    color:black;
-    /* padding-bottom: -5px; */
-    /*background-color: #ecf0f1;*/ /*#233140;*/
+.footer-below .container {
+    padding-bottom: 10px;
 }
+
+/* Copyright Text */
+.footer-below .row.text-center {
+    font-size: 11px; /* Make text smaller */
+    margin-top: 10px; /* Add space above */
+}
+
+/* Reduce Logo Size */
+.img-logo {
+    height: 70px; /* Reduce size */
+    width: auto;  /* Keep aspect ratio */
+}
+
+
+progress {
+    width: 10%;
+    height: 9px;
+    border-radius: 5px;
+    background-color: #ddd; /* Background color */
+}
+
+progress::-webkit-progress-bar {
+    background-color: #ddd; /* Background color */
+    border-radius: 5px;
+}
+
+progress::-webkit-progress-value {
+    background-color: #020c43; /* Primary Bootstrap blue */
+    border-radius: 5px;
+}
+
+progress::-moz-progress-bar {
+    background-color: #020c43; /* Primary Bootstrap blue */
+    border-radius: 5px;
+}
+
+.cost {
+    display: inline-block;
+    min-width: 350px; /* Ensures alignment */
+    text-align: center; /* Centers numbers */
+}
+
+.metric-title {
+    min-width: 130px; /* Adjust based on label width */
+    display: inline-block;
+    text-align: center;
+}
+
+/* Play button */
+#play-button {
+    background: linear-gradient(135deg, #2C3E50 0%, #566573 100%) !important; /* Dark blue to grey gradient */
+    border: none;
+    color: white;
+}
+
+#play-button:hover {
+    background: linear-gradient(135deg, #1B2631 0%, #5D6D7E 100%) !important; /* Slightly darker gradient on hover */
+}
+
+/* Finish button */
+#finish-button {
+    background: linear-gradient(135deg, #922B21 0%, #C0392B 100%) !important; /* Dark red to lighter red gradient */
+    border: none;
+    color: white;
+}
+
+#finish-button:hover {
+    background: linear-gradient(135deg, #7B241C 0%, #A93226 100%) !important;
+}
+
+/* Speed buttons (Fast, Medium, Slow) */
+
+/* Fast button */
+#fast-button {
+    background: linear-gradient(135deg, #5D6D7E 0%, #AAB7B8 100%) !important; /* Dark grey to light grey */
+    border: none;
+    color: white;
+}
+
+#fast-button:hover {
+    background: linear-gradient(135deg, #4D5656 0%, #99A3A4 100%) !important;
+}
+
+/* Medium button */
+#medium-button {
+    background: linear-gradient(135deg, #2C3E50 0%, #5D6D7E 100%) !important; /* Dark blue to grey */
+    border: none;
+    color: white;
+}
+
+#medium-button:hover {
+    background: linear-gradient(135deg, #1B2631 0%, #4D5656 100%) !important;
+}
+
+/* Slow button */
+#slow-button {
+    background: linear-gradient(135deg, #17202A 0%, #2C3E50 100%) !important; /* Darkest blue-grey */
+    border: none;
+    color: white;
+}
+
+#slow-button:hover {
+    background: linear-gradient(135deg, #0E1419 0%, #1B2631 100%) !important;
+}
+
+.progress-container {
+    width: 100%;
+    margin-top: 10px;
+}
+
+.input-group-text {
+    font-weight: bold;
+}
+
+/* Main Control Panel */
+#control-panel-wrapper {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: #f8f9fa; /* Light grey background */
+    border-radius: 5px;
+}
+
+/* Control Panel */
+#control-panel {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+/* Progress Bar Container */
+.progress-container {
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+    margin-left: 20px;
+}
+
+/* "Progress" Label Box */
+.progress-box {
+    font-weight: bold;
+    background-color: #f1f3f5; /* Light grey background */
+    border: 1px solid #ced4da;
+    padding: 10px 15px;
+    text-align: center;
+}
+
+/* White Box for Progress Bar */
+.progress-wrapper {
+    flex-grow: 1;
+    background: white;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin: 0 10px;
+}
+
+/* Progress Bar Styling */
+#progress-bar {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 12px;
+    background: #ddd;
+    border-radius: 5px;
+    outline: none;
+}
+
+/* Progress Bar Thumb (Slider Knob) */
+#progress-bar::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    background: linear-gradient(135deg, #5D6D7E 0%, #AAB7B8 100%);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+#progress-bar::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    background: linear-gradient(135deg, #5D6D7E 0%, #AAB7B8 100%);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+/* Progress Percentage Display */
+.progress-percent {
+    font-weight: bold;
+    padding: 10px 15px;
+    background: #f8f9fa;
+    border: 1px solid #ced4da;
+}
+

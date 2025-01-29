@@ -1,0 +1,1249 @@
+$(document).ready(function(){
+    var playing = false;
+
+	/*First & Second Graphs*/
+    //input fields
+    const $b = $('#b'); //buffer size
+    const $n = $('#n'); //disk size
+    const $x = $('#x'); //number of operations
+    const $e = $('#e'); //read percentage
+    const $alpha = $('#alpha'); //asymmetry
+    const $s = $('#s'); //skewness
+    const $d = $('#d'); // skewness data
+
+    //[b,n,x,s,d,e,alpha]
+    const workload1 = [100, 5000, 50000, 80, 15, 60, 12];
+    const workload2 = [250, 5000, 50000, 80, 15, 60, 12];
+    const workload3 = [150, 5000, 50000, 80, 15, 90, 12];
+    const workload4 = [150, 5000, 50000, 80, 15, 20, 12];
+    const workload5 = [150, 10000, 50000, 95, 5, 60, 12];
+    const workload6 = [150, 500, 50000, 100, 100, 60, 12];
+    const test = [5, 50, 20, 80, 15, 40, 4];
+    var workloads = [workload1, workload2, workload3, workload4, workload5, workload6, test];
+    var inputs = [$b, $n, $x, $s, $d, $e, $alpha];
+    
+    //Workload Changes
+    $(document).on("change", "#workload, #cmp-workload", function(){
+        var workloadIndex = parseInt($(this).val());
+        var isComparative = $("#comparative-analysis").is(":visible");
+    
+        var ids = isComparative ? ["cmp-b", "cmp-n", "cmp-x", "cmp-s", "cmp-d", "cmp-e", "cmp-alpha"] 
+                                : ["b", "n", "x", "s", "d", "e", "alpha"];
+    
+        if (workloadIndex > 0){
+            var workload = workloads[workloadIndex - 1];
+            ids.forEach((id, index) => {
+                var element = $("#" + id);
+                element.prop("disabled", true);
+                element.val(workload[index]);
+            });
+        } else {
+            ids.forEach((id) => $("#" + id).prop("disabled", false));
+        }
+        playing = false;
+    });
+    
+    
+    // Change table titles when algorithm changes
+    $(document).on("change", "#baseAlg, #cmp-baseAlg", function(){
+        var isComparative = $("#comparative-analysis").is(":visible");
+        var selectedAlg = parseInt($(this).val());
+
+        if (isComparative) {
+            $("#cmp-baseAlg").val(selectedAlg);
+        } else {
+            $("#baseAlg").val(selectedAlg);
+        }
+
+        var titles = {
+            0: ["LRU", "ACE-LRU"],
+            1: ["CFLRU", "ACE-CFLRU"],
+            2: ["LRUWSR", "ACE-LRUWSR"]
+        };
+
+        $("#base-alg-table-title").text(titles[selectedAlg][0]);
+        $("#ACE-alg-table-title").text(titles[selectedAlg][1]);
+
+        playing = false;
+    });
+
+    // Play button handler
+    $("#play-button").click(function(){
+        if(capacity()){
+            playing = false; // Ensure we reset before calculation
+            var isComparative = $("#comparative-analysis").is(":visible");
+            var b_val = parseInt($(isComparative ? "#cmp-b" : "#b").val());
+            var alpha_val = parseInt($(isComparative ? "#cmp-alpha" : "#alpha").val());
+            var baseAlg = parseInt($(isComparative ? "#cmp-baseAlg" : "#baseAlg").val());
+
+            calculate(generateWorkload(), b_val, alpha_val, baseAlg);
+            playing = true;
+        }
+    });
+
+    $("#finish-button").click(function(){
+        playing = false;
+    });
+
+    var progress = 0;
+    var g = document.createElement("progress");
+    var graphDone = false;
+    $("#graph").click(function(){
+        if(graphDone){
+            progress = 0;
+            $("#Bplot").empty();
+            $("#RWplot").empty();
+        }
+
+        g.setAttribute("value", progress);
+        g.setAttribute("max", "23");
+        document.getElementById("loadingbar").appendChild(g);
+       
+        RWgraph();
+        Bgraph();
+        graphDone = true
+
+    });
+
+function update(p){
+    g.setAttribute("value", p);
+}
+
+function generateWorkload(){
+    var isComparative = $("#comparative-analysis").is(":visible");
+
+    var b_val = parseInt($(isComparative ? "#cmp-b" : "#b").val());
+    var n_val = parseInt($(isComparative ? "#cmp-n" : "#n").val());
+    var x_val = parseInt($(isComparative ? "#cmp-x" : "#x").val());
+    var e_val = parseInt($(isComparative ? "#cmp-e" : "#e").val());
+    var s_val = parseInt($(isComparative ? "#cmp-s" : "#s").val());
+    var d_val = parseInt($(isComparative ? "#cmp-d" : "#d").val());
+
+    // Generate workload
+    var pageId;
+    var endPageId = n_val * (d_val / 100);
+    var workload = [];
+
+    for (let i = 0; i < x_val; i++) {
+        const typeDecider = Math.random() * 100;
+        const skewed = Math.random() * 100;
+
+        if (skewed < s_val)
+            pageId = Math.ceil(Math.random() * endPageId);
+        else
+            pageId = Math.ceil(Math.random() * (n_val - endPageId) + endPageId);
+
+        if (typeDecider < e_val)
+            workload.push(['R', pageId]);
+        else
+            workload.push(['W', pageId]);
+    }
+    return workload;
+}
+
+
+//Generate workload with read/write ratio as parameter
+function RWWorkload(e_val){
+    var isComparative = $("#comparative-analysis").is(":visible");
+    var b_val = parseInt($(isComparative ? "#cmp-b" : "#b").val());
+    var n_val = parseInt($(isComparative ? "#cmp-n" : "#n").val());
+    var x_val = parseInt($(isComparative ? "#cmp-x" : "#x").val());
+    var s_val = parseInt($(isComparative ? "#cmp-s" : "#s").val());
+    var d_val = parseInt($(isComparative ? "#cmp-d" : "#d").val());
+
+    var pageId;
+    var endPageId = n_val * (d_val / 100);
+    var workload = [];
+
+    for (let i = 0; i < x_val; i++) {
+        const typeDecider = Math.random() * 100;
+        const skewed = Math.random() * 100;
+
+        pageId = (skewed < s_val) ? 
+            Math.ceil(Math.random() * endPageId) : 
+            Math.ceil(Math.random() * (n_val - endPageId) + endPageId);
+
+        workload.push(typeDecider < e_val ? ['R', pageId] : ['W', pageId]);
+    }
+    return workload;
+}
+
+
+//generate graph for varying Read/Write ratio
+function RWgraph(){
+
+    var isComparative = $("#comparative-analysis").is(":visible");
+    var b = parseInt($(isComparative ? "#cmp-b" : "#b").val());
+    var a = parseInt($(isComparative ? "#cmp-alpha" : "#alpha").val());
+
+    var LRUx1 = [];
+    var LRUy1 = [];
+    var LRUx2 = [];
+    var LRUy2 = [];
+    var CFLRUx1 = [];
+    var CFLRUy1 = [];
+    var CFLRUx2 = [];
+    var CFLRUy2 = [];
+    var LRUWSRx1 = [];
+    var LRUWSRy1 = [];
+    var LRUWSRx2 = [];
+    var LRUWSRy2 = [];
+
+    var LRUstats = [];
+    var CFLRUstats = [];
+    var LRUWSRstats = [];
+
+    var LRUtrace = {};
+    var ACELRUtrace = {};
+    var CFLRUtrace = {};
+    var ACECFLRUtrace = {};
+    var LRUWSRtrace = {};
+    var ACELRUWSRtrace = {};
+    var RWlayout = {};
+    var RWData = [];
+
+    (function myLoop(i) {
+        setTimeout(function() {
+            progress++;
+            LRUstats = IOcalc(RWWorkload(i),b, a, 0);
+            LRUx1.push(i);
+            LRUy1.push(LRUstats[0] * .4);
+            LRUx2.push(i);
+            LRUy2.push(LRUstats[1] * .4);
+
+            CFLRUstats = IOcalc(RWWorkload(i),b, a, 1);
+            CFLRUx1.push(i);
+            CFLRUy1.push(CFLRUstats[0] * .4);
+            CFLRUx2.push(i);
+            CFLRUy2.push(CFLRUstats[1] * .4);
+
+            LRUWSRstats = IOcalc(RWWorkload(i),b, a, 2);
+            LRUWSRx1.push(i);
+            LRUWSRy1.push(LRUWSRstats[0] * .4);
+            LRUWSRx2.push(i);
+            LRUWSRy2.push(LRUWSRstats[1] * .4);
+
+            update(progress);
+            
+        if (i < 100){
+            i+=10;
+            myLoop(i);
+        }
+        else if(i == 100){
+            {
+                LRUtrace = {
+
+                    x: LRUx1, 
+                    y: LRUy1, 
+                    mode:"scatter", 
+                    name:"LRU",
+                    marker: {
+                        size: 12,
+                        symbol: 'circle-open'
+                    }
+                }
+            
+                ACELRUtrace = {
+            
+                    x: LRUx2, 
+                    y: LRUy2, 
+                    mode:"scatter", 
+                    name:"ACE-LRU",
+                    marker: {
+                        size: 12,
+                        symbol: 'diamond-open'
+                    }
+                }
+            
+                CFLRUtrace = {
+            
+                    x: CFLRUx1, 
+                    y: CFLRUy1, 
+                    mode:"scatter", 
+                    name:"CFLRU",
+                    marker: {
+                        size: 12,
+                        symbol: 'square-open'
+                    }
+                }
+            
+                ACECFLRUtrace = {
+            
+                    x: CFLRUx2, 
+                    y: CFLRUy2, 
+                    mode:"scatter", 
+                    name:"ACE-CFLRU",
+                    marker: {
+                        size: 12,
+                        symbol: 'x-open'
+                    }
+                }
+            
+                LRUWSRtrace = {
+            
+                    x: LRUWSRx1, 
+                    y: LRUWSRy1, 
+                    mode:"scatter", 
+                    name:"LRU-WSR",
+                    marker: {
+                        size: 12,
+                        symbol: 'triangle-up-open'
+                    }
+                }
+            
+                ACELRUWSRtrace = {
+            
+                    x: LRUWSRx2, 
+                    y: LRUWSRy2, 
+                    mode:"scatter", 
+                    name:"ACE-LRUWSR",
+                    marker: {
+                        size: 12,
+                        symbol: 'triangle-down-open'
+                    }
+                }
+            
+                RWlayout = {
+                    xaxis: {
+                        autorange: true,
+                        showgrid: false,
+                        zeroline: false,
+                        showline: true,
+                        title: "%read/write ratio"
+                    },
+                    yaxis: {
+                        autorange: true,
+                        showgrid: false,
+                        zeroline: false,
+                        showline: true, 
+                        title: "Workload latency (ms)"
+                    },
+                    title: "Read/Write %"
+                };
+                
+                RWData = [LRUtrace, ACELRUtrace, CFLRUtrace, ACECFLRUtrace, LRUWSRtrace, ACELRUWSRtrace];
+                Plotly.newPlot('RWplot', RWData, RWlayout);
+                
+                if(progress==23){
+                    $("#loadingbar").empty();
+                }
+            }
+          }
+        }, 100)
+    })(0);     
+}
+
+//generate graph for varying Buffer size
+function Bgraph(){
+    var isComparative = $("#comparative-analysis").is(":visible");
+    var diskSize = parseInt($(isComparative ? "#cmp-n" : "#n").val());
+    var a = parseInt($(isComparative ? "#cmp-alpha" : "#alpha").val());
+    
+
+    var LRUx1 = [];
+    var LRUy1 = [];
+    var LRUx2 = [];
+    var LRUy2 = [];
+    var CFLRUx1 = [];
+    var CFLRUy1 = [];
+    var CFLRUx2 = [];
+    var CFLRUy2 = [];
+    var LRUWSRx1 = [];
+    var LRUWSRy1 = [];
+    var LRUWSRx2 = [];
+    var LRUWSRy2 = [];
+
+    var LRUstats = [];
+    var CFLRUstats = [];
+    var LRUWSRstats = [];
+
+    var LRUtrace = {};
+    var ACELRUtrace = {};
+    var CFLRUtrace = {};
+    var ACECFLRUtrace = {};
+    var LRUWSRtrace = {};
+    var ACELRUWSRtrace = {};
+    var BData = [];
+    var Blayout = {};
+
+    (function myLoop(i) {
+        setTimeout(function() {
+            progress++;
+            LRUstats = IOcalc(generateWorkload(),diskSize*(i/100), a, 0);
+            LRUx1.push(i);
+            LRUy1.push(LRUstats[0] * .4);
+            LRUx2.push(i);
+            LRUy2.push(LRUstats[1] * .4);
+
+            CFLRUstats = IOcalc(generateWorkload(),diskSize*(i/100), a, 1);
+            CFLRUx1.push(i);
+            CFLRUy1.push(CFLRUstats[0] * .4);
+            CFLRUx2.push(i);
+            CFLRUy2.push(CFLRUstats[1] * .4);
+
+            LRUWSRstats = IOcalc(generateWorkload(),diskSize*(i/100), a, 2);
+            LRUWSRx1.push(i);
+            LRUWSRy1.push(LRUWSRstats[0] * .4);
+            LRUWSRx2.push(i);
+            LRUWSRy2.push(LRUWSRstats[1] * .4);
+            update(progress);
+            
+        if (i < 20){
+            i+=2;
+            myLoop(i);
+        }
+        else if(i > 20){
+            {
+                LRUtrace = {
+
+                    x: LRUx1, 
+                    y: LRUy1, 
+                    mode:"scatter", 
+                    name:"LRU",
+                    marker: {
+                        size: 12,
+                        symbol: 'circle-open'
+                    }
+                }
+                
+                ACELRUtrace = {
+            
+                    x: LRUx2, 
+                    y: LRUy2, 
+                    mode:"scatter", 
+                    name:"ACE-LRU",
+                    marker: {
+                        size: 12,
+                        symbol: 'diamond-open'
+                    }
+                }
+            
+                CFLRUtrace = {
+            
+                    x: CFLRUx1, 
+                    y: CFLRUy1, 
+                    mode:"scatter", 
+                    name:"CFLRU",
+                    marker: {
+                        size: 12,
+                        symbol: 'square-open'
+                    }
+                }
+            
+                ACECFLRUtrace = {
+            
+                    x: CFLRUx2, 
+                    y: CFLRUy2, 
+                    mode:"scatter", 
+                    name:"ACE-CFLRU",
+                    marker: {
+                        size: 12,
+                        symbol: 'x-open'
+                    }
+                }
+            
+                LRUWSRtrace = {
+            
+                    x: LRUWSRx1, 
+                    y: LRUWSRy1, 
+                    mode:"scatter", 
+                    name:"LRU-WSR",
+                    marker: {
+                        size: 12,
+                        symbol: 'triangle-up-open'
+                    }
+                }
+            
+                ACELRUWSRtrace = {
+            
+                    x: LRUWSRx2, 
+                    y: LRUWSRy2, 
+                    mode:"scatter", 
+                    name:"ACE-LRUWSR",
+                    marker: {
+                        size: 12,
+                        symbol: 'triangle-down-open'
+                    }
+                }
+            
+                BData = [LRUtrace, ACELRUtrace, CFLRUtrace, ACECFLRUtrace, LRUWSRtrace, ACELRUWSRtrace];
+                
+                Blayout = {
+                    xaxis: {
+                        autorange: true,
+                        showgrid: false,
+                        zeroline: false,
+                        showline: true,
+                        title: "Bufferpool size (% of disk size)"
+                    },
+                    yaxis: {
+                        autorange: true,
+                        showgrid: false,
+                        zeroline: false,
+                        showline: true, 
+                        title: "Workload latency (ms)"
+                    },
+                    title: "Buffer Size"
+                };
+                console.log("graph");
+                Plotly.newPlot('Bplot', BData, Blayout);
+                
+                $("#loadingbar").empty();
+                
+            }
+          }
+        }, 100)
+        
+    })(1);
+}
+
+//check if input values are too high
+function capacity() {
+    var isComparative = $("#comparative-analysis").is(":visible");
+    
+    var b_val = parseInt($(isComparative ? "#cmp-b" : "#b").val());
+    var n_val = parseInt($(isComparative ? "#cmp-n" : "#n").val());
+    var x_val = parseInt($(isComparative ? "#cmp-x" : "#x").val());
+    var e_val = parseInt($(isComparative ? "#cmp-e" : "#e").val());
+    var alpha_val = parseInt($(isComparative ? "#cmp-alpha" : "#alpha").val());
+    var s_val = parseInt($(isComparative ? "#cmp-s" : "#s").val());
+
+    if (b_val > 500 || b_val < 0) {
+        window.alert("Buffer pool size is too large or invalid");
+        return false;
+    }
+    if (n_val > 10000 || n_val < b_val) {
+        window.alert("Disk size is too large or smaller than the buffer size");
+        return false;
+    }
+    if (x_val > 100000 || x_val < b_val) {
+        window.alert("Workload size is too large or smaller than the buffer");
+        return false;
+    }
+    if (e_val > 100 || e_val < 0) {
+        window.alert("Read ratio cannot exceed 100%");
+        return false;
+    }
+    if (alpha_val > 20 || alpha_val < 0) {
+        window.alert("Current SSD concurrency is too large or invalid");
+        return false;
+    }
+    if (s_val > 100 || s_val < 0) {
+        window.alert("Skewness cannot exceed 100% or be negative");
+        return false;
+    }
+
+    return true;
+}
+
+
+})
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Ace : Asymmetry/Concurrency-Aware Bufferpool Manager</title>
+	<!-- Bootswatch CSS based on Bootstrao -->
+	<!-- Theme: http://bootswatch.com/flatly/ -->
+	<link rel="stylesheet" href="css/bootstrap.min.css">
+	<!-- Plugin CSS -->
+	<link rel="stylesheet" href="css/bootstrap-slider.min.css">
+	<!-- Custom CSS -->
+	<link rel="stylesheet" href="css/styles.css">
+	<link rel="stylesheet" href="css/tooltip.css">
+  <link rel="stylesheet" href="css/loading.css">
+	<!-- Google Font -->
+	<link href="https://fonts.googleapis.com/css?family=Lato:300,400&display=swap" rel="stylesheet">
+	<!-- Google Material Icon-->
+	<link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Material+Icons+Outlined" rel="stylesheet">
+	<script src="js/plotly.js"></script>
+
+	<!-- <script>
+		window.onload = function(){
+		  if (navigator.userAgent.match(/Chrome|AppleWebKit/)) {
+		window.location.href = "#interactiveDemo";
+	} else {
+		window.location.hash = "#interactiveDemo";
+	}
+		}
+	  </script> -->
+	<!-- jQuery (Bootstrap JS plugins depend on it) -->
+	<script src="js/jquery-3.4.1.min.js"></script>
+	<!-- <script src="js/bootstrap.min.js"></script> -->
+	<script src="js/bootstrap.bundle.min.js"></script>
+	<script type="text/x-mathjax-config">
+		MathJax.Hub.Config({tex2jax: {preview: "none", inlineMath: [['$','$'], ['\\(','\\)']]}, "fast-preview": {disabled: true}});
+	</script>
+	<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML' async></script>
+	<script src="js/bootstrap-slider.js"></script>
+	<script src="js/popper.min.js"></script>
+	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  	<script src="js/plotly.js"></script>
+  	<script src="js/workloadGenerator.js"></script>
+  	<script src="js/algorithms.js"></script>
+	<style>
+		div.fixed {
+		position: fixed;
+		bottom: 50%;
+		left: 0;
+		width: 60px;
+		height: 200px;
+		}
+	</style>
+</head>
+
+<body>
+	<header id="page-top">
+		<nav class="navbar navbar-expand-lg navbar-dark navbar-fixed-top bg-dark fixed-top" style="background-color:#028A0F !important">
+			<div class="container">
+
+				<a class="navbar-brand" href="#page-top">
+					&nbsp; ACE<span class="sr-only">(current)</span>
+				</a></a>
+				<button id="navbarToggle" class="navbar-toggler" type="button" data-toggle="collapse"
+						data-target="#collapsable-nav" aria-controls="collapsable-nav" aria-expanded="false"
+						aria-label="Toggle navigation">
+					<span class="navbar-toggler-icon"></span>
+				</button>
+
+				<div id="collapsable-nav" class="collapse navbar-collapse" id="collapsable-nav">
+					<ul class="nav navbar-nav ml-auto">
+						<!-- <li class="nav-item">
+							<a class="nav-link" href="#problem">Problem</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" href="#research">Research</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" href="#interactiveDemo">Compactionary</a>
+						</li> -->
+						<li class="nav-item">
+							<a class="nav-link" href="#publication">Publications</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" href="#authors">The Team</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" href="#sponsors">Sponsors</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</nav>
+
+		<!-- <div class="jumbotron">
+			<video controls width="250">
+
+				<source src="./img/test.mov"
+						type="video/mov">
+
+				Sorry, your browser doesn't support embedded videos.
+			</video>
+		</div> -->
+
+	</header>
+
+	<div class="fixed">
+		<div class="rcorners-1" style="background-color:#028A0F">
+			<a href="research.html"><span class="rcorners-click"></span></a>
+			<div class="rcorners-text-1"><a href="index.html" style="text-decoration:none; color: rgba(255, 255, 255, 0.88)">Home</a></div>
+		</div>
+		<div class="rcorners-2" style="background-color:#028A0F">
+			<a href="research.html"><span class="rcorners-click"></span></a>
+			<div class="rcorners-text-2"><a href="background.html" style="text-decoration:none; color: rgba(255, 255, 255, 0.88)">Background</a></div>
+		</div>
+		<div class="rcorners-3" style="background-color:#028A0F">
+			<a href="research.html#problem"><span class="rcorners-click"></span></a>
+			<div class="rcorners-text-3"><a href="research.html" style="text-decoration:none; color: rgba(255, 255, 255, 0.88)">ACE</a></div>
+		</div>
+	</div>
+
+	<div class="loading" id="loader" style="display:none">Loading&#8230;</div>
+
+	<section id="research" style="margin:0 10px">
+
+		<div id="interactiveDemo" class="container">
+			<div class="row section-title text-center">
+				<h2>
+					<a target="_blank" href="https://disc-projects.bu.edu/compactionary/files/LSM_Compact_Demo.mp4">
+						<span class="metric-title" data-toggle="tooltip" data-placement="right"
+							  title="Watch walkthrough this video" style="color:#000"> ACE buffer pool manager in action </span>
+					</a>
+				</h2>
+			</div>
+
+			<!-- Comparative configuration starts here -->
+			<div id="cmp-conf-row" class="row">
+				<div class="row" id="inputs">
+					<div class="col-lg-3">
+						<div class="input-group mb-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Workload</span>
+							</div>
+							<select class="form-control" id="workload">
+								<option value=1 selected>Workload 1 (Small buffer)</option>
+								<option value=2>Workload 2 (Large buffer)</option>
+								<option value=3>Workload 3 (Read-heavy)</option>
+								<option value=4>Workload 4 (Write-heavy)</option>
+								<option value=5>Workload 5 (Very Skewed)</option>
+								<option value=6>Workload 6 (Uniform)</option>
+								<option value=7 disabled >Test Workload</option>
+								<option value=0>Custom Workload</option>
+							</select>
+						</div>
+
+					</div>
+
+					<div class="col-lg-3">
+						<div class="input-group mb-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Disk size</span>
+							</div>
+							<input type="number" class="form-control" id="n" value=5000 min=0 disabled>
+						</div>
+					</div>
+
+
+					<div class="col-lg-3">
+						<div class="input-group mb-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Buffer size</span>
+							</div>
+							<input type="number" class="form-control" id="b" value=100 min=0 disabled>
+						</div>
+
+					</div>
+
+					<div class="col-lg-3">
+						<div class="input-group mb-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Read ratio</span>
+							</div>
+							<input type="number" class="form-control" id="e" value=60 min=0 disabled>
+							<div class="input-group-append">
+								<span class="input-group-text">%</span>
+							</div>
+						</div>
+					</div>
+
+				</div>
+
+				<div class="row" id="inputs">
+					<div class="col-lg-3">
+						<div class="input-group mb-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Algorithm</span>
+							</div>
+							<select class="form-control" id="baseAlg">
+								<option value=0>LRU</option>
+								<option value=1>CFLRU</option>
+								<option value=2 >LRU-WSR</option>
+							</select>
+						</div>	
+					</div>	
+
+
+					<div class="col-lg-3">
+						<div class="input-group mb-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Concurrency</span>
+							</div>
+							<input type="number" class="form-control" min=0  id="alpha" value=12 disabled>
+						</div>
+					</div>
+
+
+					<div class="col-lg-3">
+						<div class="input-group mb-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Operations</span>
+							</div>
+							<input type="number" class="form-control" id="x" value=50000 min=0 max=100000 disabled>
+						</div>
+					</div>
+
+
+					<div class="col-lg-3">
+						<div class="input-group mb-3">
+
+							<div class="input-group-prepend">
+								<span class="input-group-text">Skew</span>
+							</div>
+							<input type="number" class="form-control" value=80 id="s" min=0 disabled>
+							<div class="input-group-append">
+								<span class="input-group-text">%</span>
+							</div>
+							<div class="input-group-append">
+								<span class="input-group-text">on</span>
+							</div>
+							<input type="number" class="form-control" value=15 id="d" min=0 disabled>
+							<div class="input-group-append">
+								<span class="input-group-text">%</span>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				
+			</div>
+			<!-- END of comparative configurations of Interactive Demo -->
+
+			<br>
+
+			<div id="control-panel" class="">
+				<div class="container-fluid">
+					<div class="row justify-content-center">
+						<div id="lsm-button-group" class="row col-4 ">
+							<div class="btn-group" role="group" aria-label="progress-control">
+								<button id="play-button" type="button" class="btn btn-info">
+									<img src="img/play:pause.png" width="50" height="50">
+								</button>
+								<button id="fast-button" type="button" class="btn btn-warning">Fast</button>
+								<button id="medium-button" type="button" class="btn btn-success">Medium</button>
+								<button id="slow-button" type="button" class="btn btn-secondary">Slow</button>
+								<button id="finish-button" type="button" class="btn btn-danger">Finish</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<br>
+			<br>
+
+			<!-- Interactive Demo result starts here -->
+			<!-- Diagram result starts here -->
+			<style>
+				.tablecell{
+					display: table-cell;
+					vertical-align: inherit;
+				}
+				table { 
+    				border-collapse: collapse; 
+				}
+			</style>
+
+			</div>
+			<div id="indiv-bush-row" class="row">
+				<!-- Vanilla LSM-Tree bush results starts here lsm-cmpct-pp-1-->
+				<div class="col-sm">
+					<div id="cmp-lsm-cmpct-pp-1-mp" class="row cmp-indiv-mp">
+						<div  class="lsm-title">
+							<span id="base-alg-table-title" class="row cmp-indiv-mp">LRU</span>
+						</div>
+						<br>
+					</div>
+					<div id="table1">
+					</div>
+				</div> <!-- END of lsm-cmpct-pp-1-bush-col result -->
+				<br>
+				<div class="col-sm">
+					<div id="cmp-lsm-cmpct-pp-2-mp" class="row cmp-indiv-mp">
+						<div  class="lsm-title">
+							<span id="ACE-alg-table-title" class="row cmp-indiv-mp">ACE-LRU</span>
+						</div>
+						<span id="ACEAlert">notice the streaks of clean pages formed by concurrently writing dirty pages</span>
+					</div>
+						<div id = "table2"></div>
+						
+					</div>
+					
+				</div>
+			</div>
+			<br>
+
+			<br>
+
+			<!-- Cost result starts here -->
+			<div id="cost-result" class="container">
+				
+				<!-- #Write I/O -->
+				<div class="row">
+					<div class="col text-center">
+						<span id="base-alg-write-IO" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
+					</div>
+					<div class="col-2 text-center">
+						<span class="metric-title" data-toggle="tooltip" data-placement="left"
+								  title="The number of times dirty pages were written.">#Write batches</span>
+					</div>
+					<div class="col text-center">
+						<span id="ace-alg-write-IO" class="cost uncertain">0</span>
+					</div>
+				</div>
+
+				<!-- #Disk Pages Read-->
+				<div class="row">
+					<div class="col text-center">
+						<span id="base-alg-pages-read" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
+					</div>
+					<div class="col-2 text-center">
+						<span class="metric-title" data-toggle="tooltip" data-placement="left"
+								  title="The number of pages processed from a workload.">#Disk Pages Read</span>
+					</div>
+					<div class="col text-center">
+						<span id="ace-alg-pages-read" class="cost uncertain">0</span>
+					</div>
+				</div>
+				<!-- #Disk Pages Written-->
+				<div class="row">
+					<div class="col text-center">
+						<span id="base-alg-pages-written" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
+					</div>
+					<div class="col-2 text-center">
+						<span class="metric-title" data-toggle="tooltip" data-placement="left"
+								  title="The number of dirty pages written.">#Disk Pages Written</span>
+					</div>
+					<div class="col text-center">
+						<span id="ace-alg-pages-written" class="cost uncertain">0</span>
+					</div>
+				</div>
+
+				<!-- #Buffer Misses -->
+				<div class="row">
+					<div class="col text-center">
+						<span id="base-alg-buffer-misses" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
+					</div>
+					<div class="col-2 text-center">
+						<span class="metric-title" data-toggle="tooltip" data-placement="left"
+										title="The number of times a requested page is not found in the bufferpool.">#Buffer Misses</span>
+					</div>
+					<div class="col text-center">
+						<span id="ace-alg-buffer-misses" class="cost uncertain">0</span>
+					</div>
+				</div>
+				<!-- #Buffer Hits-->
+				<div class="row">
+					<div class="col text-center">
+						<span id="base-alg-buffer-hits" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
+					</div>
+					<div class="col-2 text-center">
+						<span class="metric-title" data-toggle="tooltip" data-placement="left"
+								  title="The number of times a requested page is in the bufferpool.">#Buffer Hits</span>
+					</div>
+					<div class="col text-center">
+						<span id="ace-alg-buffer-hits" class="cost uncertain">0</span>
+					</div>
+				</div>
+
+				<!-- #Read I/O-->
+				<!-- <div class="row">
+					<div class="col text-center">
+						<span id="base-alg-read-IO" class="cost uncertain">0</span>
+					</div>
+					<div class="col-2 text-center">
+						<span class="metric-title" data-toggle="tooltip" data-placement="left"
+								  title="The number of times pages were added to the bufferpool.">#Read I/O</span>
+					</div>
+					<div class="col text-center">
+						<span id="ace-alg-read-IO" class="cost uncertain">0</span>
+					</div>
+				</div> -->
+
+				<!-- #Pages Evicted -->
+				<div class="row">
+					<div class="col text-center">
+						<span id="base-alg-pages-evicted" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
+					</div>
+					<div class="col-2 text-center">
+						<span class="metric-title" data-toggle="tooltip" data-placement="left"
+								  title="The number of pages evicted from the bufferpool.">#Pages Evicted</span>
+					</div>
+					<div class="col text-center">
+						<span id="ace-alg-pages-evicted" class="cost uncertain">0</span>
+					</div>
+				</div>
+			
+			</div>
+			<!-- END of all cost results -->
+
+			<br>
+			<hr>
+			<br>
+
+			<div class="row" id="show-plot-btn">
+				<div class="col-lg-12 text-left">
+					<div>
+						
+						<div class = "d-flex flex-row justify-content-center">
+							<a id="graph" class="btn btn-info btn-lg " target="_blank" style="color:#fff">
+								Vary RW% and BP Size
+							</a>
+						</div>
+						<div class="h-100 d-flex align-items-center justify-content-center">
+							<div id="loadingbar"> </div>				
+						</div>
+						
+						<div class="flex-parent-element">
+							
+							<div class="flex-child-element magenta" id="RWplot"></div>
+							<div class="flex-child-element green" id="Bplot"></div>
+						  </div>
+						<style>
+							.flex-parent-element {
+							display: flex;
+							width: 100%;
+							}
+
+							.flex-child-element {
+							flex: 1;
+							margin: 10px;
+							}
+
+							.flex-child-element:first-child {
+							margin-right: 20px;
+							}
+						</style>
+					</div>
+					
+				</div>
+			</div>
+			
+		</div>
+	</section>
+	<!-- <section id="selected-takeaways" class="bg-light">
+	  <div class="container">
+		<div class="row ection-title text-center">
+				  <h2> Selected Takeaways </h2>
+		</div>
+
+		  <div class="row" style="padding-top:40px">
+			<div class="col-lg-6">
+			  <img class="img-responsive img-centered" style="border: 5px solid #ddd;border-radius: 8px;padding: 5px;margin-left:10%" src="./img/compaction-takeaway-data-moved.png" alt="" width=80%/>
+			</div>
+			<div class="col-lg-6">
+			  <img class="img-responsive img-centered" style="border: 5px solid #ddd;border-radius: 8px;padding: 5px;margin-left:10%" src="./img/compaction-takeaway-tail-cmpt-latency.png" alt="" width=80%/>
+			</div>
+		  </div>
+
+		  <div class="row text-center">
+			<div class="col-lg-6">
+			  <div class="text-center" style="margin:10px auto">
+				<img class="img-responsive img-centered" src="./img/shining-bulbs.png" width="30px">
+				<span>Compacting data at smaller granularity reduces data movement. </span>
+			  </div>
+			</div>
+			<div class="col-lg-6">
+			  <div class="text-center" style="margin:10px auto">
+				<img class="img-responsive img-centered" src="./img/shining-bulbs.png" width="30px">
+				<span>"Tiering" moves the least data but incurs the highest tail write latency.</span>
+			  </div>
+			</div>
+		  </div>
+
+		  <div class="row" style="padding-top:20px">
+			<div class="col-lg-6">
+			  <img class="img-responsive img-centered" style="border: 5px solid #ddd;border-radius: 8px;padding: 5px;margin-left:10%" src="./img/compaction-takeaway-point-lookup.png" alt="" width=80%/>
+			</div>
+			<div class="col-lg-6">
+			  <img class="img-responsive img-centered" style="border: 5px solid #ddd;border-radius: 8px;padding: 5px;margin-left:20%" src="./img/compaction-takeaway-update.png" alt="" width=60%/>
+			</div>
+		  </div>
+
+		  <div class="row text-center">
+			<div class="col-lg-6">
+			  <div class="text-center" style="margin:10px auto">
+				<img class="img-responsive img-centered" src="./img/shining-bulbs.png" width="30px">
+				<span>Hybrid layouts (e.g., 1-leveling) dominate point lookup performance. </span>
+			  </div>
+			</div>
+			<div class="col-lg-6">
+			  <div class="text-center" style="margin:10px auto">
+				<img class="img-responsive img-centered" src="./img/shining-bulbs.png" width="30px">
+				<span>"Tiering" dominates other strategies for update-intensive workloads.</span>
+			  </div>
+			</div>
+		  </div>
+	  </div>
+	</section> -->
+	<section id="publication" class="bg-light" style="padding-top:50px">
+		<div class="container" style="margin-top:-150px">
+			<div class="row" style="text-align: center">
+				<div class="col-lg-12">
+					<h2><br><br><b>For more details check our papers!</b></h2>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-lg-12">
+					<p class="content">
+						<br />
+						<!-- First Paper -->
+						Tarikul Islam Papon, Manos Athanassoulis <br>
+						<a href="https://disc.bu.edu/papers/icde23-papon" target="_blank"><b><u>ACEing the Bufferpool Management Paradigm for Modern Storage Devices</u></b></a>
+						<a href="https://ieeexplore.ieee.org/document/10184709" target="_blank"><font color="Blue"><u>[Official PDF]</u></font></a>
+						<a href="https://cs-people.bu.edu/mathan/publications/icde23-papon.pdf" target="_blank"><font color="Blue"><u>[Local PDF]</u></font></a>
+						<br />
+						In Proceedings of the IEEE International Conference on Data Engineering (ICDE), 2023.
+						<br /><br />
+	
+						<!-- Second Paper -->
+						Tarikul Islam Papon, Manos Athanassoulis <br>
+						<a href="https://disc.bu.edu/papers/damon21-papon" target="_blank"><b><u>A Parametric I/O Model for Modern Storage Devices</u></b></a>
+						<a href="https://dl.acm.org/doi/10.1145/3465998.3466003" target="_blank"><font color="Blue"><u>[Official PDF]</u></font></a>
+						<a href="https://cs-people.bu.edu/mathan/publications/damon21-papon.pdf" target="_blank"><font color="Blue"><u>[Local PDF]</u></font></a>
+						<br />
+						In Proceedings of the International Workshop on Data Management on New Hardware (DaMoN), 2021.
+					</p>
+				</div>
+			</div>
+		</div>
+	</section>
+	
+
+	<section id="authors" class="" style="padding-top: 10px; padding-bottom: 10px;">
+		<div class="container page-scroll">
+			<div class="row" style="text-align: center">
+				<h2><br><b>Meet The Team</b></h2><br>
+			</div>
+			<br/>
+			<div class="row">
+
+        		<div class="col-sm"></div>
+				<div class="col-sm text-center topReveal">
+					<div class="team-member-box-2">
+						<div class="team-image-wrapper rotateTopReveal">
+
+							<a target="_blank" href="https://cs-people.bu.edu/papon/">
+								<img src="./img/people/papon.jpg" alt="Tarikul Islam Papon" class="img-fluid rounded-circle team-member-img text-center image-people-toggle-faculty image-shown">
+							</a>
+						</div>
+						<h3> <a target="_blank" href="https://cs-people.bu.edu/papon/"><font color="#000"> Tarikul Islam Papon</font></a></h3>
+						<p style="text-align:center">PhD Reseacher</p>
+					</div>
+				</div>
+
+				<div class="col-sm text-center topReveal">
+					<div class="team-member-box-2">
+						<div class="team-image-wrapper rotateTopReveal">
+
+							<a target="_blank" href="https://cs-people.bu.edu/teona/">
+								<img src="./img/people/teona.jpg" alt="Teona Bagashvili" class="img-fluid rounded-circle team-member-img text-center image-people-toggle-faculty image-shown">
+							</a>
+						</div>
+						<h3><a target="_blank" href="www.linkedin.com/in/ronin-bae"><font color="#000"> Teona Bagashvili </font></a></h3>
+						<p style="text-align:center">PhD Researcher</p>
+					</div>
+				</div>
+
+				<div class="col-sm text-center topReveal">
+					<div class="team-member-box-2">
+						<div class="team-image-wrapper rotateTopReveal">
+
+							<a target="_blank" href="https://cs-people.bu.edu/mathan/">
+								<img src="./img/people/manos.jpg" alt="Manos Athanassoulis" class="img-fluid rounded-circle team-member-img text-center image-people-toggle-faculty image-shown">
+							</a>
+						</div>
+						<h3><a target="_blank" href="https://cs-people.bu.edu/mathan/"><font color="#000"> Manos Athanassoulis</font></a></h3>
+						<p style="text-align:center">Assistant Professor</p>
+					</div>
+				</div>
+
+				<div class="col-sm"></div>
+			</div>
+		</div>
+	</section>
+
+	<section id="sponsors" style="background-color:#ecf0f1;padding:0px;margin:40px 0px">
+		<div class="container page-scroll">
+			<div class="row" style="text-align: center">
+				<h2><br><b>Sponsors</b></h2><br>
+			</div>
+			<div class="row">
+				<div class="col-lg-6 text-center">
+					<img src="./img/FB-logo.png" width="150">
+					<br>
+				</div>
+
+				<div class="col-lg-6 text-center">
+					<a target="_blank" href="#">
+						<img src="./img/NSF-logo.png" width="150">
+					</a>
+					<br>
+					<br><br>
+				</div>
+			</div>
+
+		</div>
+	</section>
+	<footer class="text-center">
+		<div class="footer-below">
+			<div class="container">
+				<div class="row">
+					<div class="col-lg-6">
+						<a target="_blank" href="http://www.bu.edu/cs/">
+							<img class="img-responsive img-centered img-logo" src="./img/BU-logo.png" alt="">
+						</a>
+						<br>
+					</div>
+
+					<div class="col-lg-6">
+						<a target="_blank" href="https://disc.bu.edu">
+							<img class="img-responsive img-centered img-logo" src="./img/disc-logo.png" alt="">
+						</a>
+						<br>
+						<br>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="footer-below">
+			<div class="container">
+				<div class="row text-center">
+					<div class="col-lg-12 text-center">
+						Copyright © 2023. DiSC lab. All Rights Reserved.
+					</div>
+				</div>
+			</div>
+		</div>
+	</footer>
+</body>
+
+</html>
