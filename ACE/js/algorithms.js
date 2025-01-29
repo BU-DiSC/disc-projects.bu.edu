@@ -5,6 +5,16 @@ var playing = false;
 var firstWrite = true;
 $(document).ready(function(){
     $("#ACEAlert").css('visibility', 'hidden');
+    function cleanACEBufferDisplay() {
+        console.log("🔄 Cleaning ACE buffer display...");
+        $("#ACE-alg-table tr").each(function () {
+            $('td', this).each(function (index) {
+                if (!ACEbuffer[index]) {
+                    $(this).css("background-color", "#F2F3F4");  // ✅ Super Light Grey (empty)
+                }
+            });
+        });
+    }
     
     const $workload = $('#workload');
     $workload.change(function(){
@@ -50,22 +60,83 @@ $(document).ready(function(){
             playing = true;
         }
     });
-
-    // Handle manual progress adjustment via slider
-    function updateProgress(currentStep, totalSteps) {
-        let progressPercent = Math.round((currentStep / totalSteps) * 100);
+    $("#progress-bar").on("input", function () {
+        if (!workload || workload.length === 0) {
+            console.warn("⚠️ No workload loaded. Cannot update progress.");
+            return;
+        }
+    
+        let newProgress = parseInt($(this).val());
+        let newStep = Math.round((newProgress / 100) * (workload.length - 1)); // ✅ Ensure index is within range
+    
+        // ✅ Ensure newStep stays within valid bounds
+        newStep = Math.max(0, Math.min(newStep, workload.length - 1));
+    
+        console.log(`⏩ Manual Progress Change: ${newProgress}% → Step ${newStep}`);
+    
+        // ✅ Reset simulation state
+        resetStats();
         
-        console.log("Updating progress:", progressPercent + "%");  // ✅ Debugging
+        buffer = [];
+        dirty = [];
+        coldflag = [];
+        uses = {};
+        
+        ACEbuffer = [];
+        ACEdirty = []; // ✅ FIX: Properly reset ACE dirty tracking
+        ACEcoldflag = [];
+        ACEuses = {};
     
-        $("#progress-bar").val(progressPercent);  // ✅ Update slider
-        $("#progress-label").text(progressPercent + "%");  // ✅ Update text
+        bufferHit = 0;
+        bufferMiss = 0;
+        readIO = 0;
+        writeIO = 0;
+        pagesWritten = 0;
+        pagesRead = 0;
+        pagesEvicted = 0;
+        pagesPrefetched = 0;
     
-        $("#progress-bar").trigger('input');  // ✅ Force UI refresh
-    }
+        ACEbufferHit = 0;
+        ACEbufferMiss = 0;
+        ACEreadIO = 0;
+        ACEwriteIO = 0;
+        ACEpagesWritten = 0;
+        ACEpagesRead = 0;
+        ACEpagesEvicted = 0;
+        ACEpagesPrefetched = 0;
+    
+        // ✅ Re-run simulation from step 0 to newStep
+        for (let i = 0; i <= newStep; i++) {
+            if (workload[i] !== undefined) {  // ✅ Guard clause to prevent undefined access
+                baseAlgorithm(i);
+                ACEAlgorithm(i);
+            } else {
+                console.warn(`⚠️ Skipping invalid workload index: ${i}`);
+            }
+        }
+    
+        // ✅ Force UI redraw without marking empty pages as dirty
+        cleanACEBufferDisplay();
+    
+        // ✅ Update global step
+        p = newStep;
+    
+        // ✅ Recalculate and update display
+        baseDisplay();
+        ACEDisplay();
+        updateProgress(p, workload.length);
+    });
+    
+    
+    
+    
+    
 });
 /* Progress Bar Update Function */
 function updateProgress(currentStep, totalSteps) {
     let progressPercent = Math.round((currentStep / totalSteps) * 100);
+    console.log(`✅ Step ${currentStep}/${totalSteps} → Progress: ${progressPercent}%`);
+
     $("#progress-bar").val(progressPercent);  // Update slider value
     $("#progress-label").text(progressPercent + "%");  // Update label
     $("#progress-bar").trigger('change');  // Force DOM refresh
@@ -201,8 +272,10 @@ function calculate(wload, bLen, alpha, baseAlg){
                 ACEAlgorithm(p);
                 baseDisplay();
                 ACEDisplay();    
-                updateProgress(p, totalSteps);
                 p++;
+                updateProgress(p, totalSteps);
+                console.log(`✅ Step after increment: ${p}`);  // ✅ Log after
+                console.log(`✅ Progress updated to: ${Math.round((p / totalSteps) * 100)}%`);
             }
             if(firstWrite && ACEpagesWritten > 0){
                 $("#ACEAlert").css('visibility', 'visible');
@@ -217,18 +290,37 @@ function calculate(wload, bLen, alpha, baseAlg){
     
 }
 
-function finisher(){
+function finisher() {
+    if (!workload || workload.length === 0) {
+        console.warn("⚠️ No workload loaded. Cannot finish simulation.");
+        return;
+    }
+
+    console.log("🏁 Finishing simulation...");
+    
     playing = false;
     pauser = false;
-    reloader = 1;
-    for(var pagesLeft = p; pagesLeft < workload.length; pagesLeft++){
+    reloader = 0;  // ✅ Ensure reloader is reset
+
+    // ✅ Complete all remaining steps
+    for (let pagesLeft = p; pagesLeft < workload.length; pagesLeft++) {
         baseAlgorithm(pagesLeft);
         ACEAlgorithm(pagesLeft);
     }
+
+    // ✅ Move progress to 100%
+    p = workload.length - 1;
+
+    // ✅ Update display to reflect full execution
     baseDisplay();
-    ACEDisplay(); 
+    ACEDisplay();
+    updateProgress(p, workload.length);
+
+    // ✅ Ensure Play Button is Re-enabled
     $("#play-button").prop('disabled', false);
 }
+
+
 
 function resetStats(){
     $("#base-alg-buffer-misses").text(0);
@@ -277,24 +369,26 @@ function baseDisplay(){
 }
 
 function ACEDisplay(){
-    //update end of buffer pool
+    console.log("🔄 Updating ACE Display...");
+
     let i = 0;
     $("#ACE-alg-table tr").each(function () {
         $('td', this).each(function () {
-            if(ACEdirty.includes(ACEbuffer[i])){
-                $(this).css("background-color", "#892417");  // Dark Red (Navbar)
-            }
-            else if(ACEbuffer[i] == null){
+            if(ACEbuffer[i] === undefined || ACEbuffer[i] === null){
+                // ✅ Ensure empty pages are properly displayed
                 $(this).css("background-color", "#F2F3F4");  // Super Light Grey
+            } 
+            else if(ACEdirty.includes(ACEbuffer[i])) {
+                $(this).css("background-color", "#892417");  // Dark Red (Dirty)
             }
-            else{
-                $(this).css("background-color", "#5D6D7E");  // Blue-Grey for Clean Pages
+            else {
+                $(this).css("background-color", "#5D6D7E");  // Blue-Grey (Clean Pages)
             }
             i++;
         });
     });
 
-    //update metrics
+    // ✅ Update metrics to reflect the correct state
     $("#ace-alg-buffer-misses").text(ACEbufferMiss);
     $("#ace-alg-buffer-hits").text(ACEbufferHit);
     $("#ace-alg-pages-read").text(ACEpagesRead);
@@ -303,6 +397,7 @@ function ACEDisplay(){
     $("#ace-alg-write-IO").text(ACEwriteIO);
     $("#ace-alg-pages-evicted").text(ACEpagesEvicted);
 }
+
 
 function baseLRU(p){
     var type = workload[p][0];
