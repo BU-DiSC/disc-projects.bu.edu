@@ -306,34 +306,6 @@
 
 					<!-- Performance Metrics Panel -->
 					<div id="cost-result" class="container">
-						<!-- #Write I/O -->
-						<div class="row">
-							<div class="col text-right">
-								<span id="base-alg-write-IO" class="cost uncertain">0</span>
-							</div>
-							<div class="col-2 text-center">
-								<span class="metric-title">#Write batches</span>
-							</div>
-							<div class="col text-left">
-								<span id="ace-alg-write-IO" class="cost uncertain">0</span>
-							</div>
-						</div>
-						
-
-						<!-- #Disk Pages Read-->
-						<div class="row">
-							<div class="col text-right">
-								<span id="base-alg-pages-read" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
-							</div>
-							<div class="col-2 text-center">
-								<span class="metric-title" data-toggle="tooltip" data-placement="left"
-									title="The number of pages processed from a workload.">#Disk Pages Read</span>
-							</div>
-							<div class="col text-left">
-								<span id="ace-alg-pages-read" class="cost uncertain">0</span>
-							</div>
-						</div>
-
 						<!-- #Disk Pages Written-->
 						<div class="row">
 							<div class="col text-right">
@@ -345,6 +317,20 @@
 							</div>
 							<div class="col text-left">
 								<span id="ace-alg-pages-written" class="cost uncertain">0</span>
+							</div>
+						</div>
+						
+						<!-- #Disk Pages Read-->
+						<div class="row">
+							<div class="col text-right">
+								<span id="base-alg-pages-read" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
+							</div>
+							<div class="col-2 text-center">
+								<span class="metric-title" data-toggle="tooltip" data-placement="left"
+									title="The number of pages processed from a workload.">#Disk Pages Read</span>
+							</div>
+							<div class="col text-left">
+								<span id="ace-alg-pages-read" class="cost uncertain">0</span>
 							</div>
 						</div>
 
@@ -376,17 +362,27 @@
 							</div>
 						</div>
 
-						<!-- #Pages Evicted -->
 						<div class="row">
 							<div class="col text-right">
-								<span id="base-alg-pages-evicted" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
+								<span id="base-alg-write-IO" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
 							</div>
 							<div class="col-2 text-center">
-								<span class="metric-title" data-toggle="tooltip" data-placement="left"
-									title="The number of pages evicted from the bufferpool.">#Pages Evicted</span>
+								<span class="metric-title">#Write batches</span>
 							</div>
 							<div class="col text-left">
-								<span id="ace-alg-pages-evicted" class="cost uncertain">0</span>
+								<span id="ace-alg-write-IO" class="cost uncertain">0</span>
+							</div>
+						</div>
+
+						<div class="row">
+							<div class="col text-right">
+								<span id="base-alg-latency" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
+							</div>
+							<div class="col-2 text-center">
+								<span class="metric-title">Latency (ms)</span>
+							</div>
+							<div class="col text-left">
+								<span id="ace-alg-latency" class="cost uncertain">0</span>
 							</div>
 						</div>
 

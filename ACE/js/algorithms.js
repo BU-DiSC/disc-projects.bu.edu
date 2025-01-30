@@ -404,7 +404,10 @@ function calculate(wload, bLen, alpha, baseAlg){
                 updateWriteBatchesPlot(aceWriteBatches, traditionalWriteBatches);
                 updateLatencyPlot(aceLatency, traditionalLatency); // Update the latency plot
 
-
+                // Update the latency display on the page
+                $("#base-alg-latency").text(lruLatency.toFixed(2));  // Display Traditional Latency with 2 decimal places
+                $("#ace-alg-latency").text(aceLruLatency.toFixed(2));  // Display ACE Latency with 2 decimal places
+                
                 console.log(`✅ Step after increment: ${p}`);  // ✅ Log after
                 console.log(`✅ Progress updated to: ${Math.round((p / totalSteps) * 100)}%`);
             }
