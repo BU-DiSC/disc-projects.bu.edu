@@ -71,6 +71,110 @@ $(document).on("change", "#workload, #cmp-workload-rw, #cmp-workload-bp", functi
 });
 
 
+$(document).ready(function(){
+    var playing = false;
+    var currentExperiment = "individual"; // "individual" or "comparative"
+    
+    // Handles changes for the individual experiment
+    $('#workload').change(function() {
+        if (currentExperiment === "individual") {
+            updateWorkload("individual");
+        }
+    });
+
+    // Handles changes for the comparative experiment
+    $('#cmp-workload-rw, #cmp-workload-bp').change(function() {
+        if (currentExperiment === "comparative") {
+            updateWorkload("comparative");
+        }
+    });
+
+    // Button click to toggle between individual and comparative experiments
+    $('#toggle-experiment-button').click(function() {
+        currentExperiment = (currentExperiment === "individual") ? "comparative" : "individual";
+        toggleExperimentView(currentExperiment);
+    });
+
+    // Start the simulation (for either experiment)
+    $("#play-button").click(function(){
+        if(playing) return;
+        playing = true;
+        startSimulation(currentExperiment);
+    });
+
+    // Finish the simulation (for either experiment)
+    $("#finish-button").click(function(){
+        playing = false;
+        finishSimulation();
+    });
+
+    // Update Workload based on selected configuration (either individual or comparative)
+    function updateWorkload(experimentType) {
+        let workloadData;
+        if (experimentType === "individual") {
+            // Get data from individual experiment inputs
+            workloadData = {
+                bufferSize: $('#b').val(),
+                diskSize: $('#n').val(),
+                readRatio: $('#e').val(),
+                // Other inputs here
+            };
+        } else {
+            // Get data from comparative experiment inputs
+            workloadData = {
+                bufferSize: $('#cmp-b-rw').val(),
+                diskSize: $('#cmp-n-rw').val(),
+                readRatio: $('#cmp-e-bp').val(),
+                // Other inputs here
+            };
+        }
+
+        console.log(workloadData);
+        // Now you can pass this to the simulation
+    }
+
+    // Function to switch between individual and comparative experiment views
+    function toggleExperimentView(experimentType) {
+        if (experimentType === "individual") {
+            $('#individual-analysis').show();
+            $('#comparative-analysis').hide();
+        } else {
+            $('#individual-analysis').hide();
+            $('#comparative-analysis').show();
+        }
+    }
+
+    // Function to start the simulation (this would vary based on the experiment type)
+    function startSimulation(experimentType) {
+        if (experimentType === "individual") {
+            // Start individual experiment simulation
+            runIndividualExperiment();
+        } else {
+            // Start comparative experiment simulation
+            runComparativeExperiment();
+        }
+    }
+
+    // Function to run the individual experiment simulation
+    function runIndividualExperiment() {
+        // Add logic to run the individual experiment
+        console.log("Running individual experiment...");
+        // Update progress, etc.
+    }
+
+    // Function to run the comparative experiment simulation
+    function runComparativeExperiment() {
+        // Add logic to run the comparative experiment
+        console.log("Running comparative experiment...");
+        // Update progress, etc.
+    }
+
+    // Finish the experiment
+    function finishSimulation() {
+        console.log("Finishing the simulation...");
+        // Reset all progress and stop simulation
+    }
+});
 
 
     

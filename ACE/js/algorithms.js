@@ -24,6 +24,8 @@ $(document).ready(function(){
         $("#ACE-alg-table").remove();
         $("#ACEAlert").css('visibility', 'hidden');
         firstWrite = true;
+        aceWriteBatches = [];  // Reset the ACE write batches array
+        traditionalWriteBatches = []; 
         updateProgress(0, 100);  // Reset progress bar
     });
 
@@ -52,12 +54,26 @@ $(document).ready(function(){
         finisher();
     });
 
-    $("#play-button").click(function(){
-        if(playing){
+    $("#play-button").click(function() {
+        if (playing) {
             pauser = !pauser; // Toggle pause/play
         }
-        if(!playing){
+        if (!playing) {
             playing = true;
+            // Reset any previous data if needed
+            aceWriteBatches = [];
+            traditionalWriteBatches = [];
+            p = 0; // Reset the step to the start of the simulation
+    
+            // Ensure the plot is created (in case it's the first time the simulation is running)
+            const plotDiv = document.getElementById('write-batches-graph');
+            if (plotDiv) {
+                // Initialize plot with empty data (if this is the first time or after a reset)
+                Plotly.newPlot(plotDiv, [], {title: 'Write Batches Comparison'}, {});
+            }
+            
+            // Start the simulation
+            myLoop(workload.length);
         }
     });
     $("#progress-bar").on("input", function () {
@@ -141,6 +157,50 @@ function updateProgress(currentStep, totalSteps) {
     $("#progress-label").text(progressPercent + "%");  // Update label
     $("#progress-bar").trigger('change');  // Force DOM refresh
 }
+
+function updateWriteBatchesPlot(aceData, traditionalData) {
+    console.log("Updating Plot with data: ", aceData, traditionalData); // Log data being passed to plot
+
+    var trace1 = {
+        x: Array.from({ length: aceData.length }, (_, i) => i + 1), // X-axis as steps (1, 2, 3,...)
+        y: aceData, // Y-axis for ACE write batches
+        type: 'scatter',
+        mode: 'lines+markers',
+        name: 'ACE-LRU',
+        line: {color: '#1B2631'}
+    };
+
+    var trace2 = {
+        x: Array.from({ length: traditionalData.length }, (_, i) => i + 1), // X-axis as steps (1, 2, 3,...)
+        y: traditionalData, // Y-axis for Traditional write batches
+        type: 'scatter',
+        mode: 'lines+markers',
+        name: 'LRU',
+        line: {color: 'red'}
+    };
+
+    var layout = {
+        title: '',
+        xaxis: {
+            title: 'Simulation Steps',
+        },
+        yaxis: {
+            title: '#Write Batches',
+        },
+        showlegend: true
+    };
+
+    var data = [trace1, trace2];
+
+    var plotDiv = document.getElementById('write-batches-graph');
+    if (plotDiv) {
+        Plotly.react(plotDiv, data, layout);  // Update the plot with new data
+    } else {
+        Plotly.newPlot('write-batches-graph', data, layout);  // Create the plot if it doesn't exist
+    }
+}
+
+
 /*Base Variables*/
 var buffer;
 var dirty;
@@ -261,7 +321,8 @@ function calculate(wload, bLen, alpha, baseAlg){
         ACEtable.append(row);
     }
     $('#table2').append(ACEtable);
-
+    var aceWriteBatches = [];
+    var traditionalWriteBatches = [];
     (function myLoop(i) {
         setTimeout(function() {
             if(reloader == 1){
@@ -274,6 +335,13 @@ function calculate(wload, bLen, alpha, baseAlg){
                 ACEDisplay();    
                 p++;
                 updateProgress(p, totalSteps);
+
+                aceWriteBatches.push(ACEwriteIO); // For ACE write IO
+                traditionalWriteBatches.push(writeIO); // For Traditional write IO
+
+                // Update the plot with new data
+                updateWriteBatchesPlot(aceWriteBatches, traditionalWriteBatches);
+
                 console.log(`✅ Step after increment: ${p}`);  // ✅ Log after
                 console.log(`✅ Progress updated to: ${Math.round((p / totalSteps) * 100)}%`);
             }
@@ -459,7 +527,7 @@ function ACELRU(p){
             ACE(page);
             
     }
-
+    
 }
 
 function baseCFLRU(p){
