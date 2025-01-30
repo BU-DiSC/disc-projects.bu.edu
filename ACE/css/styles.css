@@ -872,9 +872,9 @@ progress::-moz-progress-bar {
     margin-bottom: 20px; /* Adds spacing below the dotted line */
 }
 
-#write-batches-graph {
-    width: 50%;
-    height: 400px;  /* Adjust the height */
-    margin: 0px 0;
+#write-batches-graph, #latency-graph {
+    height: 400px;  /* Ensures plots have a height */
+    width: 100%;  /* Make sure they take full width of the container */
+    margin: 10px 0;
 }
 

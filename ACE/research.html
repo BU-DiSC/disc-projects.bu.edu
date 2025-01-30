@@ -186,11 +186,10 @@
 							<div class="col-lg-3">
 								<div class="input-group mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Read ratio</span>
+										<span class="input-group-text">Read (%)</span>
 									</div>
 									<input type="number" class="form-control" id="e" value=60 min=0 disabled>
 									<div class="input-group-append">
-										<span class="input-group-text">%</span>
 									</div>
 								</div>
 							</div>
@@ -231,7 +230,7 @@
 							<div class="col-lg-3">
 								<div class="input-group mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Skew%</span>
+										<span class="input-group-text">Skew (%)</span>
 									</div>
 									<input type="number" class="form-control" value=80 id="s" min=0 disabled>
 									<div class="input-group-append">
@@ -394,13 +393,18 @@
 					</div>
 
 					<!-- After the Performance Metrics Panel -->
-					<div id="write-batches-plot" class="container">
+					<div class="container">
 						<div class="row">
-							<div class="col-lg-12">
+							<div class="col-lg-6"> <!-- Half-width for write-batches plot -->
 								<div id="write-batches-graph"></div> <!-- Placeholder for the plot -->
+							</div>
+							<div class="col-lg-6"> <!-- Half-width for latency plot -->
+								<div id="latency-graph"></div> <!-- Placeholder for the latency plot -->
 							</div>
 						</div>
 					</div>
+					
+					
 
 				</div>
 
@@ -489,7 +493,7 @@
 						<div class="col-lg-3">
 							<div class="input-group mb-2">
 								<div class="input-group-prepend">
-									<span class="input-group-text">Read %</span>
+									<span class="input-group-text">Read (%)</span>
 								</div>
 								<input type="number" class="form-control" id="cmp-e-bp" value=60 min=0 max=100>
 								<div class="input-group-append">
@@ -519,7 +523,7 @@
 						<div class="col-lg-3">
 							<div class="input-group mb-2">
 								<div class="input-group-prepend">
-									<span class="input-group-text">Skew%</span>
+									<span class="input-group-text">Skew (%)</span>
 								</div>
 								<input type="number" class="form-control" id="cmp-s-rw" value=80 min=0 max=100>
 								<div class="input-group-append">
@@ -544,7 +548,7 @@
 						<div class="col-lg-3">
 							<div class="input-group mb-2">
 								<div class="input-group-prepend">
-									<span class="input-group-text">Skew%</span>
+									<span class="input-group-text">Skew (%)</span>
 								</div>
 								<input type="number" class="form-control" id="cmp-s-bp" value=80 min=0 max=100>
 								<div class="input-group-append">

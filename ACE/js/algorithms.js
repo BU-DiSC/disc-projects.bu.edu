@@ -127,7 +127,7 @@ $(document).ready(function(){
                 baseAlgorithm(i);
                 ACEAlgorithm(i);
             } else {
-                console.warn(`⚠️ Skipping invalid workload index: ${i}`);
+                console.warn(`Skipping invalid workload index: ${i}`);
             }
         }
     
@@ -182,7 +182,7 @@ function updateWriteBatchesPlot(aceData, traditionalData) {
     var layout = {
         title: '',
         xaxis: {
-            title: 'Simulation Steps',
+            title: 'Operation steps',
         },
         yaxis: {
             title: '#Write Batches',
@@ -197,6 +197,51 @@ function updateWriteBatchesPlot(aceData, traditionalData) {
         Plotly.react(plotDiv, data, layout);  // Update the plot with new data
     } else {
         Plotly.newPlot('write-batches-graph', data, layout);  // Create the plot if it doesn't exist
+    }
+}
+
+function updateLatencyPlot(aceLatency, traditionalLatency) {
+    console.log("Updating Latency Plot with data: ", aceLatency, traditionalLatency); // Log data being passed to plot
+
+    // Trace for ACE latency data (blue color)
+    var trace1 = {
+        x: Array.from({ length: aceLatency.length }, (_, i) => i + 1), // X-axis as steps (1, 2, 3,...)
+        y: aceLatency, // Y-axis for ACE latency
+        type: 'scatter',
+        mode: 'lines+markers',
+        name: 'ACE-LRU',  // Name for ACE-LRU algorithm
+        line: {color: '#1B2631'}
+    };
+
+    // Trace for Traditional latency data (red color)
+    var trace2 = {
+        x: Array.from({ length: traditionalLatency.length }, (_, i) => i + 1), // X-axis as steps (1, 2, 3,...)
+        y: traditionalLatency, // Y-axis for Traditional latency
+        type: 'scatter',
+        mode: 'lines+markers',
+        name: 'LRU',  // Name for LRU algorithm
+        line: {color: 'red'}
+    };
+
+    // Layout settings for the plot
+    var layout = {
+        title: '',
+        xaxis: {
+            title: 'Operation steps',
+        },
+        yaxis: {
+            title: 'Latency (ms)',
+        },
+        showlegend: true // Ensure legend is shown
+    };
+
+    var data = [trace1, trace2];  // Combine both traces (ACE and Traditional)
+
+    var plotDiv = document.getElementById('latency-graph');
+    if (plotDiv) {
+        Plotly.react(plotDiv, data, layout);  // Update the plot with new data
+    } else {
+        Plotly.newPlot('latency-graph', data, layout);  // Create the plot if it doesn't exist
     }
 }
 
@@ -323,6 +368,16 @@ function calculate(wload, bLen, alpha, baseAlg){
     $('#table2').append(ACEtable);
     var aceWriteBatches = [];
     var traditionalWriteBatches = [];
+    var aceLatency = [];
+    var traditionalLatency = [];
+    const baseReadLatency = 12.4; 
+    const asymmetry = 2.8; 
+    function calculateLatency(writeBatches, diskPagesRead, isACE) {
+        let writeLatency = baseReadLatency * (isACE ? asymmetry : 1);  // LRU and ACE share the same formula
+        let totalLatency = (writeBatches * writeLatency) + (diskPagesRead * baseReadLatency);
+        
+        return totalLatency;
+    }   
     (function myLoop(i) {
         setTimeout(function() {
             if(reloader == 1){
@@ -339,8 +394,16 @@ function calculate(wload, bLen, alpha, baseAlg){
                 aceWriteBatches.push(ACEwriteIO); // For ACE write IO
                 traditionalWriteBatches.push(writeIO); // For Traditional write IO
 
+                var lruLatency = calculateLatency(writeIO, readIO, false)/1000;  
+                var aceLruLatency = calculateLatency(ACEwriteIO, ACEreadIO, true)/1000;
+
+                // Store the latency data for both algorithms
+                aceLatency.push(aceLruLatency);
+                traditionalLatency.push(lruLatency);
                 // Update the plot with new data
                 updateWriteBatchesPlot(aceWriteBatches, traditionalWriteBatches);
+                updateLatencyPlot(aceLatency, traditionalLatency); // Update the latency plot
+
 
                 console.log(`✅ Step after increment: ${p}`);  // ✅ Log after
                 console.log(`✅ Progress updated to: ${Math.round((p / totalSteps) * 100)}%`);
