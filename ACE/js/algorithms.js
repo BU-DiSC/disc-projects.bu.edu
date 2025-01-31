@@ -998,7 +998,7 @@ function IOcalc(wload, bLen, alpha, baseAlg){
         baseAlgorithm(quick);
         ACEAlgorithm(quick);
     }
-    return [writeIO + readIO, ACEwriteIO + ACEreadIO];
+    return [writeIO,readIO, ACEwriteIO,ACEreadIO];
 }
 
 

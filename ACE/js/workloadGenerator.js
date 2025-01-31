@@ -339,9 +339,9 @@ function RWgraph(){
     var isComparative = $("#comparative-analysis").is(":visible");
     var b = parseInt($(isComparative ? "#cmp-b-rw" : "#b").val());
     var a = parseInt($(isComparative ? "#cmp-alpha-rw" : "#alpha").val());
-
+    var read_latency = 12.4;
+    var write_latency = 12.4 * 2.8;
     
-
     var LRUx1 = [];
     var LRUy1 = [];
     var LRUx2 = [];
@@ -373,21 +373,21 @@ function RWgraph(){
             progress++;
             LRUstats = IOcalc(RWWorkload(i),b, a, 0);
             LRUx1.push(i);
-            LRUy1.push(LRUstats[0] * .4);
+            LRUy1.push((LRUstats[0] * write_latency + LRUstats[1] * read_latency)/1000);
             LRUx2.push(i);
-            LRUy2.push(LRUstats[1] * .4);
+            LRUy2.push((LRUstats[2] * write_latency + LRUstats[3] * read_latency)/1000);
 
             CFLRUstats = IOcalc(RWWorkload(i),b, a, 1);
             CFLRUx1.push(i);
-            CFLRUy1.push(CFLRUstats[0] * .4);
+            CFLRUy1.push((CFLRUstats[0] * write_latency + CFLRUstats[1] * read_latency)/1000);
             CFLRUx2.push(i);
-            CFLRUy2.push(CFLRUstats[1] * .4);
+            CFLRUy2.push((LRUstats[2] * write_latency + LRUstats[3] * read_latency)/1000);
 
             LRUWSRstats = IOcalc(RWWorkload(i),b, a, 2);
             LRUWSRx1.push(i);
-            LRUWSRy1.push(LRUWSRstats[0] * .4);
+            LRUWSRy1.push((LRUWSRstats[0] * write_latency + LRUWSRstats[1] * read_latency)/1000);
             LRUWSRx2.push(i);
-            LRUWSRy2.push(LRUWSRstats[1] * .4);
+            LRUWSRy2.push((LRUWSRstats[2] * write_latency + LRUWSRstats[3] * read_latency)/1000);
 
             update(progress);
             
@@ -505,7 +505,8 @@ function Bgraph(){
     var isComparative = $("#comparative-analysis").is(":visible");
     var diskSize = parseInt($(isComparative ? "#cmp-n-bp" : "#n").val());
     var a = parseInt($(isComparative ? "#cmp-alpha-bp" : "#alpha").val());
-    
+    var read_latency = 12.4;
+    var write_latency = 12.4 * 2.8;    
     
 
     var LRUx1 = [];
@@ -539,21 +540,21 @@ function Bgraph(){
             progress++;
             LRUstats = IOcalc(generateWorkload(),diskSize*(i/100), a, 0);
             LRUx1.push(i);
-            LRUy1.push(LRUstats[0] * .4);
+            LRUy1.push((LRUstats[0] * write_latency + LRUstats[1] * read_latency)/1000);
             LRUx2.push(i);
-            LRUy2.push(LRUstats[1] * .4);
+            LRUy2.push((LRUstats[2] * write_latency + LRUstats[3] * read_latency)/1000);
 
             CFLRUstats = IOcalc(generateWorkload(),diskSize*(i/100), a, 1);
             CFLRUx1.push(i);
-            CFLRUy1.push(CFLRUstats[0] * .4);
+            CFLRUy1.push((CFLRUstats[0] * write_latency + CFLRUstats[1] * read_latency)/1000);
             CFLRUx2.push(i);
-            CFLRUy2.push(CFLRUstats[1] * .4);
+            CFLRUy2.push((CFLRUstats[2] * write_latency + CFLRUstats[3] * read_latency)/1000);
 
             LRUWSRstats = IOcalc(generateWorkload(),diskSize*(i/100), a, 2);
             LRUWSRx1.push(i);
-            LRUWSRy1.push(LRUWSRstats[0] * .4);
+            LRUWSRy1.push((LRUWSRstats[0] * write_latency + LRUWSRstats[1] * read_latency)/1000);
             LRUWSRx2.push(i);
-            LRUWSRy2.push(LRUWSRstats[1] * .4);
+            LRUWSRy2.push((LRUWSRstats[2] * write_latency + LRUWSRstats[3] * read_latency)/1000);
             update(progress);
             
         if (i < 20){
