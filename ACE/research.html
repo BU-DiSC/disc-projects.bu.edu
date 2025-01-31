@@ -199,6 +199,29 @@
 							<div class="col-lg-3">
 								<div class="input-group mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Device</span>
+									</div>
+									<select class="form-control" id="device">
+										<option value=0>Device 1 (PCI)</option>
+										<option value=1>Device 2</option>
+										<option value=2>Device 3</option>
+										<option value=2>Device 4</option>
+									</select>
+								</div>
+							</div>
+
+							<div class="col-lg-3">
+								<div class="input-group mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Asymmetry</span>
+									</div>
+									<input type="number" class="form-control" min=0 id="asym" value=2.8>
+								</div>
+							</div>
+
+							<div class="col-lg-3">
+								<div class="input-group mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Algorithm</span>
 									</div>
 									<select class="form-control" id="baseAlg">
@@ -206,6 +229,27 @@
 										<option value=1>CFLRU</option>
 										<option value=2>LRU-WSR</option>
 									</select>
+								</div>
+							</div>
+							<div class="col-lg-3">
+								<div class="input-group mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Operations skewness (%)</span>
+									</div>
+									<input type="number" class="form-control" value=80 id="s" min=0 disabled>
+									<div class="input-group-append">
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="row" id="inputs">
+							<div class="col-lg-3">
+								<div class="input-group mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">RR Latency (μs)</span>
+									</div>
+									<input type="number" class="form-control" id="lat" value=12.4 min=0 max=100000>
 								</div>
 							</div>
 
@@ -221,7 +265,7 @@
 							<div class="col-lg-3">
 								<div class="input-group mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Operations</span>
+										<span class="input-group-text"># Operations</span>
 									</div>
 									<input type="number" class="form-control" id="x" value=50000 min=0 max=100000 disabled>
 								</div>
@@ -230,20 +274,14 @@
 							<div class="col-lg-3">
 								<div class="input-group mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Skew (%)</span>
-									</div>
-									<input type="number" class="form-control" value=80 id="s" min=0 disabled>
-									<div class="input-group-append">
-									</div>
-									<div class="input-group-append">
-										<span class="input-group-text">on</span>
+										<span class="input-group-text">Target data skewness (%)</span>
 									</div>
 									<input type="number" class="form-control" value=15 id="d" min=0 disabled>
 									<div class="input-group-append">
 									</div>
 								</div>
 							</div>
-						</div>
+						</div>									
 					</div>
 
 					<!-- Combined Control Panel & Progress Bar -->

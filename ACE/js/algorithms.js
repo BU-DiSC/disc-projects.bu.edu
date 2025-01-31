@@ -370,8 +370,8 @@ function calculate(wload, bLen, alpha, baseAlg){
     var traditionalWriteBatches = [];
     var aceLatency = [];
     var traditionalLatency = [];
-    const baseReadLatency = 12.4; 
-    const asymmetry = 2.8; 
+    const baseReadLatency = parseFloat($('#lat').val());  // Fetch base latency from #lat field
+    const asymmetry = parseFloat($('#asym').val());  // Fetch asymmetry from #asym field
     function calculateLatency(writeBatches, diskPagesRead, isACE) {
         let writeLatency = baseReadLatency * (isACE ? asymmetry : 1);  // LRU and ACE share the same formula
         let totalLatency = (writeBatches * writeLatency) + (diskPagesRead * baseReadLatency);
