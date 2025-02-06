@@ -131,7 +131,7 @@
 			</div>
 			
 				<!-- Radio Buttons for Switching Views (Side by Side & Highlighted) -->
-				<div class="row justify-content-center mb-5">
+				<!-- <div class="row justify-content-center mb-5">
 					<div class="btn-group btn-group-toggle" data-toggle="buttons">
 						<label class="btn btn-outline-primary active" id="label-individual">
 							<input id="customRadio2" type="radio" name="customRadio" class="custom-control-input" checked> Individual Analysis
@@ -140,7 +140,7 @@
 							<input id="customRadio1" type="radio" name="customRadio" class="custom-control-input"> Comparative Analysis
 						</label>
 					</div>
-				</div>
+				</div> -->
 
 				<!-- Individual Analysis Content -->
 				<div id="individual-analysis">
@@ -202,10 +202,10 @@
 										<span class="input-group-text">Device</span>
 									</div>
 									<select class="form-control" id="device">
-										<option value=0>Device 1 (PCI)</option>
-										<option value=1>Device 2</option>
-										<option value=2>Device 3</option>
-										<option value=2>Device 4</option>
+										<option value=1>Device 1 (PCI)</option>
+										<option value=2>Device 2 (SATA)</option>
+										<option value=3>Device 3 (Optane)</option>
+										<option value=4>Device 4 (Virtual)</option>
 									</select>
 								</div>
 							</div>
@@ -215,7 +215,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Asymmetry</span>
 									</div>
-									<input type="number" class="form-control" min=0 id="asym" value=2.8>
+									<input type="number" class="form-control" min=0 id="asym" value=3.0>
 								</div>
 							</div>
 
@@ -247,7 +247,7 @@
 							<div class="col-lg-3">
 								<div class="input-group mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">RR Latency (μs)</span>
+										<span class="input-group-text">Base Latency (μs)</span>
 									</div>
 									<input type="number" class="form-control" id="lat" value=12.4 min=0 max=100000>
 								</div>
@@ -258,7 +258,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Concurrency</span>
 									</div>
-									<input type="number" class="form-control" min=0 id="alpha" value=12 disabled>
+									<input type="number" class="form-control" min=0 id="alpha" value=6 disabled>
 								</div>
 							</div>
 
@@ -290,14 +290,17 @@
 							
 							<!-- Control Buttons -->
 							<div id="lsm-button-group" class="btn-group" role="group" aria-label="progress-control">
+								<button id="backward-button" type="button" class="btn btn-primary"><<</button>
 								<button id="play-button" type="button" class="btn btn-info">
 									<img src="img/play:pause.png" width="40" height="40">
 								</button>
+								<button id="forward-button" type="button" class="btn btn-primary">>></button>								
 								<button id="fast-button" type="button" class="btn btn-warning">Fast</button>
 								<button id="medium-button" type="button" class="btn btn-success">Medium</button>
 								<button id="slow-button" type="button" class="btn btn-secondary">Slow</button>
 								<button id="finish-button" type="button" class="btn btn-danger">Finish</button>
 							</div>
+
 
 							<!-- Progress Bar Container -->
 							<div class="progress-container input-group">
@@ -371,7 +374,7 @@
 								<span id="ace-alg-pages-read" class="cost uncertain">0</span>
 							</div>
 						</div>
-
+					
 						<!-- #Buffer Misses -->
 						<div class="row">
 							<div class="col text-right">
@@ -385,7 +388,7 @@
 								<span id="ace-alg-buffer-misses" class="cost uncertain">0</span>
 							</div>
 						</div>
-
+					
 						<!-- #Buffer Hits-->
 						<div class="row">
 							<div class="col text-right">
@@ -399,7 +402,7 @@
 								<span id="ace-alg-buffer-hits" class="cost uncertain">0</span>
 							</div>
 						</div>
-
+					
 						<div class="row">
 							<div class="col text-right">
 								<span id="base-alg-write-IO" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
@@ -411,7 +414,7 @@
 								<span id="ace-alg-write-IO" class="cost uncertain">0</span>
 							</div>
 						</div>
-
+					
 						<div class="row">
 							<div class="col text-right">
 								<span id="base-alg-latency" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
@@ -423,7 +426,6 @@
 								<span id="ace-alg-latency" class="cost uncertain">0</span>
 							</div>
 						</div>
-
 					</div>
 
 					<!-- After the Performance Metrics Panel -->
@@ -438,178 +440,207 @@
 						</div>
 					</div>
 					
+					<hr class="section-divider">
+
+					<div class="container">
+						<div class="row">
+							<div class="col-lg-6 border-right">
+								<h5 class="text-center"><strong>Vary Read/Write Ratio</strong></h5>
+							</div>
+							<div class="col-lg-6">
+								<h5 class="text-center"><strong>Vary Buffer Pool Size</strong></h5>
+							</div>
+						</div>
 					
-
-				</div>
-
-
-				<!-- Comparative Analysis Content -->
-					<div id="comparative-analysis" style="display: none;">
-						<!-- Comparative Analysis Input Panel -->
-
-					<!-- Headings for both experiments -->
-					<div class="row">
-						<div class="col-lg-6 border-right">
-							<h5 class="text-center"><strong>Vary Read/Write Ratio</strong></h5>
-						</div>
-						<div class="col-lg-6">
-							<h5 class="text-center"><strong>Vary Buffer Pool Size</strong></h5>
-						</div>
-					</div>
-
-
-					<!-- First Row: Workload & Concurrency -->
-					<div class="row">
-						<div class="col-lg-3">
-							<div class="input-group mb-2">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Workload</span>
+						<!-- First Row: Workload & Device -->
+						<div class="row">
+							<div class="col-lg-3">
+								<div class="input-group mb-2">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Workload</span>
+									</div>
+									<select class="form-control" id="cmp_workload_rw">
+										<option value="1" selected>Small buffer</option>
+										<option value="2">Large buffer</option>
+										<option value="5">Very Skewed</option>
+										<option value="6">Uniform</option>
+									</select>
 								</div>
-								<select class="form-control" id="cmp-workload-rw">
-									<option value=1 selected>Small buffer</option>
-									<option value=2>Large buffer</option>
-									<option value=5>Very Skewed</option>
-									<option value=6>Uniform</option>
-								</select>
 							</div>
-						</div>
-						<div class="col-lg-3">
-							<div class="input-group mb-2">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Concurrency</span>
+							<div class="col-lg-3 border-right">
+								<div class="input-group mb-2">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Device</span>
+									</div>
+									<select class="form-control" id="cmp_device_rw">
+										<option value="1">Device 1 (PCI)</option>
+										<option value="2">Device 2 (SATA)</option>
+										<option value="3">Device 3 (Optane)</option>
+										<option value="4">Device 4 (Virtual)</option>
+									</select>
 								</div>
-								<input type="number" class="form-control" id="cmp-alpha-rw" value=12 min=0>
 							</div>
-						</div>
-
-						<div class="col-lg-3">
-							<div class="input-group mb-2">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Workload</span>
+					
+							<div class="col-lg-3">
+								<div class="input-group mb-2">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Workload</span>
+									</div>
+									<select class="form-control" id="cmp_workload_bp">
+										<option value="3">Read-heavy</option>
+										<option value="4">Write-heavy</option>
+										<option value="5">Very Skewed</option>
+										<option value="6">Uniform</option>
+									</select>
 								</div>
-								<select class="form-control" id="cmp-workload-bp">
-									<option value=3>Read-heavy</option>
-									<option value=4>Write-heavy</option>
-									<option value=5>Very Skewed</option>
-									<option value=6>Uniform</option>
-								</select>
 							</div>
-						</div>
-						<div class="col-lg-3">
-							<div class="input-group mb-2">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Concurrency</span>
-								</div>
-								<input type="number" class="form-control" id="cmp-alpha-bp" value=12 min=0>
-							</div>
-						</div>
-					</div>
-
-					<!-- Second Row: Buffer Size (Read-Write) & Read % (Buffer Pool) | Disk Size -->
-					<div class="row">
-						<div class="col-lg-3">
-							<div class="input-group mb-2">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Buffer Size</span>
-								</div>
-								<input type="number" class="form-control" id="cmp-b-rw" value=100 min=0>
-							</div>
-						</div>
-						<div class="col-lg-3">
-							<div class="input-group mb-2">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Disk Size</span>
-								</div>
-								<input type="number" class="form-control" id="cmp-n-rw" value=5000 min=0>
-							</div>
-						</div>
-
-						<div class="col-lg-3">
-							<div class="input-group mb-2">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Read (%)</span>
-								</div>
-								<input type="number" class="form-control" id="cmp-e-bp" value=60 min=0 max=100>
-								<div class="input-group-append">
+							<div class="col-lg-3">
+								<div class="input-group mb-2">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Device</span>
+									</div>
+									<select class="form-control" id="cmp_device_bp">
+										<option value="1">Device 1 (PCI)</option>
+										<option value="2">Device 2 (SATA)</option>
+										<option value="3">Device 3 (Optane)</option>
+										<option value="4">Device 4 (Virtual)</option>
+									</select>
 								</div>
 							</div>
 						</div>
-						<div class="col-lg-3">
-							<div class="input-group mb-2">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Disk Size</span>
-								</div>
-								<input type="number" class="form-control" id="cmp-n-bp" value=5000 min=0>
-							</div>
-						</div>
-					</div>
-
-					<!-- Third Row: Operations & Skewness % on % -->
-					<div class="row">
-						<div class="col-lg-3">
-							<div class="input-group mb-2">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Operations</span>
-								</div>
-								<input type="number" class="form-control" id="cmp-x-rw" value=50000 min=0 max=100000>
-							</div>
-						</div>
-						<div class="col-lg-3">
-							<div class="input-group mb-2">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Skew (%)</span>
-								</div>
-								<input type="number" class="form-control" id="cmp-s-rw" value=80 min=0 max=100>
-								<div class="input-group-append">
-								</div>
-								<div class="input-group-append">
-									<span class="input-group-text">on</span>
-								</div>
-								<input type="number" class="form-control" id="cmp-d-rw" value=15 min=0 max=100>
-								<div class="input-group-append">
+					
+						<!-- Second Row: Buffer Size, Read %, and Disk Size -->
+						<div class="row">
+							<div class="col-lg-3">
+								<div class="input-group mb-2">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Buffer Size</span>
+									</div>
+									<input type="number" class="form-control" id="cmp_buffer_size_rw" value="100" min="0">
 								</div>
 							</div>
-						</div>
-
-						<div class="col-lg-3">
-							<div class="input-group mb-2">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Operations</span>
+							<div class="col-lg-3 border-right">
+								<div class="input-group mb-2">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Disk Size</span>
+									</div>
+									<input type="number" class="form-control" id="cmp_disk_size_rw" value="5000" min="0">
 								</div>
-								<input type="number" class="form-control" id="cmp-x-bp" value=50000 min=0 max=100000>
+							</div>
+					
+							<div class="col-lg-3">
+								<div class="input-group mb-2">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Read (%)</span>
+									</div>
+									<input type="number" class="form-control" id="cmp_read_percentage_bp" value="60" min="0" max="100">
+								</div>
+							</div>
+							<div class="col-lg-3">
+								<div class="input-group mb-2">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Disk Size</span>
+									</div>
+									<input type="number" class="form-control" id="cmp_disk_size_bp" value="5000" min="0">
+								</div>
 							</div>
 						</div>
-						<div class="col-lg-3">
-							<div class="input-group mb-2">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Skew (%)</span>
+					
+						<!-- Third Row: Operations & Skewness -->
+						<div class="row">
+							<div class="col-lg-3">
+								<div class="input-group mb-2">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Operations</span>
+									</div>
+									<input type="number" class="form-control" id="cmp_operations_rw" value="50000" min="0" max="100000">
 								</div>
-								<input type="number" class="form-control" id="cmp-s-bp" value=80 min=0 max=100>
-								<div class="input-group-append">
+							</div>
+							<div class="col-lg-3 border-right">
+								<div class="input-group mb-2">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Base Latency (μs)</span>
+									</div>
+									<input type="number" class="form-control" id="cmp_base_latency_rw" value="12.4" min="0" max="100000">
 								</div>
-								<div class="input-group-append">
-									<span class="input-group-text">on</span>
+							</div>
+					
+							<div class="col-lg-3">
+								<div class="input-group mb-2">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Operations</span>
+									</div>
+									<input type="number" class="form-control" id="cmp_operations_bp" value="50000" min="0" max="100000">
 								</div>
-								<input type="number" class="form-control" id="cmp-d-bp" value=15 min=0 max=100>
-								<div class="input-group-append">
+							</div>
+							<div class="col-lg-3">
+								<div class="input-group mb-2">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Base Latency (μs)</span>
+									</div>
+									<input type="number" class="form-control" id="cmp_base_latency_bp" value="12.4" min="0" max="100000">
+								</div>
+							</div>
+						</div>
+					
+						<!-- Fourth Row: Skewness & Alpha-Kappa -->
+						<div class="row">
+							<div class="col-lg-3">
+								<div class="input-group mb-2">
+									<div class="input-group-prepend">
+										<span class="input-group-text"> Skew (%) </span>
+									</div>
+									<input type="number" class="form-control" id="cmp_skew_d_rw" value="80" min="0" max="100">
+									<div class="input-group-append">
+										<span class="input-group-text"> on </span>
+									</div>
+									<input type="number" class="form-control" id="cmp_skew_t_rw" value="15" min="0" max="100">
+								</div>
+							</div>
+							<div class="col-lg-3 border-right">
+								<div class="input-group mb-2">
+									<div class="input-group-prepend">
+										<span class="input-group-text"> &alpha; </span>
+									</div>
+									<input type="number" class="form-control" id="cmp_alpha_rw" value="3.0" min="0" max="100">
+									<div class="input-group-append">
+										<span class="input-group-text"> &kappa; </span>
+									</div>
+									<input type="number" class="form-control" id="cmp_kappa_rw" value="6" min="0" max="100">
+								</div>
+							</div>
+					
+							<div class="col-lg-3">
+								<div class="input-group mb-2">
+									<div class="input-group-prepend">
+										<span class="input-group-text"> Skew (%) </span>
+									</div>
+									<input type="number" class="form-control" id="cmp_skew_d_bp" value="80" min="0" max="100">
+									<div class="input-group-append">
+										<span class="input-group-text"> on </span>
+									</div>
+									<input type="number" class="form-control" id="cmp_skew_t_bp" value="15" min="0" max="100">
+								</div>
+							</div>
+							<div class="col-lg-3">
+								<div class="input-group mb-2">
+									<div class="input-group-prepend">
+										<span class="input-group-text"> &alpha; </span>
+									</div>
+									<input type="number" class="form-control" id="cmp_alpha_bp" value="3.0" min="0" max="100">
+									<div class="input-group-append">
+										<span class="input-group-text"> &kappa; </span>
+									</div>
+									<input type="number" class="form-control" id="cmp_kappa_bp" value="6" min="0" max="100">
 								</div>
 							</div>
 						</div>
 					</div>
 					
-
-
-						<!-- Comparative Experiment Output -->
-						<div class="container">
+						
+	
 							<div class="row" id="show-plot-btn">
 								<div class="col-lg-12 text-center">
-									<!-- Button -->
-									<!-- Description Box -->
-									<!-- Description (Subtle Highlighting) -->
-									<div class="text-center mt-4" style="font-weight: bold; font-size: 1.1rem; color: #555;"> 
-										This experiment compares LRU, CFLRU and LRU-WSR with their ACE implementations
-									</div>
-
 									<div class="d-flex flex-row justify-content-center mt-4">
 										<a id="graph" class="btn btn-primary btn-lg run-button" target="_blank"
 										style="color: white !important; font-size: 1rem;">
@@ -652,7 +683,13 @@
 								padding: 0px;
 							}
 						</style>
+				</div>
 
+				<!-- Comparative Analysis Content -->
+					<div id="comparative-analysis" style="display: none;">
+						<!-- Comparative Analysis Input Panel -->
+
+					<!-- Headings for both experiments -->			
 
 			        </div>
 			
@@ -798,57 +835,6 @@
 			</div>
 		</div>
 	</footer>
-	<script>
-		document.addEventListener("DOMContentLoaded", function () {
-			const comparativeAnalysis = document.getElementById("comparative-analysis");
-			const individualAnalysis = document.getElementById("individual-analysis");
-			const radioComparative = document.getElementById("customRadio1");
-			const radioIndividual = document.getElementById("customRadio2");
-			const labelComparative = document.getElementById("label-comparative");
-			const labelIndividual = document.getElementById("label-individual");
-
-			function toggleView(selected) {
-				if (selected === "comparative") {
-					comparativeAnalysis.style.display = "block";
-					individualAnalysis.style.display = "none";
-
-					radioComparative.checked = true;
-					radioIndividual.checked = false;
-
-					labelComparative.classList.add("btn-primary");
-					labelComparative.classList.remove("btn-outline-primary");
-
-					labelIndividual.classList.add("btn-outline-primary");
-					labelIndividual.classList.remove("btn-primary");
-				} else {
-					comparativeAnalysis.style.display = "none";
-					individualAnalysis.style.display = "block";
-
-					radioComparative.checked = false;
-					radioIndividual.checked = true;
-
-					labelIndividual.classList.add("btn-primary");
-					labelIndividual.classList.remove("btn-outline-primary");
-
-					labelComparative.classList.add("btn-outline-primary");
-					labelComparative.classList.remove("btn-primary");
-				}
-			}
-
-			// Attach event listeners to labels (fixes click issue)
-			labelComparative.addEventListener("click", function () {
-				toggleView("comparative");
-			});
-
-			labelIndividual.addEventListener("click", function () {
-				toggleView("individual");
-			});
-
-			// Initialize correct visibility on page load
-			toggleView("individual");
-		});
-
-		</script>
 </body>
 
 </html>

@@ -719,10 +719,9 @@ progress::-moz-progress-bar {
 }
 
 /* Play button */
-#play-button {
-    background: linear-gradient(135deg, #2C3E50 0%, #566573 100%) !important; /* Dark blue to grey gradient */
-    border: none;
-    color: white;
+#play-button, #b-button, #f-button {
+    background: linear-gradient(135deg, #5D6D7E 0%, #AAB7B8 100%) !important; /* Light grey gradient */
+    color: black;
 }
 
 #play-button:hover {
@@ -807,65 +806,69 @@ progress::-moz-progress-bar {
 .progress-container {
     display: flex;
     align-items: center;
-    flex-grow: 1;
-    margin-left: 20px;
+    width: 100%;
+    margin-top: 10px;
 }
 
-/* "Progress" Label Box */
-.progress-box {
-    font-weight: bold;
-    background-color: #f1f3f5; /* Light grey background */
-    border: 1px solid #ced4da;
-    padding: 10px 15px;
-    text-align: center;
-}
-
-/* White Box for Progress Bar */
+/* Wrapper to Ensure Proper Display */
 .progress-wrapper {
     flex-grow: 1;
     background: white;
-    padding: 8px;
+    padding: 6px;
     border: 1px solid #ccc;
-    border-radius: 5px;
+    border-radius: 10px;
     margin: 0 10px;
 }
 
-/* Progress Bar Styling */
+/* Style for Progress Bar */
 #progress-bar {
     -webkit-appearance: none;
     width: 100%;
     height: 12px;
     background: #ddd;
-    border-radius: 5px;
+    border-radius: 6px;
     outline: none;
+    overflow: hidden;  /* Ensure it clips properly */
+    position: relative;
 }
 
-/* Progress Bar Thumb (Slider Knob) */
+/* ✅ Dark Grey Progress Fill */
+#progress-bar::-webkit-progress-bar {
+    background-color: #ddd;
+    border-radius: 6px;
+}
+
+/* ✅ Fix for Progress Dot (Slider Thumb) at the Start */
 #progress-bar::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
     width: 18px;
     height: 18px;
-    background: linear-gradient(135deg, #5D6D7E 0%, #AAB7B8 100%);
+    background: #5D6D7E; /* Darker Grey */
     border-radius: 50%;
     cursor: pointer;
+    position: relative;
+    margin-left: -10px;  /* Ensures it starts at the beginning */
 }
 
 #progress-bar::-moz-range-thumb {
     width: 18px;
     height: 18px;
-    background: linear-gradient(135deg, #5D6D7E 0%, #AAB7B8 100%);
+    background: #5D6D7E;
     border-radius: 50%;
     cursor: pointer;
+    position: relative;
+    margin-left: -10px; /* Ensures it starts at the beginning */
 }
 
-/* Progress Percentage Display */
+/* Progress Percentage Label */
 .progress-percent {
     font-weight: bold;
     padding: 10px 15px;
     background: #f8f9fa;
     border: 1px solid #ced4da;
 }
+
 
 #individual-analysis {
     border-bottom: 2px dotted #ccc; /* Add a light gray dotted line */
@@ -878,3 +881,10 @@ progress::-moz-progress-bar {
     margin: 10px 0;
 }
 
+.section-divider {
+    border: none;
+    border-top: 2px dotted #ccc; /* Dotted line separator */
+    margin: 30px 0; /* Space above and below */
+    width: 100%; /* Ensure it spans the full width */
+    opacity: 0.8; /* Slight transparency */
+}

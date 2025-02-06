@@ -15,21 +15,24 @@ $(document).ready(function(){
     const $d = $('#d'); // skewness data
 
     //[b,n,x,s,d,e,alpha]
-    const workload1 = [100, 5000, 50000, 80, 15, 60, 12];
-    const workload2 = [250, 5000, 50000, 80, 15, 60, 12];
-    const workload3 = [150, 5000, 50000, 80, 15, 90, 12];
-    const workload4 = [150, 5000, 50000, 80, 15, 20, 12];
-    const workload5 = [150, 10000, 50000, 95, 5, 60, 12];
-    const workload6 = [150, 500, 50000, 100, 100, 60, 12];
+    const workload1 = [100, 5000, 50000, 80, 15, 60, 12]; //small buffer
+    const workload2 = [250, 5000, 50000, 80, 15, 60, 12]; // large buffer
+    const workload3 = [150, 5000, 50000, 80, 15, 90, 12]; // read heavy
+    const workload4 = [150, 5000, 50000, 80, 15, 20, 12]; //write heavy
+    const workload5 = [150, 10000, 50000, 95, 5, 60, 12];  // skewed
+    const workload6 = [150, 500, 50000, 100, 100, 60, 12];  // uniform
     const test = [5, 50, 20, 80, 15, 40, 4];
+
+    const device1 = [12.4, 3.0, 6]; // PCI
+    const device2 = [100, 1.5, 9]; // SATA
+    const device3 = [6.8, 1.1, 5]; // Optane
+    const device4 = [180, 2.0, 19]; // Virtual
+
+    var devices = [device1, device2, device3, device4]
     var workloads = [workload1, workload2, workload3, workload4, workload5, workload6, test];
     var inputs = [$b, $n, $x, $s, $d, $e, $alpha];
     
-    //Workload Changes
-// Workload Changes
-// Workload Changes for Interactive & Comparative Experiments
-// Workload Changes for Interactive & Comparative Experiments
-$(document).on("change", "#workload, #cmp-workload-rw, #cmp-workload-bp", function() {
+$(document).on("change", "#workload, #cmp_workload_rw, #cmp_workload_bp", function() {
     var workloadIndex = parseInt($(this).val());
     var id = $(this).attr("id");
 
@@ -39,10 +42,12 @@ $(document).on("change", "#workload, #cmp-workload-rw, #cmp-workload-bp", functi
     
     if (id === "workload") {
         ids = ["b", "n", "x", "s", "d", "e", "alpha"];
-    } else if (id === "cmp-workload-rw") {
-        ids = ["cmp-b-rw", "cmp-n-rw", "cmp-x-rw", "cmp-s-rw", "cmp-d-rw", "cmp-e-rw", "cmp-alpha-rw"];
-    } else if (id === "cmp-workload-bp") {
-        ids = ["cmp-b-bp", "cmp-n-bp", "cmp-x-bp", "cmp-s-bp", "cmp-d-bp", "cmp-e-bp", "cmp-alpha-bp"];
+    } else if (id === "cmp_workload_rw") {
+        ids = ["cmp_buffer_size_rw", "cmp_disk_size_rw", "cmp_operations_rw", 
+            "cmp_skew_d_rw", "cmp_skew_t_rw", "cmp_read_percentage_rw", "cmp_kappa_rw"];
+    } else if (id === "cmp_workload_bp") {
+        ids = ["cmp_buffer_size_bp", "cmp_disk_size_bp", "cmp_operations_bp", 
+            "cmp_skew_d_bp", "cmp_skew_t_bp", "cmp_read_percentage_bp", "cmp_kappa_bp"];
     }
 
     if (workloadIndex > 0 && workloadIndex <= workloads.length) {
@@ -53,8 +58,8 @@ $(document).on("change", "#workload, #cmp-workload-rw, #cmp-workload-bp", functi
         ids.forEach((fieldId, index) => {
             var element = $("#" + fieldId);
             if (element.length) {
-                element.val(workload[index]); // ✅ Set workload values
-                element.prop("disabled", false); // ✅ Keep fields editable
+                element.val(workload[index]);
+                element.prop("disabled", false);
                 console.log(`Updated ${fieldId} → ${workload[index]}`);
             } else {
                 console.warn(`Field ${fieldId} not found!`);
@@ -70,38 +75,45 @@ $(document).on("change", "#workload, #cmp-workload-rw, #cmp-workload-bp", functi
     playing = false;
 });
 
+$(document).on("change", "#device, #cmp_device_rw, #cmp_device_bp", function() {
+    var deviceIndex = parseInt($(this).val()) - 1; // Convert 1-based index to 0-based
 
+    console.log("Device changed:", this.id, "Index:", deviceIndex + 1);
+
+    if (deviceIndex >= 0 && deviceIndex < devices.length) {
+        var selectedDevice = devices[deviceIndex];
+
+        console.log("Selected Device Values:", selectedDevice);
+
+        // Determine which section triggered the change
+        if (this.id === "device") {
+            // Individual Analysis Fields
+            $("#lat").val(selectedDevice[0]);
+            $("#asym").val(selectedDevice[1]);
+            $("#alpha").val(selectedDevice[2]);
+
+            console.log(`Updated [Individual] → Latency: ${selectedDevice[0]}, Asymmetry: ${selectedDevice[1]}, Concurrency: ${selectedDevice[2]}`);
+        } else if (this.id === "cmp_device_rw") {
+            // Comparative Analysis (Read/Write) Fields
+            $("#cmp_base_latency_rw").val(selectedDevice[0]);
+            $("#cmp_alpha_rw").val(selectedDevice[1]);
+            $("#cmp_kappa_rw").val(selectedDevice[2]);
+
+            console.log(`Updated [Read/Write] → Latency: ${selectedDevice[0]}, Alpha: ${selectedDevice[1]}, Kappa: ${selectedDevice[2]}`);
+        } else if (this.id === "cmp_device_bp") {
+            // Comparative Analysis (Buffer Pool) Fields
+            $("#cmp_base_latency_bp").val(selectedDevice[0]);
+            $("#cmp_alpha_bp").val(selectedDevice[1]);
+            $("#cmp_kappa_bp").val(selectedDevice[2]);
+
+            console.log(`Updated [Buffer Pool] → Latency: ${selectedDevice[0]}, Alpha: ${selectedDevice[1]}, Kappa: ${selectedDevice[2]}`);
+        }
+    } else {
+        console.warn("Invalid device index selected.");
+    }
+});
 $(document).ready(function(){
     var playing = false;
-    var currentExperiment = "individual"; // "individual" or "comparative"
-    
-    // Handles changes for the individual experiment
-    $('#workload').change(function() {
-        if (currentExperiment === "individual") {
-            updateWorkload("individual");
-        }
-    });
-
-    // Handles changes for the comparative experiment
-    $('#cmp-workload-rw, #cmp-workload-bp').change(function() {
-        if (currentExperiment === "comparative") {
-            updateWorkload("comparative");
-        }
-    });
-
-    // Button click to toggle between individual and comparative experiments
-    $('#toggle-experiment-button').click(function() {
-        currentExperiment = (currentExperiment === "individual") ? "comparative" : "individual";
-        toggleExperimentView(currentExperiment);
-    });
-
-    // Start the simulation (for either experiment)
-    $("#play-button").click(function(){
-        if(playing) return;
-        playing = true;
-        startSimulation(currentExperiment);
-    });
-
     // Finish the simulation (for either experiment)
     $("#finish-button").click(function(){
         playing = false;
@@ -132,51 +144,7 @@ $(document).ready(function(){
         console.log(workloadData);
         // Now you can pass this to the simulation
     }
-
-    // Function to switch between individual and comparative experiment views
-    function toggleExperimentView(experimentType) {
-        if (experimentType === "individual") {
-            $('#individual-analysis').show();
-            $('#comparative-analysis').hide();
-        } else {
-            $('#individual-analysis').hide();
-            $('#comparative-analysis').show();
-        }
-    }
-
-    // Function to start the simulation (this would vary based on the experiment type)
-    function startSimulation(experimentType) {
-        if (experimentType === "individual") {
-            // Start individual experiment simulation
-            runIndividualExperiment();
-        } else {
-            // Start comparative experiment simulation
-            runComparativeExperiment();
-        }
-    }
-
-    // Function to run the individual experiment simulation
-    function runIndividualExperiment() {
-        // Add logic to run the individual experiment
-        console.log("Running individual experiment...");
-        // Update progress, etc.
-    }
-
-    // Function to run the comparative experiment simulation
-    function runComparativeExperiment() {
-        // Add logic to run the comparative experiment
-        console.log("Running comparative experiment...");
-        // Update progress, etc.
-    }
-
-    // Finish the experiment
-    function finishSimulation() {
-        console.log("Finishing the simulation...");
-        // Reset all progress and stop simulation
-    }
 });
-
-
     
     // Change table titles when algorithm changes
     $(document).on("change", "#baseAlg, #cmp-baseAlg", function(){
@@ -202,19 +170,19 @@ $(document).ready(function(){
     });
 
     // Play button handler
-$("#play-button").click(function(){
-    if(capacity()){
-        if (!playing) { // ✅ Prevent unnecessary resets
-            var isComparative = $("#comparative-analysis").is(":visible");
-            var b_val = parseInt($(isComparative ? "#cmp-b" : "#b").val());
-            var alpha_val = parseInt($(isComparative ? "#cmp-alpha" : "#alpha").val());
-            var baseAlg = parseInt($(isComparative ? "#cmp-baseAlg" : "#baseAlg").val());
+    $("#play-button").click(function(){
+        if(capacity()){
+            if (!playing) { // ✅ Prevent unnecessary resets
+                var isComparative = $("#comparative-analysis").is(":visible");
+                var b_val = parseInt($(isComparative ? "#cmp-b" : "#b").val());
+                var alpha_val = parseInt($(isComparative ? "#cmp-alpha" : "#alpha").val());
+                var baseAlg = parseInt($(isComparative ? "#cmp-baseAlg" : "#baseAlg").val());
 
-            playing = true; // ✅ Set BEFORE calling calculate()
-            calculate(generateWorkload(), b_val, alpha_val, baseAlg);
+                playing = true; // ✅ Set BEFORE calling calculate()
+                calculate(generateWorkload(), b_val, alpha_val, baseAlg);
+            }
         }
-    }
-});
+    });
 
 
     $("#finish-button").click(function(){
@@ -248,37 +216,16 @@ function update(p){
 }
 
 function generateWorkload(){
-    var isComparative = $("#comparative-analysis").is(":visible");
-    var isRW = $("#cmp-workload-rw").is(":visible");
-    var isBP = $("#cmp-workload-bp").is(":visible");
 
     var b_val, n_val, x_val, e_val, s_val, d_val;
 
-    if (isComparative) {
-        if (isRW) {
-            b_val = parseInt($("#cmp-b-rw").val());
-            n_val = parseInt($("#cmp-n-rw").val());
-            x_val = parseInt($("#cmp-x-rw").val());
-            e_val = parseInt($("#cmp-e-rw").val());
-            s_val = parseInt($("#cmp-s-rw").val());
-            d_val = parseInt($("#cmp-d-rw").val());
-        } else if (isBP) {
-            b_val = parseInt($("#cmp-b-bp").val());
-            n_val = parseInt($("#cmp-n-bp").val());
-            x_val = parseInt($("#cmp-x-bp").val());
-            e_val = parseInt($("#cmp-e-bp").val());
-            s_val = parseInt($("#cmp-s-bp").val());
-            d_val = parseInt($("#cmp-d-bp").val());
-        }
-    } else {
-        // Individual experiment
-        b_val = parseInt($("#b").val());
-        n_val = parseInt($("#n").val());
-        x_val = parseInt($("#x").val());
-        e_val = parseInt($("#e").val());
-        s_val = parseInt($("#s").val());
-        d_val = parseInt($("#d").val());
-    }
+    // Individual experiment
+    b_val = parseInt($("#b").val());
+    n_val = parseInt($("#n").val());
+    x_val = parseInt($("#x").val());
+    e_val = parseInt($("#e").val());
+    s_val = parseInt($("#s").val());
+    d_val = parseInt($("#d").val());
 
     // Generate workload
     var pageId;
@@ -302,18 +249,19 @@ function generateWorkload(){
     return workload;
 }
 
+function BPWorkload(){
 
+    var b_val, n_val, x_val, e_val, s_val, d_val;
 
-//Generate workload with read/write ratio as parameter
-function RWWorkload(e_val) {
-    var isComparative = $("#comparative-analysis").is(":visible");
+    // Individual experiment
+    b_val = parseInt($("#cmp_buffer_size_bp").val());  // Buffer size
+    n_val = parseInt($("#cmp_disk_size_bp").val());    // Disk size
+    x_val = parseInt($("#cmp_operations_bp").val());   // # Operations
+    e_val = parseInt($("#cmp_read_percentage_bp").val()); // Read percentage
+    s_val = parseInt($("#cmp_skew_d_bp").val());  // Skewness (% of hot data)
+    d_val = parseInt($("#cmp_skew_t_bp").val());  // Target Skewness on % of data
 
-    var b_val = parseInt($(isComparative ? "#cmp-b-rw" : "#b").val());
-    var n_val = parseInt($(isComparative ? "#cmp-n-rw" : "#n").val());
-    var x_val = parseInt($(isComparative ? "#cmp-x-rw" : "#x").val());
-    var s_val = parseInt($(isComparative ? "#cmp-s-rw" : "#s").val());
-    var d_val = parseInt($(isComparative ? "#cmp-d-rw" : "#d").val());
-
+    // Generate workload
     var pageId;
     var endPageId = n_val * (d_val / 100);
     var workload = [];
@@ -322,25 +270,54 @@ function RWWorkload(e_val) {
         const typeDecider = Math.random() * 100;
         const skewed = Math.random() * 100;
 
-        pageId = (skewed < s_val) ? 
-            Math.ceil(Math.random() * endPageId) : 
-            Math.ceil(Math.random() * (n_val - endPageId) + endPageId);
+        if (skewed < s_val)
+            pageId = Math.ceil(Math.random() * endPageId);
+        else
+            pageId = Math.ceil(Math.random() * (n_val - endPageId) + endPageId);
 
-        workload.push(typeDecider < e_val ? ['R', pageId] : ['W', pageId]);
+        if (typeDecider < e_val)
+            workload.push(['R', pageId]);
+        else
+            workload.push(['W', pageId]);
     }
     return workload;
 }
 
+//Generate workload with read/write ratio as parameter
+function RWWorkload(e_val) {
+    var n_val = parseInt($("#cmp_disk_size_rw").val()); // Disk size
+    var x_val = parseInt($("#cmp_operations_rw").val()); // # Operations
+    var s_val = parseInt($("#cmp_skew_d_rw").val()); // Skewness (% of hot data)
+    var d_val = parseInt($("#cmp_skew_t_rw").val()); // Target Skewness on % of data
 
+    var pageId;
+    var endPageId = n_val * (d_val / 100); // Defines "hot" data region
+    var workload = [];
+
+    for (let i = 0; i < x_val; i++) {
+        const typeDecider = Math.random() * 100; // Read/Write decision
+        const skewed = Math.random() * 100; // Skewed access decision
+
+        // Select a page ID based on skewness
+        pageId = (skewed < s_val) ? 
+            Math.ceil(Math.random() * endPageId) : 
+            Math.ceil(Math.random() * (n_val - endPageId) + endPageId);
+
+        // Determine whether it's a read ('R') or write ('W')
+        workload.push(typeDecider < e_val ? ['R', pageId] : ['W', pageId]);
+    }
+
+    return workload;
+}
 
 //generate graph for varying Read/Write ratio
 function RWgraph(){
+    var b = parseInt($("#cmp_buffer_size_rw").val());
+    var a = parseInt($("#cmp_kappa_rw").val()); 
 
-    var isComparative = $("#comparative-analysis").is(":visible");
-    var b = parseInt($(isComparative ? "#cmp-b-rw" : "#b").val());
-    var a = parseInt($(isComparative ? "#cmp-alpha-rw" : "#alpha").val());
-    var read_latency = 12.4;
-    var write_latency = 12.4 * 2.8;
+    var read_latency = parseInt($("#cmp_base_latency_rw").val());
+    var asymmetry = parseInt($("#cmp_alpha_rw").val());
+    var write_latency = read_latency * asymmetry;
     
     var LRUx1 = [];
     var LRUy1 = [];
@@ -501,13 +478,11 @@ function RWgraph(){
 
 //generate graph for varying Buffer size
 function Bgraph(){
-    
-    var isComparative = $("#comparative-analysis").is(":visible");
-    var diskSize = parseInt($(isComparative ? "#cmp-n-bp" : "#n").val());
-    var a = parseInt($(isComparative ? "#cmp-alpha-bp" : "#alpha").val());
-    var read_latency = 12.4;
-    var write_latency = 12.4 * 2.8;    
-    
+    var diskSize = parseInt($("#cmp_disk_size_bp").val());
+    var a = parseInt($("#cmp_kappa_bp").val()); 
+    var read_latency = parseInt($("#cmp_base_latency_bp").val());
+    var asymmetry = parseInt($("#cmp_alpha_bp").val());
+    var write_latency = read_latency * asymmetry;
 
     var LRUx1 = [];
     var LRUy1 = [];
@@ -538,19 +513,19 @@ function Bgraph(){
     (function myLoop(i) {
         setTimeout(function() {
             progress++;
-            LRUstats = IOcalc(generateWorkload(),diskSize*(i/100), a, 0);
+            LRUstats = IOcalc(BPWorkload(),diskSize*(i/100), a, 0);
             LRUx1.push(i);
             LRUy1.push((LRUstats[0] * write_latency + LRUstats[1] * read_latency)/1000);
             LRUx2.push(i);
             LRUy2.push((LRUstats[2] * write_latency + LRUstats[3] * read_latency)/1000);
 
-            CFLRUstats = IOcalc(generateWorkload(),diskSize*(i/100), a, 1);
+            CFLRUstats = IOcalc(BPWorkload(),diskSize*(i/100), a, 1);
             CFLRUx1.push(i);
             CFLRUy1.push((CFLRUstats[0] * write_latency + CFLRUstats[1] * read_latency)/1000);
             CFLRUx2.push(i);
             CFLRUy2.push((CFLRUstats[2] * write_latency + CFLRUstats[3] * read_latency)/1000);
 
-            LRUWSRstats = IOcalc(generateWorkload(),diskSize*(i/100), a, 2);
+            LRUWSRstats = IOcalc(BPWorkload(),diskSize*(i/100), a, 2);
             LRUWSRx1.push(i);
             LRUWSRy1.push((LRUWSRstats[0] * write_latency + LRUWSRstats[1] * read_latency)/1000);
             LRUWSRx2.push(i);
