@@ -33,6 +33,10 @@ var ACEpagesReadHistory = [];
 var ACEpagesEvictedHistory = [];
 var ACEpagesPrefetchedHistory = [];
 
+
+var tradLatency = 0;
+var aceLatencyval = 0;
+
 function initializeEmptyPlots() {
     console.log("📊 Initializing empty plots...");
 
@@ -712,19 +716,15 @@ function calculate(wload, bLen, alpha, baseAlg){
                 aceWriteBatches.push(ACEwriteIO); // For ACE write IO
                 traditionalWriteBatches.push(writeIO); // For Traditional write IO
 
-                var tradLatency = calculateLatency(writeIO, readIO, false)/1000;  
-                var aceLruLatency = calculateLatency(ACEwriteIO, ACEreadIO, true)/1000;
+                tradLatency = calculateLatency(writeIO, readIO, false)/1000;  
+                aceLatencyval = calculateLatency(ACEwriteIO, ACEreadIO, true)/1000;
 
                 // Store the latency data for both algorithms
-                aceLatency.push(aceLruLatency);
+                aceLatency.push(aceLatencyval);
                 traditionalLatency.push(tradLatency);
                 // Update the plot with new data
                 updateWriteBatchesPlot(aceWriteBatches, traditionalWriteBatches);
                 updateLatencyPlot(aceLatency, traditionalLatency); // Update the latency plot
-
-                // Update the latency display on the page
-                $("#base-alg-latency").text(tradLatency.toFixed(2));  // Display Traditional Latency with 2 decimal places
-                $("#ace-alg-latency").text(aceLruLatency.toFixed(2));  // Display ACE Latency with 2 decimal places
                 
                 console.log(`✅ Step after increment: ${p}`);  // ✅ Log after
                 console.log(`✅ Progress updated to: ${Math.round((p / totalSteps) * 100)}%`);
@@ -795,7 +795,7 @@ function resetStats(){
 }
 
 function calculatePercentageDifference(baseValue, aceValue) {
-    if (baseValue === 0) return "0.00%"; // Avoid division by zero
+    if (baseValue === 0.000) return "0.00%"; // Avoid division by zero
     const diff = ((aceValue - baseValue) / baseValue) * 100;
     // Only prepend '+' if the difference is strictly greater than 0
     if (diff > 0) {
@@ -833,6 +833,8 @@ function baseDisplay() {
     $("#base-alg-read-IO").text(readIO);
     $("#base-alg-write-IO").text(writeIO);
     $("#base-alg-pages-evicted").text(pagesEvicted);
+    $("#base-alg-latency").text(tradLatency.toFixed(2));  
+                    
 }
 
 function ACEDisplay() {
@@ -860,6 +862,7 @@ function ACEDisplay() {
     $("#ace-alg-read-IO").text(ACEreadIO);
     $("#ace-alg-write-IO").text(ACEwriteIO);
     $("#ace-alg-pages-evicted").text(ACEpagesEvicted);
+    $("#ace-alg-latency").text(aceLatencyval.toFixed(2));  // Display ACE Latency with 2 decimal places
 
     // Calculate and display percentage differences
     const bufferMissDiff = calculatePercentageDifference(bufferMiss, ACEbufferMiss);
@@ -869,6 +872,7 @@ function ACEDisplay() {
     const readIODiff = calculatePercentageDifference(readIO, ACEreadIO);
     const writeIODiff = calculatePercentageDifference(writeIO, ACEwriteIO);
     const pagesEvictedDiff = calculatePercentageDifference(pagesEvicted, ACEpagesEvicted);
+    const latencydiff = calculatePercentageDifference(tradLatency, aceLatencyval);
 
     $("#ace-alg-buffer-misses").html(`${ACEbufferMiss}  (${bufferMissDiff})`);
     $("#ace-alg-buffer-hits").html(`${ACEbufferHit}  (${bufferHitDiff})`);
@@ -877,6 +881,7 @@ function ACEDisplay() {
     $("#ace-alg-read-IO").html(`${ACEreadIO}  (${readIODiff})`);
     $("#ace-alg-write-IO").html(`${ACEwriteIO}  (${writeIODiff})`);
     $("#ace-alg-pages-evicted").html(`${ACEpagesEvicted}  (${pagesEvictedDiff})`);
+    $("#ace-alg-latency").html(`${aceLatencyval.toFixed(2)}  (${latencydiff})`);
 }
 
 
