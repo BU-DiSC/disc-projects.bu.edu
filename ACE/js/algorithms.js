@@ -916,44 +916,24 @@ function calculatePercentageDifference(baseValue, aceValue) {
     }
 }
 
-
 function baseDisplay() {
+    // Update end of buffer pool
     console.log("Updating baseDisplay...");  // Debugging log
     let i = 0;
-
     $("#base-alg-table tr").each(function () {
         $('td', this).each(function () {
-            let page = buffer[i];
-
-            if (page == null) {
-                $(this).css({
-                    "background-color": "#F2F3F4",  // Super Light Grey
-                    "border": "none"
-                });
-            } else if (dirty.includes(page)) {
-                // ✅ If this dirty page is **about to be written back**, add a black border
-                if (writeIO > 0 && page === buffer[0]) {  // ✅ Highlight only the **single** evicted dirty page
-                    $(this).css({
-                        "background-color": "#892417", // Dark Red (Dirty)
-                        "border": "2px solid black"
-                    });
-                } else {
-                    $(this).css({
-                        "background-color": "#892417", // Dark Red (Dirty)
-                        "border": "none"
-                    });
-                }
+            if (dirty.includes(buffer[i])) {
+                $(this).css("background-color", "#892417");  // Dark Red (Navbar)
+            } else if (buffer[i] == null) {
+                $(this).css("background-color", "#F2F3F4");  // Super Light Grey
             } else {
-                $(this).css({
-                    "background-color": "#5D6D7E", // Blue-Grey for Clean Pages
-                    "border": "none" // ✅ Remove border
-                });
+                $(this).css("background-color", "#5D6D7E");  // Blue-Grey for Clean Pages
             }
             i++;
         });
     });
 
-    // ✅ Update performance metrics
+    // Update metrics
     $("#base-alg-buffer-misses").text(bufferMiss);
     $("#base-alg-buffer-hits").text(bufferHit);
     $("#base-alg-pages-read").text(pagesRead);
@@ -962,6 +942,7 @@ function baseDisplay() {
     $("#base-alg-write-IO").text(writeIO);
     $("#base-alg-pages-evicted").text(pagesEvicted);
     $("#base-alg-latency").text(tradLatency.toFixed(2));  
+                    
 }
 
 function ACEDisplay() {
