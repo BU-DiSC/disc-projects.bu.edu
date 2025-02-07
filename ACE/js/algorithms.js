@@ -37,6 +37,8 @@ var ACEpagesPrefetchedHistory = [];
 var tradLatency = 0;
 var aceLatencyval = 0;
 
+var aceWriteBatches = [];
+var traditionalWriteBatches = [];
 function initializeEmptyPlots() {
     console.log("📊 Initializing empty plots...");
 
@@ -61,7 +63,7 @@ function initializeEmptyPlots() {
     ];
 
     var writeBatchesLayout = {
-        title: 'Write Batches Over Time',
+        title: '',
         xaxis: { title: 'Operation Steps' },
         yaxis: { title: '# Write Batches' },
         showlegend: true
@@ -88,7 +90,7 @@ function initializeEmptyPlots() {
     ];
 
     var latencyLayout = {
-        title: 'Latency Over Time',
+        title: '',
         xaxis: { title: 'Operation Steps' },
         yaxis: { title: 'Latency (ms)' },
         showlegend: true
@@ -231,77 +233,84 @@ $(document).ready(function(){
         reloader = 1;     // Stop auto-execution
     
         if (p > 0) {  
-            console.log(`⏮️ Backward: Step ${p - 1}`);
+            p--;  // ✅ Decrement BEFORE restoring state
+            console.log(`⏮️ Backward: Step ${p}`);
     
-            // Restore state by removing the last step
-            resetStepState();
+            // ✅ Restore state from `p`
+            resetStepState(p);
     
-            // Update UI (table, stats, progress bar)
+            // ✅ Update UI (table, stats, progress bar)
             baseDisplay();
             ACEDisplay();
             updateProgress(p, workload.length);
     
-            // Update the plots (WITHOUT resetting them)
-            updateWriteBatchesPlot(aceWriteBatches, traditionalWriteBatches);
-            updateLatencyPlot(aceLatency, traditionalLatency);
+            // ✅ Update the plots (WITHOUT resetting them)
+            updateWriteBatchesPlot(aceWriteBatches.slice(0, p + 1), traditionalWriteBatches.slice(0, p + 1));
+            updateLatencyPlot(aceLatency.slice(0, p + 1), traditionalLatency.slice(0, p + 1));
         } else {
             console.warn("⚠️ Already at the first step.");
         }
     });
     
-    function resetStepState() {
-        console.log(`🔄 Rolling back one step to ${p}...`);
     
-        if (p <= 0) return; // Prevent going below step 0
     
-        if (!bufferHistory[p] || !dirtyHistory[p]) {
-            console.warn(`⚠️ Missing history for step ${p}, skipping rollback.`);
+    function resetStepState(stepIndex) {
+        console.log(`🔄 Rolling back to step ${stepIndex}...`);
+    
+        if (stepIndex < 0) {
+            console.warn("⚠️ Cannot go below step 0.");
+            return;
+        }
+    
+        if (!bufferHistory[stepIndex] || !dirtyHistory[stepIndex]) {
+            console.warn(`⚠️ Missing history for step ${stepIndex}, skipping rollback.`);
             return;
         }
     
         try {
-            // ✅ Restore buffer states correctly
-            buffer = JSON.parse(JSON.stringify(bufferHistory[p]));
-            dirty = JSON.parse(JSON.stringify(dirtyHistory[p]));
-            coldflag = JSON.parse(JSON.stringify(coldflagHistory[p]));
-            uses = JSON.parse(JSON.stringify(usesHistory[p]));
+            // ✅ Restore buffer states from `stepIndex`
+            buffer = JSON.parse(JSON.stringify(bufferHistory[stepIndex]));
+            dirty = JSON.parse(JSON.stringify(dirtyHistory[stepIndex]));
+            coldflag = JSON.parse(JSON.stringify(coldflagHistory[stepIndex]));
+            uses = JSON.parse(JSON.stringify(usesHistory[stepIndex]));
     
-            ACEbuffer = JSON.parse(JSON.stringify(ACEbufferHistory[p]));
-            ACEdirty = JSON.parse(JSON.stringify(ACEdirtyHistory[p]));
-            ACEcoldflag = JSON.parse(JSON.stringify(ACEcoldflagHistory[p]));
-            ACEuses = JSON.parse(JSON.stringify(ACEusesHistory[p]));
+            ACEbuffer = JSON.parse(JSON.stringify(ACEbufferHistory[stepIndex]));
+            ACEdirty = JSON.parse(JSON.stringify(ACEdirtyHistory[stepIndex]));
+            ACEcoldflag = JSON.parse(JSON.stringify(ACEcoldflagHistory[stepIndex]));
+            ACEuses = JSON.parse(JSON.stringify(ACEusesHistory[stepIndex]));
     
-            // ✅ Restore step metrics
-            bufferHit = bufferHitHistory[p] || 0;
-            bufferMiss = bufferMissHistory[p] || 0;
-            readIO = readIOHistory[p] || 0;
-            writeIO = writeIOHistory[p] || 0;
-            pagesWritten = pagesWrittenHistory[p] || 0;
-            pagesRead = pagesReadHistory[p] || 0;
-            pagesEvicted = pagesEvictedHistory[p] || 0;
-            pagesPrefetched = pagesPrefetchedHistory[p] || 0;
+            // ✅ Restore step metrics from `stepIndex`
+            bufferHit = bufferHitHistory[stepIndex] || 0;
+            bufferMiss = bufferMissHistory[stepIndex] || 0;
+            readIO = readIOHistory[stepIndex] || 0;
+            writeIO = writeIOHistory[stepIndex] || 0;
+            pagesWritten = pagesWrittenHistory[stepIndex] || 0;
+            pagesRead = pagesReadHistory[stepIndex] || 0;
+            pagesEvicted = pagesEvictedHistory[stepIndex] || 0;
+            pagesPrefetched = pagesPrefetchedHistory[stepIndex] || 0;
     
-            ACEbufferHit = ACEbufferHitHistory[p] || 0;
-            ACEbufferMiss = ACEbufferMissHistory[p] || 0;
-            ACEreadIO = ACEreadIOHistory[p] || 0;
-            ACEwriteIO = ACEwriteIOHistory[p] || 0;
-            ACEpagesWritten = ACEpagesWrittenHistory[p] || 0;
-            ACEpagesRead = ACEpagesReadHistory[p] || 0;
-            ACEpagesEvicted = ACEpagesEvictedHistory[p] || 0;
-            ACEpagesPrefetched = ACEpagesPrefetchedHistory[p] || 0;
+            ACEbufferHit = ACEbufferHitHistory[stepIndex] || 0;
+            ACEbufferMiss = ACEbufferMissHistory[stepIndex] || 0;
+            ACEreadIO = ACEreadIOHistory[stepIndex] || 0;
+            ACEwriteIO = ACEwriteIOHistory[stepIndex] || 0;
+            ACEpagesWritten = ACEpagesWrittenHistory[stepIndex] || 0;
+            ACEpagesRead = ACEpagesReadHistory[stepIndex] || 0;
+            ACEpagesEvicted = ACEpagesEvictedHistory[stepIndex] || 0;
+            ACEpagesPrefetched = ACEpagesPrefetchedHistory[stepIndex] || 0;
     
-            // ✅ Ensure UI reflects restored state
-            baseDisplay();
-            ACEDisplay();
-            updateProgress(p, workload.length);
-            updateWriteBatchesPlot(aceWriteBatches, traditionalWriteBatches);
-            updateLatencyPlot(aceLatency, traditionalLatency);
+            // ✅ Restore Latency Values
+            tradLatency = traditionalLatency[stepIndex] || 0;
+            aceLatencyval = aceLatency[stepIndex] || 0;
     
-            console.log("✅ Step state rolled back successfully.");
+            // ✅ Update Plots with Restored Latency
+            updateLatencyPlot(aceLatency.slice(0, stepIndex + 1), traditionalLatency.slice(0, stepIndex + 1));
+    
+            console.log(`✅ Successfully restored state at step ${stepIndex}.`);
         } catch (error) {
             console.error("❌ Error restoring step state:", error);
         }
     }
+    
     
     
 
@@ -316,9 +325,6 @@ $(document).ready(function(){
         reloader = 1;     // Stop auto-execution
     
         if (p < workload.length - 1) {  
-            p++;  // Move one step forward
-            console.log(`▶️ Forward: Step ${p}`);
-    
             // ✅ Store history before updating state
             bufferHistory[p] = JSON.parse(JSON.stringify(buffer));
             dirtyHistory[p] = JSON.parse(JSON.stringify(dirty));
@@ -330,6 +336,32 @@ $(document).ready(function(){
             ACEcoldflagHistory[p] = JSON.parse(JSON.stringify(ACEcoldflag));
             ACEusesHistory[p] = JSON.parse(JSON.stringify(ACEuses));
     
+            bufferHitHistory[p] = bufferHit;
+            bufferMissHistory[p] = bufferMiss;
+            readIOHistory[p] = readIO;
+            writeIOHistory[p] = writeIO;
+            pagesWrittenHistory[p] = pagesWritten;
+            pagesReadHistory[p] = pagesRead;
+            pagesEvictedHistory[p] = pagesEvicted;
+            pagesPrefetchedHistory[p] = pagesPrefetched;
+    
+            ACEbufferHitHistory[p] = ACEbufferHit;
+            ACEbufferMissHistory[p] = ACEbufferMiss;
+            ACEreadIOHistory[p] = ACEreadIO;
+            ACEwriteIOHistory[p] = ACEwriteIO;
+            ACEpagesWrittenHistory[p] = ACEpagesWritten;
+            ACEpagesReadHistory[p] = ACEpagesRead;
+            ACEpagesEvictedHistory[p] = ACEpagesEvicted;
+            ACEpagesPrefetchedHistory[p] = ACEpagesPrefetched;
+    
+            // ✅ Store Latency Values
+            traditionalLatency[p] = tradLatency;
+            aceLatency[p] = aceLatencyval;
+    
+            // ✅ Move forward
+            p++;
+            console.log(`▶️ Forward: Step ${p}`);
+    
             // Execute one step of both algorithms
             baseAlgorithm(p);
             ACEAlgorithm(p);
@@ -339,6 +371,10 @@ $(document).ready(function(){
             ACEDisplay();
             updateProgress(p, workload.length);
     
+            // ✅ Restore Latency Values Properly
+            tradLatency = traditionalLatency[p] || 0;
+            aceLatencyval = aceLatency[p] || 0;
+    
             // Update the plots
             updateWriteBatchesPlot(aceWriteBatches, traditionalWriteBatches);
             updateLatencyPlot(aceLatency, traditionalLatency);
@@ -347,8 +383,6 @@ $(document).ready(function(){
         }
     });
     
-
-
     
 
     $("#fast-button").click(function(){
@@ -370,22 +404,16 @@ $(document).ready(function(){
     $("#play-button").click(function() {
         if (playing) {
             pauser = !pauser; // Toggle pause/play
-        }
-        if (!playing) {
-            playing = true;
-            // Reset any previous data if needed
-            aceWriteBatches = [];
-            traditionalWriteBatches = [];
-    
-            // Ensure the plot is created (in case it's the first time the simulation is running)
-            const plotDiv = document.getElementById('write-batches-graph');
-            if (plotDiv) {
-                // Initialize plot with empty data (if this is the first time or after a reset)
-                Plotly.newPlot(plotDiv, [], {title: 'Write Batches'}, {});
+            if (pauser) {
+                console.log("⏸️ Simulation paused.");
+            } else {
+                console.log("▶️ Simulation resumed.");
+                myLoop(workload.length - p); // Resume from current step
             }
-            
-            // Start the simulation
-            myLoop(workload.length - p);
+        } else {
+            playing = true;
+            pauser = false; // Ensure it's not paused when starting
+            myLoop(workload.length - p); // Start from current step
         }
     });
     $("#progress-bar").on("input", function () {
@@ -690,8 +718,7 @@ function calculate(wload, bLen, alpha, baseAlg){
         ACEtable.append(row);
     }
     $('#table2').append(ACEtable);
-    var aceWriteBatches = [];
-    var traditionalWriteBatches = [];
+
     const baseReadLatency = parseFloat($('#lat').val());  // Fetch base latency from #lat field
     const asymmetry = parseFloat($('#asym').val());  // Fetch asymmetry from #asym field
     function calculateLatency(writeBatches, diskPagesRead, isACE) {
