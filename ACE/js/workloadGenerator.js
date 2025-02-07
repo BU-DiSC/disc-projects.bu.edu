@@ -15,12 +15,12 @@ $(document).ready(function(){
     const $d = $('#d'); // skewness data
 
     //[b,n,x,s,d,e,alpha]
-    const workload1 = [100, 5000, 50000, 80, 15, 60, 12]; //small buffer
-    const workload2 = [250, 5000, 50000, 80, 15, 60, 12]; // large buffer
-    const workload3 = [150, 5000, 50000, 80, 15, 90, 12]; // read heavy
-    const workload4 = [150, 5000, 50000, 80, 15, 20, 12]; //write heavy
-    const workload5 = [150, 10000, 50000, 95, 5, 60, 12];  // skewed
-    const workload6 = [150, 500, 50000, 100, 100, 60, 12];  // uniform
+    const workload1 = [100, 5000, 50000, 80, 15, 60, 6]; //small buffer
+    const workload2 = [250, 5000, 50000, 80, 15, 60, 6]; // large buffer
+    const workload3 = [150, 5000, 50000, 80, 15, 90, 6]; // read heavy
+    const workload4 = [150, 5000, 50000, 80, 15, 20, 6]; //write heavy
+    const workload5 = [150, 10000, 50000, 95, 5, 60, 6];  // skewed
+    const workload6 = [150, 500, 50000, 100, 100, 60, 6];  // uniform
     const test = [5, 50, 20, 80, 15, 40, 4];
 
     const device1 = [12.4, 3.0, 6]; // PCI
