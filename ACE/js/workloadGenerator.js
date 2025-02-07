@@ -75,49 +75,13 @@ $(document).on("change", "#workload, #cmp_workload_rw, #cmp_workload_bp", functi
     playing = false;
 });
 
-$(document).on("change", "#device, #cmp_device_rw, #cmp_device_bp", function() {
-    var deviceIndex = parseInt($(this).val()) - 1; // Convert 1-based index to 0-based
 
-    console.log("Device changed:", this.id, "Index:", deviceIndex + 1);
-
-    if (deviceIndex >= 0 && deviceIndex < devices.length) {
-        var selectedDevice = devices[deviceIndex];
-
-        console.log("Selected Device Values:", selectedDevice);
-
-        // Determine which section triggered the change
-        if (this.id === "device") {
-            // Individual Analysis Fields
-            $("#lat").val(selectedDevice[0]);
-            $("#asym").val(selectedDevice[1]);
-            $("#alpha").val(selectedDevice[2]);
-
-            console.log(`Updated [Individual] → Latency: ${selectedDevice[0]}, Asymmetry: ${selectedDevice[1]}, Concurrency: ${selectedDevice[2]}`);
-        } else if (this.id === "cmp_device_rw") {
-            // Comparative Analysis (Read/Write) Fields
-            $("#cmp_base_latency_rw").val(selectedDevice[0]);
-            $("#cmp_alpha_rw").val(selectedDevice[1]);
-            $("#cmp_kappa_rw").val(selectedDevice[2]);
-
-            console.log(`Updated [Read/Write] → Latency: ${selectedDevice[0]}, Alpha: ${selectedDevice[1]}, Kappa: ${selectedDevice[2]}`);
-        } else if (this.id === "cmp_device_bp") {
-            // Comparative Analysis (Buffer Pool) Fields
-            $("#cmp_base_latency_bp").val(selectedDevice[0]);
-            $("#cmp_alpha_bp").val(selectedDevice[1]);
-            $("#cmp_kappa_bp").val(selectedDevice[2]);
-
-            console.log(`Updated [Buffer Pool] → Latency: ${selectedDevice[0]}, Alpha: ${selectedDevice[1]}, Kappa: ${selectedDevice[2]}`);
-        }
-    } else {
-        console.warn("Invalid device index selected.");
-    }
-});
 $(document).ready(function(){
     var playing = false;
     // Finish the simulation (for either experiment)
     $("#finish-button").click(function(){
         playing = false;
-        finishSimulation();
+        finisher();
     });
 
     // Update Workload based on selected configuration (either individual or comparative)

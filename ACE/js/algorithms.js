@@ -313,19 +313,17 @@ $(document).ready(function(){
     
     
     
-
     $("#forward-button").click(function() {
         if (!workload || workload.length === 0) {
             console.warn("⚠️ No workload loaded. Cannot step forward.");
             return;
         }
     
-        playing = false;  // Pause simulation
-        pauser = true;    // Ensure it's paused
-        reloader = 1;     // Stop auto-execution
+        playing = false;  // ✅ Pause simulation (but allow resuming)
+        pauser = true;    // ✅ Ensure it's paused
+        reloader = 0;     // ✅ Allow resuming instead of stopping execution
     
         if (p < workload.length - 1) {  
-            // ✅ Store history before updating state
             bufferHistory[p] = JSON.parse(JSON.stringify(buffer));
             dirtyHistory[p] = JSON.parse(JSON.stringify(dirty));
             coldflagHistory[p] = JSON.parse(JSON.stringify(coldflag));
@@ -354,7 +352,6 @@ $(document).ready(function(){
             ACEpagesEvictedHistory[p] = ACEpagesEvicted;
             ACEpagesPrefetchedHistory[p] = ACEpagesPrefetched;
     
-            // ✅ Store Latency Values
             traditionalLatency[p] = tradLatency;
             aceLatency[p] = aceLatencyval;
     
@@ -362,26 +359,39 @@ $(document).ready(function(){
             p++;
             console.log(`▶️ Forward: Step ${p}`);
     
-            // Execute one step of both algorithms
+            // Execute next step
             baseAlgorithm(p);
             ACEAlgorithm(p);
     
-            // Update the display and progress bar
+            // ✅ Update metrics
+            tradLatency = calculateLatency(writeIO, readIO, false) / 1000;
+            aceLatencyval = calculateLatency(ACEwriteIO, ACEreadIO, true) / 1000;
+    
+            traditionalLatency[p] = tradLatency;
+            aceLatency[p] = aceLatencyval;
+    
+            // ✅ Update performance metric display
+            $("#base-alg-latency").text(tradLatency.toFixed(2));
+            $("#ace-alg-latency").text(aceLatencyval.toFixed(2));
+    
+            // ✅ Ensure write batches arrays update
+            aceWriteBatches.push(ACEwriteIO);
+            traditionalWriteBatches.push(writeIO);
+    
+            // ✅ Update Display, Progress Bar, and Plots
             baseDisplay();
             ACEDisplay();
             updateProgress(p, workload.length);
-    
-            // ✅ Restore Latency Values Properly
-            tradLatency = traditionalLatency[p] || 0;
-            aceLatencyval = aceLatency[p] || 0;
-    
-            // Update the plots
             updateWriteBatchesPlot(aceWriteBatches, traditionalWriteBatches);
             updateLatencyPlot(aceLatency, traditionalLatency);
+    
         } else {
             console.warn("⚠️ Already at the last step.");
         }
     });
+    
+
+    
     
     
 
@@ -400,7 +410,75 @@ $(document).ready(function(){
     $("#finish-button").click(function(){
         finisher();
     });
-
+    const baseReadLatency = parseFloat($('#lat').val());  // Fetch base latency from #lat field
+    const asymmetry = parseFloat($('#asym').val());  // Fetch asymmetry from #asym field
+    function calculateLatency(writeBatches, diskPagesRead, isACE) {
+        let writeLatency = baseReadLatency * (isACE ? asymmetry : 1);  // LRU and ACE share the same formula
+        let totalLatency = (writeBatches * writeLatency) + (diskPagesRead * baseReadLatency);
+        
+        return totalLatency;
+    }   
+    function myLoop(remainingSteps) {
+        if (reloader == 1) { 
+            console.warn("🛑 myLoop has been stopped.");
+            return;
+        }
+    
+        if (remainingSteps <= 0) {
+            console.log("✅ myLoop completed all steps.");
+            playing = false;
+            return;
+        }
+    
+        setTimeout(function() {
+            if (reloader == 1) return; // Stop execution if `finisher()` was called
+    
+            if (!pauser) {
+                baseAlgorithm(p);
+                ACEAlgorithm(p);
+                baseDisplay();
+                ACEDisplay();
+    
+                if (p < workload.length - 1) {  
+                    p++;
+                    updateProgress(p, workload.length);
+                }
+    
+                aceWriteBatches.push(ACEwriteIO);
+                traditionalWriteBatches.push(writeIO);
+    
+                tradLatency = calculateLatency(writeIO, readIO, false) / 1000;
+                aceLatencyval = calculateLatency(ACEwriteIO, ACEreadIO, true) / 1000;
+    
+                aceLatency.push(aceLatencyval);
+                traditionalLatency.push(tradLatency);
+    
+                updateWriteBatchesPlot(aceWriteBatches, traditionalWriteBatches);
+                updateLatencyPlot(aceLatency, traditionalLatency);
+    
+                console.log(`✅ Step after increment: ${p}`);
+                console.log(`✅ Progress updated to: ${Math.round((p / workload.length) * 100)}%`);
+            }
+    
+            if (firstWrite && ACEpagesWritten > 0) {
+                $("#ACEAlert").css('visibility', 'visible');
+                $("#ACERow").css({
+                    "border-color": "blue",
+                    "border-width": "4px",
+                    "border-style": "solid"
+                });
+                firstWrite = false;
+            }
+    
+            if (playing) { // ✅ Only continue if playing is true
+                myLoop(remainingSteps - 1);
+            } else {
+                console.log("⏸️ Simulation paused or manually stepped forward.");
+            }
+        }, delay);
+    }
+    
+    
     $("#play-button").click(function() {
         if (playing) {
             pauser = !pauser; // Toggle pause/play
@@ -408,14 +486,18 @@ $(document).ready(function(){
                 console.log("⏸️ Simulation paused.");
             } else {
                 console.log("▶️ Simulation resumed.");
-                myLoop(workload.length - p); // Resume from current step
+                reloader = 0; // ✅ Allow myLoop to execute
+                myLoop(workload.length - p); // ✅ Resume from current step
             }
         } else {
-            playing = true;
-            pauser = false; // Ensure it's not paused when starting
-            myLoop(workload.length - p); // Start from current step
+            playing = true; // ✅ Ensure playing is set to true when resuming
+            pauser = false; // ✅ Ensure it's not paused when starting
+            reloader = 0;   // ✅ Reset reloader so simulation continues
+            console.log("▶️ Starting simulation...");
+            myLoop(workload.length - p); // ✅ Start from current step
         }
     });
+    
     $("#progress-bar").on("input", function () {
         if (!workload || workload.length === 0) {
             console.warn("⚠️ No workload loaded. Cannot update progress.");
@@ -719,53 +801,48 @@ function calculate(wload, bLen, alpha, baseAlg){
     }
     $('#table2').append(ACEtable);
 
-    const baseReadLatency = parseFloat($('#lat').val());  // Fetch base latency from #lat field
-    const asymmetry = parseFloat($('#asym').val());  // Fetch asymmetry from #asym field
-    function calculateLatency(writeBatches, diskPagesRead, isACE) {
-        let writeLatency = baseReadLatency * (isACE ? asymmetry : 1);  // LRU and ACE share the same formula
-        let totalLatency = (writeBatches * writeLatency) + (diskPagesRead * baseReadLatency);
+    // (function myLoop(i) {
         
-        return totalLatency;
-    }   
-    (function myLoop(i) {
-        setTimeout(function() {
-            if(reloader == 1){
-                return;
-            }
-            if(!pauser){
-                baseAlgorithm(p);
-                ACEAlgorithm(p);
-                baseDisplay();
-                ACEDisplay();    
-                p++;
-                updateProgress(p, totalSteps);
+    //     setTimeout(function() {
+    //         if(reloader == 1){
+    //             return;
+    //         }
+    //         if(!pauser){
+    //             baseAlgorithm(p);
+    //             ACEAlgorithm(p);
+    //             baseDisplay();
+    //             ACEDisplay();    
+    //             if (p < workload.length - 1) {  // ✅ Only increment if there's more work
+    //                 p++;
+    //                 updateProgress(p, workload.length);
+    //             }
 
-                aceWriteBatches.push(ACEwriteIO); // For ACE write IO
-                traditionalWriteBatches.push(writeIO); // For Traditional write IO
+    //             aceWriteBatches.push(ACEwriteIO); // For ACE write IO
+    //             traditionalWriteBatches.push(writeIO); // For Traditional write IO
 
-                tradLatency = calculateLatency(writeIO, readIO, false)/1000;  
-                aceLatencyval = calculateLatency(ACEwriteIO, ACEreadIO, true)/1000;
+    //             tradLatency = calculateLatency(writeIO, readIO, false)/1000;  
+    //             aceLatencyval = calculateLatency(ACEwriteIO, ACEreadIO, true)/1000;
 
-                // Store the latency data for both algorithms
-                aceLatency.push(aceLatencyval);
-                traditionalLatency.push(tradLatency);
-                // Update the plot with new data
-                updateWriteBatchesPlot(aceWriteBatches, traditionalWriteBatches);
-                updateLatencyPlot(aceLatency, traditionalLatency); // Update the latency plot
+    //             // Store the latency data for both algorithms
+    //             aceLatency.push(aceLatencyval);
+    //             traditionalLatency.push(tradLatency);
+    //             // Update the plot with new data
+    //             updateWriteBatchesPlot(aceWriteBatches, traditionalWriteBatches);
+    //             updateLatencyPlot(aceLatency, traditionalLatency); // Update the latency plot
                 
-                console.log(`✅ Step after increment: ${p}`);  // ✅ Log after
-                console.log(`✅ Progress updated to: ${Math.round((p / totalSteps) * 100)}%`);
-            }
-            if(firstWrite && ACEpagesWritten > 0){
-                $("#ACEAlert").css('visibility', 'visible');
-                $("#ACERow").css({"border-color": "blue", 
-                "border-width":"4px", 
-                "border-style":"solid"});
-                firstWrite = false;
-            }
-          if (--i) myLoop(i); 
-        }, delay)
-    })(workload.length);             
+    //             console.log(`✅ Step after increment: ${p}`);  // ✅ Log after
+    //             console.log(`✅ Progress updated to: ${Math.round((p / totalSteps) * 100)}%`);
+    //         }
+    //         if(firstWrite && ACEpagesWritten > 0){
+    //             $("#ACEAlert").css('visibility', 'visible');
+    //             $("#ACERow").css({"border-color": "blue", 
+    //             "border-width":"4px", 
+    //             "border-style":"solid"});
+    //             firstWrite = false;
+    //         }
+    //       if (--i) myLoop(i); 
+    //     }, delay)
+    // })(workload.length);             
     
 }
 
@@ -781,13 +858,17 @@ function finisher() {
     pauser = false;
     reloader = 0;  // ✅ Ensure reloader is reset
 
-    // ✅ Complete all remaining steps
+    // ✅ Complete all remaining steps (with boundary check)
     for (let pagesLeft = p; pagesLeft < workload.length; pagesLeft++) {
+        if (pagesLeft >= workload.length) {
+            console.warn(`⚠️ Attempting to process out-of-bounds workload index: ${pagesLeft}`);
+            break;
+        }
         baseAlgorithm(pagesLeft);
         ACEAlgorithm(pagesLeft);
     }
 
-    // ✅ Move progress to 100%
+    // ✅ Set `p` to last valid index
     p = workload.length - 1;
 
     // ✅ Update display to reflect full execution
@@ -798,6 +879,7 @@ function finisher() {
     // ✅ Ensure Play Button is Re-enabled
     $("#play-button").prop('disabled', false);
 }
+
 
 
 
