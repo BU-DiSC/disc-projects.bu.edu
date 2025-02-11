@@ -366,7 +366,7 @@
 								<span id="ace-alg-pages-written" class="cost uncertain">0</span>
 							</div>
 						</div>
-						
+
 						<!-- #Disk Pages Read-->
 						<div class="row">
 							<div class="col text-right">
@@ -380,7 +380,7 @@
 								<span id="ace-alg-pages-read" class="cost uncertain">0</span>
 							</div>
 						</div>
-					
+
 						<!-- #Buffer Misses -->
 						<div class="row">
 							<div class="col text-right">
@@ -394,7 +394,7 @@
 								<span id="ace-alg-buffer-misses" class="cost uncertain">0</span>
 							</div>
 						</div>
-					
+
 						<!-- #Buffer Hits-->
 						<div class="row">
 							<div class="col text-right">
@@ -408,19 +408,21 @@
 								<span id="ace-alg-buffer-hits" class="cost uncertain">0</span>
 							</div>
 						</div>
-					
+
+						<!-- #Write Batches -->
 						<div class="row">
 							<div class="col text-right">
 								<span id="base-alg-write-IO" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
 							</div>
 							<div class="col-2 text-center">
-								<span class="metric-title">#Write batches</span>
+								<span class="metric-title">#Write Batches</span>
 							</div>
 							<div class="col text-left">
 								<span id="ace-alg-write-IO" class="cost uncertain">0</span>
 							</div>
 						</div>
-					
+
+						<!-- Latency -->
 						<div class="row">
 							<div class="col text-right">
 								<span id="base-alg-latency" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
@@ -433,6 +435,7 @@
 							</div>
 						</div>
 					</div>
+
 
 					<!-- After the Performance Metrics Panel -->
 					<div class="container">
@@ -660,16 +663,57 @@
 									<!-- Add a Spacer -->
 									<div style="height: 30px;"></div>
 
-									<!-- Plots -->
-									<div class="flex-parent-element" style="margin-top: 0px !important; padding-top: 0px !important;">
-										<div class="flex-child-element" id="RWplot"></div>
-										<div class="flex-child-element" id="Bplot"></div>
+									<!-- Plots Section -->
+									<div class="container">
+										<div class="row justify-content-center">
+											<!-- First Row (Top 2 Plots) -->
+											<div class="col-md-6">
+												<div id="RWplot"></div>
+												<p id="RWplot-caption" class="plot-caption"></p>
+											</div>
+											<div class="col-md-6">
+												<div id="LRUplot"></div>
+												<p id="LRUplot-caption" class="plot-caption"></p>
+											</div>
+										</div>
+
+										<!-- Second Row (Centered Bottom Plot) -->
+										<div class="row justify-content-center">
+											<div class="col-md-8">
+												<div id="Bplot"></div>
+												<p id="Bplot-caption" class="plot-caption"></p>
+											</div>
+										</div>
 									</div>
+
+									
 								</div>
 							</div>
 						</div>
 
 						<style>
+							/* Ensures all plots have the same width & height */
+							#RWplot, #LRUplot, #Bplot {
+								width: 100%;
+								height: 400px;
+							}
+
+							/* Center the bottom plot */
+							.row.justify-content-center {
+								display: flex;
+								justify-content: center;
+								align-items: center;
+							}
+
+							/* Adjust column width to maintain consistency */
+							.col-md-6 {
+								max-width: 50%; /* Ensures the top two plots are evenly spaced */
+							}
+
+							.col-md-8 {
+								max-width: 50%; /* Centers and resizes the bottom plot */
+							}
+
 							.flex-parent-element {
 								display: flex;
 								flex-wrap: wrap;
@@ -680,7 +724,7 @@
 							}
 
 							.flex-child-element {
-								flex: 1 1 48%;
+								flex: 1 1 20%;
 								min-width: 500px; /* Wider */
 								height: 400px; /* Ensures proper height */
 								background-color: transparent; /* Removes box background */

@@ -171,6 +171,7 @@ $(document).ready(function(){
     
         RWgraph();  // Now the RW plot updates only when the user clicks the button
         Bgraph();   // Buffer pool graph updates only when the user clicks the button
+        ACELRUgraph(); 
     });
     
     
@@ -431,6 +432,9 @@ function RWgraph(){
                 RWData = [LRUtrace, ACELRUtrace, CFLRUtrace, ACECFLRUtrace, LRUWSRtrace, ACELRUWSRtrace];
                 Plotly.newPlot('RWplot', RWData, RWlayout);
                 
+                document.getElementById("RWplot-caption").innerText = 
+                "ACE improves runtime of write-heavy workloads.";
+
                 if(progress==23){
                     $("#loadingbar").empty();
                 }
@@ -595,7 +599,8 @@ function Bgraph(){
                 };
                 console.log("graph");
                 Plotly.newPlot('Bplot', BData, Blayout);
-                
+                document.getElementById("Bplot-caption").innerText = 
+                "ACE is beneficial across a wide range of bufferpool size ";
                 $("#loadingbar").empty();
                 
             }
@@ -605,6 +610,81 @@ function Bgraph(){
     })(1);
 }
 
+
+function ACELRUgraph(){
+    var b = parseInt($("#cmp_buffer_size_rw").val());
+    var a = parseInt($("#cmp_kappa_rw").val()); 
+    
+    var LRUx = [];
+    var LRUy = [[], [], [], []]; // Four SSD configurations
+    
+    var SSDConfigs = [
+        [12.4, 3.0, 6],  // PCI
+        [100, 1.5, 9],   // SATA
+        [6.8, 1.1, 5],   // Optane
+        [180, 2.0, 19]   // Virtual
+    ];
+
+    (function myLoop(i) {
+        setTimeout(function() {
+            progress++;
+            LRUx.push(i);
+
+            for (let j = 0; j < SSDConfigs.length; j++) {
+                let workloadStats = IOcalc(RWWorkload(i), b, a, 1); // Running ACE-LRU instead of LRU
+                let base_latency = 12.4; // TODO: needs to be fixed
+                let asymmetry = SSDConfigs[j][1];
+                let write_latency = base_latency * asymmetry;
+                let latency = (workloadStats[2] * write_latency + workloadStats[3] * base_latency) / 1000;
+                LRUy[j].push(latency);
+            }
+
+            update(progress);
+
+            if (i < 100){
+                i+=10;
+                myLoop(i);
+            } else {
+                let traces = SSDConfigs.map((config, index) => {
+                    return {
+                        x: LRUx,
+                        y: LRUy[index],
+                        mode: "scatter",
+                        name: `${['PCI (α = 3.0)', 'SATA (α = 1.5)', 'Optane (α = 1.1)', 'Virtual (α = 2.0)'][index]}`,
+                        marker: { size: 12, symbol: 'circle-open' }
+                    };
+                });
+
+                let layout = {
+                    xaxis: {
+                        autorange: true,
+                        showgrid: false,
+                        zeroline: false,
+                        showline: true,
+                        title: "Read Ratio (%)"
+                    },
+                    yaxis: {
+                        autorange: true,
+                        showgrid: false,
+                        zeroline: false,
+                        showline: true, 
+                        title: "Latency (ms)"
+                    },
+                    title: "ACE-LRU Latency"
+                };
+
+                Plotly.newPlot('LRUplot', traces, layout);
+
+                document.getElementById("LRUplot-caption").innerText = 
+                "Devices with higher asymmetry (α) have higher gain for ACE";
+
+                if(progress==23){
+                    $("#loadingbar").empty();
+                }
+            }
+        }, 100);
+    })(0);
+}
 //check if input values are too high
 function capacity() {
     var isComparative = $("#comparative-analysis").is(":visible");

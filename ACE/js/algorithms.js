@@ -982,16 +982,35 @@ function ACEDisplay() {
     const pagesEvictedDiff = calculatePercentageDifference(pagesEvicted, ACEpagesEvicted);
     const latencydiff = calculatePercentageDifference(tradLatency, aceLatencyval);
 
-    $("#ace-alg-buffer-misses").html(`${ACEbufferMiss}  (${bufferMissDiff})`);
-    $("#ace-alg-buffer-hits").html(`${ACEbufferHit}  (${bufferHitDiff})`);
-    $("#ace-alg-pages-read").html(`${ACEpagesRead}  (${pagesReadDiff})`);
-    $("#ace-alg-pages-written").html(`${ACEpagesWritten}  (${pagesWrittenDiff})`);
-    $("#ace-alg-read-IO").html(`${ACEreadIO}  (${readIODiff})`);
-    $("#ace-alg-write-IO").html(`${ACEwriteIO}  (${writeIODiff})`);
-    $("#ace-alg-pages-evicted").html(`${ACEpagesEvicted}  (${pagesEvictedDiff})`);
-    $("#ace-alg-latency").html(`${aceLatencyval.toFixed(2)}  (${latencydiff})`);
+    // ✅ Display the values with color-coded percentage differences
+    $("#ace-alg-buffer-misses").html(`${ACEbufferMiss} &nbsp; ${formatDifference(bufferMissDiff, true)}`);
+    $("#ace-alg-buffer-hits").html(`${ACEbufferHit} &nbsp; ${formatDifference(bufferHitDiff, false)}`);
+    $("#ace-alg-pages-read").html(`${ACEpagesRead} &nbsp; ${formatDifference(pagesReadDiff, true)}`);
+    $("#ace-alg-pages-written").html(`${ACEpagesWritten} &nbsp; ${formatDifference(pagesWrittenDiff, true)}`);
+    $("#ace-alg-read-IO").html(`${ACEreadIO} &nbsp; ${formatDifference(readIODiff, true)}`);
+    $("#ace-alg-write-IO").html(`${ACEwriteIO} &nbsp; ${formatDifference(writeIODiff, true)}`);
+    $("#ace-alg-pages-evicted").html(`${ACEpagesEvicted} &nbsp; ${formatDifference(pagesEvictedDiff, true)}`);
+    $("#ace-alg-latency").html(`${aceLatencyval.toFixed(2)} &nbsp; ${formatDifference(latencydiff, true)}`);
 }
 
+function formatDifference(diffStr, isLowerBetter) {
+    if (diffStr === "0.00%") {
+        return `<span style="color: black;">(--)</span>`;  // Show "--" for no difference
+    }
+
+    let diffValue = parseFloat(diffStr);
+    let color;
+
+    if (isLowerBetter) {
+        // Lower value is better → Green if negative, Red if positive
+        color = diffValue < 0 ? "green" : "red";
+    } else {
+        // Higher value is better → Green if positive, Red if negative
+        color = diffValue > 0 ? "green" : "red";
+    }
+
+    return `<span style="color: ${color};">(${diffStr})</span>`;
+}
 
 function baseLRU(p){
     var type = workload[p][0];
