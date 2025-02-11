@@ -169,9 +169,11 @@ $(document).ready(function(){
         g.setAttribute("max", "23");
         document.getElementById("loadingbar").appendChild(g);
     
-        RWgraph();  // Now the RW plot updates only when the user clicks the button
-        Bgraph();   // Buffer pool graph updates only when the user clicks the button
-        ACELRUgraph(); 
+        setTimeout(() => {
+            RWgraph();  // Now the RW plot updates only when the user clicks the button
+            Bgraph();   // Buffer pool graph updates only when the user clicks the button
+            ACELRUgraph(); 
+        }); // **2-second delay before executing the graphs**
     });
     
     
@@ -417,7 +419,7 @@ function RWgraph(){
                         showgrid: false,
                         zeroline: false,
                         showline: true,
-                        title: "%read/write ratio"
+                        title: "Read Ratio (%)"
                     },
                     yaxis: {
                         autorange: true,
@@ -426,14 +428,14 @@ function RWgraph(){
                         showline: true, 
                         title: "Workload latency (ms)"
                     },
-                    title: "Read/Write %"
+                    title: ""
                 };
                 
                 RWData = [LRUtrace, ACELRUtrace, CFLRUtrace, ACECFLRUtrace, LRUWSRtrace, ACELRUWSRtrace];
                 Plotly.newPlot('RWplot', RWData, RWlayout);
-                
-                document.getElementById("RWplot-caption").innerText = 
-                "Write-heavy workloads benefit more from ACE";
+
+                document.getElementById("RWplot-caption").innerHTML =
+                `<b>Write-heavy workloads benefit more from ACE</b>`;
 
                 if(progress==23){
                     $("#loadingbar").empty();
@@ -595,13 +597,13 @@ function Bgraph(){
                         showline: true, 
                         title: "Workload latency (ms)"
                     },
-                    title: "Buffer Size"
+                    title: ""
                 };
                 console.log("graph");
                 Plotly.newPlot('Bplot', BData, Blayout);
-                document.getElementById("Bplot-caption").innerText = 
-                "ACE is beneficial across a wide range of bufferpool size ";
-                $("#loadingbar").empty();
+
+                document.getElementById("Bplot-caption").innerHTML =
+                `<b>ACE is beneficial across a wide range of bufferpool size</b>`;
                 
             }
           }
@@ -616,27 +618,42 @@ function ACELRUgraph(){
     var a = parseInt($("#cmp_kappa_rw").val()); 
     
     var LRUx = [];
-    var LRUy = [[], [], [], []]; // Four SSD configurations
-    
+    var Speedup = [[], [], [], []]; // Speedup = LRU Latency / ACE-LRU Latency
+
     var SSDConfigs = [
-        [12.4, 3.0, 6],  // PCI
-        [100, 1.5, 9],   // SATA
-        [6.8, 1.1, 5],   // Optane
-        [180, 2.0, 19]   // Virtual
+        [12.4, 3.0, 6],  // PCI (α = 3.0)
+        [100, 1.5, 9],   // SATA (α = 1.5)
+        [6.8, 1.1, 5],   // Optane (α = 1.1)
+        [180, 2.0, 19]   // Virtual (α = 2.0)
+    ];
+
+    let deviceLabels = [
+        "PCI (α = 3.0)", 
+        "SATA (α = 1.5)", 
+        "Optane (α = 1.1)", 
+        "Virtual (α = 2.0)"
     ];
 
     (function myLoop(i) {
         setTimeout(function() {
             progress++;
-            LRUx.push(i);
 
-            for (let j = 0; j < SSDConfigs.length; j++) {
-                let workloadStats = IOcalc(RWWorkload(i), b, a, 1); // Running ACE-LRU instead of LRU
-                let base_latency = 12.4; // TODO: needs to be fixed
-                let asymmetry = SSDConfigs[j][1];
-                let write_latency = base_latency * asymmetry;
-                let latency = (workloadStats[2] * write_latency + workloadStats[3] * base_latency) / 1000;
-                LRUy[j].push(latency);
+            if (i >= 10) {  // **Start at 10 to match RW graph positioning**
+                LRUx.push(i);
+
+                for (let j = 0; j < SSDConfigs.length; j++) {
+                    let workloadStatsLRU = IOcalc(RWWorkload(i), b, a, 0); // LRU
+                    let workloadStatsACE = IOcalc(RWWorkload(i), b, a, 1); // ACE-LRU
+                    
+                    let base_latency = SSDConfigs[j][0]; // Use respective device latency
+                    let asymmetry = SSDConfigs[j][1];
+                    let write_latency = base_latency * asymmetry;
+
+                    let LRU_Latency = (workloadStatsLRU[0] * write_latency + workloadStatsLRU[1] * base_latency) / 1000;
+                    let ACE_Latency = (workloadStatsACE[2] * write_latency + workloadStatsACE[3] * base_latency) / 1000;
+                    
+                    Speedup[j].push(LRU_Latency / ACE_Latency);
+                }
             }
 
             update(progress);
@@ -645,46 +662,51 @@ function ACELRUgraph(){
                 i+=10;
                 myLoop(i);
             } else {
-                let traces = SSDConfigs.map((config, index) => {
-                    return {
-                        x: LRUx,
-                        y: LRUy[index],
-                        mode: "scatter",
-                        name: `${['PCI (α = 3.0)', 'SATA (α = 1.5)', 'Optane (α = 1.1)', 'Virtual (α = 2.0)'][index]}`,
-                        marker: { size: 12, symbol: 'circle-open' }
-                    };
-                });
+                let speedupTraces = [];
+
+                for (let j = 0; j < SSDConfigs.length; j++) {
+                    speedupTraces.push({
+                        x: [0].concat(LRUx), // **Ensure 0 appears at x = 1 position**
+                        y: [null].concat(Speedup[j]), // **Ensure lines don't start from Y-axis**
+                        mode: "lines+markers",
+                        name: deviceLabels[j], // **Proper legend with Greek α values**
+                        marker: { size: 10, symbol: 'triangle-up' }, // **Uniform 'triangle-up' marker**
+                        line: { dash: "solid" } // **Keep solid lines for readability**
+                    });
+                }
 
                 let layout = {
-                    xaxis: {
-                        autorange: true,
-                        showgrid: false,
-                        zeroline: false,
-                        showline: true,
-                        title: "Read Ratio (%)"
+                    xaxis: { 
+                        title: "% Read/Write Ratio",
+                        range: [0, 100], // **Ensure x-axis starts at 0**
+                        showline: true,  // **Ensure X-axis line is always visible**
+                        showgrid: false, // **Remove background grid**
+                        zeroline: false  // **Remove zero line at X=0**
                     },
-                    yaxis: {
-                        autorange: true,
-                        showgrid: false,
-                        zeroline: false,
-                        showline: true, 
-                        title: "Latency (ms)"
+                    yaxis: { 
+                        title: "Speedup",
+                        showline: true,  // **Ensure Y-axis line is always visible**
+                        showgrid: false, // **Remove background grid**
+                        zeroline: false  // **Remove zero line at Y=0**
                     },
-                    title: "ACE-LRU Latency"
+                    showlegend: true  // **Keep legend visible**
                 };
 
-                Plotly.newPlot('LRUplot', traces, layout);
+                Plotly.newPlot('LRUplot', speedupTraces, layout);
 
-                document.getElementById("LRUplot-caption").innerText = 
-                "Devices with higher asymmetry (α) have higher gain for ACE";
+                document.getElementById("LRUplot-caption").innerHTML =
+                `<b>Devices with higher asymmetry (α) gain more from ACE</b>`;
 
-                if(progress==23){
+                if(progress == 23){
                     $("#loadingbar").empty();
                 }
             }
         }, 100);
-    })(0);
+    })(10); // Start at i = 10, ensuring the first point is not at X=0
 }
+
+
+
 //check if input values are too high
 function capacity() {
     var isComparative = $("#comparative-analysis").is(":visible");
