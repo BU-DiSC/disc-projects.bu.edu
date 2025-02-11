@@ -433,7 +433,7 @@ function RWgraph(){
                 Plotly.newPlot('RWplot', RWData, RWlayout);
                 
                 document.getElementById("RWplot-caption").innerText = 
-                "ACE improves runtime of write-heavy workloads.";
+                "Write-heavy workloads benefit more from ACE";
 
                 if(progress==23){
                     $("#loadingbar").empty();
