@@ -277,7 +277,6 @@ function RWWorkload(e_val) {
     return workload;
 }
 
-//generate graph for varying Read/Write ratio
 function RWgraph(){
     var b = parseInt($("#cmp_buffer_size_rw").val());
     var a = parseInt($("#cmp_kappa_rw").val()); 
@@ -285,166 +284,111 @@ function RWgraph(){
     var read_latency = parseInt($("#cmp_base_latency_rw").val());
     var asymmetry = parseInt($("#cmp_alpha_rw").val());
     var write_latency = read_latency * asymmetry;
-    
-    var LRUx1 = [];
-    var LRUy1 = [];
-    var LRUx2 = [];
-    var LRUy2 = [];
-    var CFLRUx1 = [];
-    var CFLRUy1 = [];
-    var CFLRUx2 = [];
-    var CFLRUy2 = [];
-    var LRUWSRx1 = [];
-    var LRUWSRy1 = [];
-    var LRUWSRx2 = [];
-    var LRUWSRy2 = [];
+
+    var xVals = [];
+    var LRU_speedup = [];
+    var CFLRU_speedup = [];
+    var LRUWSR_speedup = [];
+    var avg_speedup = [];
 
     var LRUstats = [];
     var CFLRUstats = [];
     var LRUWSRstats = [];
 
     var LRUtrace = {};
-    var ACELRUtrace = {};
     var CFLRUtrace = {};
-    var ACECFLRUtrace = {};
     var LRUWSRtrace = {};
-    var ACELRUWSRtrace = {};
-    var RWlayout = {};
+    var AVGtrace = {};
     var RWData = [];
+    var RWlayout = {};
 
     (function myLoop(i) {
         setTimeout(function() {
             progress++;
-            LRUstats = IOcalc(RWWorkload(i),b, a, 0);
-            LRUx1.push(i);
-            LRUy1.push((LRUstats[0] * write_latency + LRUstats[1] * read_latency)/1000);
-            LRUx2.push(i);
-            LRUy2.push((LRUstats[2] * write_latency + LRUstats[3] * read_latency)/1000);
 
-            CFLRUstats = IOcalc(RWWorkload(i),b, a, 1);
-            CFLRUx1.push(i);
-            CFLRUy1.push((CFLRUstats[0] * write_latency + CFLRUstats[1] * read_latency)/1000);
-            CFLRUx2.push(i);
-            CFLRUy2.push((LRUstats[2] * write_latency + LRUstats[3] * read_latency)/1000);
+            LRUstats = IOcalc(RWWorkload(i), b, a, 0);
+            CFLRUstats = IOcalc(RWWorkload(i), b, a, 1);
+            LRUWSRstats = IOcalc(RWWorkload(i), b, a, 2);
 
-            LRUWSRstats = IOcalc(RWWorkload(i),b, a, 2);
-            LRUWSRx1.push(i);
-            LRUWSRy1.push((LRUWSRstats[0] * write_latency + LRUWSRstats[1] * read_latency)/1000);
-            LRUWSRx2.push(i);
-            LRUWSRy2.push((LRUWSRstats[2] * write_latency + LRUWSRstats[3] * read_latency)/1000);
+            let LRU_Latency = (LRUstats[0] * write_latency + LRUstats[1] * read_latency) / 1000;
+            let ACELRU_Latency = (LRUstats[2] * write_latency + LRUstats[3] * read_latency) / 1000;
+            let CFLRU_Latency = (CFLRUstats[0] * write_latency + CFLRUstats[1] * read_latency) / 1000;
+            let ACECFLRU_Latency = (CFLRUstats[2] * write_latency + CFLRUstats[3] * read_latency) / 1000;
+            let LRUWSR_Latency = (LRUWSRstats[0] * write_latency + LRUWSRstats[1] * read_latency) / 1000;
+            let ACELRUWSR_Latency = (LRUWSRstats[2] * write_latency + LRUWSRstats[3] * read_latency) / 1000;
+
+            xVals.push(i);
+            LRU_speedup.push(LRU_Latency / ACELRU_Latency);
+            CFLRU_speedup.push(CFLRU_Latency / ACECFLRU_Latency);
+            LRUWSR_speedup.push(LRUWSR_Latency / ACELRUWSR_Latency);
 
             update(progress);
             
-        if (i < 100){
-            i+=10;
-            myLoop(i);
-        }
-        else if(i == 100){
-            {
-                LRUtrace = {
-
-                    x: LRUx1, 
-                    y: LRUy1, 
-                    mode:"scatter", 
-                    name:"LRU",
-                    marker: {
-                        size: 12,
-                        symbol: 'circle-open'
+            if (i < 100){
+                i += 10;
+                myLoop(i);
+            }
+            else if(i >= 100){
+                {
+                    LRUtrace = {
+                        x: xVals, 
+                        y: LRU_speedup, 
+                        mode:"scatter", 
+                        name:"ACE-LRU",
+                        marker: { size: 12, symbol: 'x-open' },
+                        line: { dash: "solid" }
                     }
-                }
-            
-                ACELRUtrace = {
-            
-                    x: LRUx2, 
-                    y: LRUy2, 
-                    mode:"scatter", 
-                    name:"ACE-LRU",
-                    marker: {
-                        size: 12,
-                        symbol: 'diamond-open'
+                    
+                    CFLRUtrace = {
+                        x: xVals, 
+                        y: CFLRU_speedup, 
+                        mode:"scatter", 
+                        name:"ACE-CFLRU",
+                        marker: { size: 12, symbol: 'square-open' },
+                        line: { dash: "solid" }
                     }
-                }
-            
-                CFLRUtrace = {
-            
-                    x: CFLRUx1, 
-                    y: CFLRUy1, 
-                    mode:"scatter", 
-                    name:"CFLRU",
-                    marker: {
-                        size: 12,
-                        symbol: 'square-open'
-                    }
-                }
-            
-                ACECFLRUtrace = {
-            
-                    x: CFLRUx2, 
-                    y: CFLRUy2, 
-                    mode:"scatter", 
-                    name:"ACE-CFLRU",
-                    marker: {
-                        size: 12,
-                        symbol: 'x-open'
-                    }
-                }
-            
-                LRUWSRtrace = {
-            
-                    x: LRUWSRx1, 
-                    y: LRUWSRy1, 
-                    mode:"scatter", 
-                    name:"LRU-WSR",
-                    marker: {
-                        size: 12,
-                        symbol: 'triangle-up-open'
-                    }
-                }
-            
-                ACELRUWSRtrace = {
-            
-                    x: LRUWSRx2, 
-                    y: LRUWSRy2, 
-                    mode:"scatter", 
-                    name:"ACE-LRUWSR",
-                    marker: {
-                        size: 12,
-                        symbol: 'triangle-down-open'
-                    }
-                }
-            
-                RWlayout = {
-                    xaxis: {
-                        autorange: true,
-                        showgrid: false,
-                        zeroline: false,
-                        showline: true,
-                        title: "Read Ratio (%)"
-                    },
-                    yaxis: {
-                        autorange: true,
-                        showgrid: false,
-                        zeroline: false,
-                        showline: true, 
-                        title: "Workload latency (ms)"
-                    },
-                    title: ""
-                };
                 
-                RWData = [LRUtrace, ACELRUtrace, CFLRUtrace, ACECFLRUtrace, LRUWSRtrace, ACELRUWSRtrace];
-                Plotly.newPlot('RWplot', RWData, RWlayout);
+                    LRUWSRtrace = {
+                        x: xVals, 
+                        y: LRUWSR_speedup, 
+                        mode:"scatter", 
+                        name:"ACE-LRUWSR",
+                        marker: { size: 12, symbol: 'circle-open' },
+                        line: { dash: "solid" }
+                    }
 
-                document.getElementById("RWplot-caption").innerHTML =
-                `<b>Write-heavy workloads benefit more from ACE</b>`;
+                
+                    RWData = [LRUtrace, CFLRUtrace, LRUWSRtrace];
+                    
+                    RWlayout = {
+                        xaxis: {
+                            autorange: true,
+                            showgrid: false,
+                            zeroline: false,
+                            showline: true,
+                            title: "Read Ratio (%)"
+                        },
+                        yaxis: {
+                            autorange: true,
+                            showgrid: false,
+                            zeroline: false,
+                            showline: true, 
+                            title: "Speedup"
+                        },
 
-                if(progress==23){
-                    $("#loadingbar").empty();
+                    };
+                    console.log("graph");
+                    Plotly.newPlot('RWplot', RWData, RWlayout);
+
+                    document.getElementById("RWplot-caption").innerHTML =
+                    `<b>Write-heavy workloads benefit more from ACE</b>`;
                 }
             }
-          }
-        }, 100)
-    })(0);     
+        }, 100);
+    })(0);  // Start from 0
 }
+
+
 
 //generate graph for varying Buffer size
 function Bgraph(){
@@ -603,7 +547,7 @@ function Bgraph(){
                 Plotly.newPlot('Bplot', BData, Blayout);
 
                 document.getElementById("Bplot-caption").innerHTML =
-                `<b>ACE is beneficial across a wide range of bufferpool size</b>`;
+                '<b>ACE is beneficial across a wide range of bufferpool size</b>';
                 
             }
           }
@@ -613,33 +557,34 @@ function Bgraph(){
 }
 
 
+
 function ACELRUgraph(){
     var b = parseInt($("#cmp_buffer_size_rw").val());
     var a = parseInt($("#cmp_kappa_rw").val()); 
     
-    var LRUx = [];
+    var xVals = []; // Ensure x-axis values match RWgraph
     var Speedup = [[], [], [], []]; // Speedup = LRU Latency / ACE-LRU Latency
 
     var SSDConfigs = [
         [12.4, 3.0, 6],  // PCI (α = 3.0)
+        [180, 2.0, 19],  // Virtual (α = 2.0) **Moved Virtual after PCI**
         [100, 1.5, 9],   // SATA (α = 1.5)
-        [6.8, 1.1, 5],   // Optane (α = 1.1)
-        [180, 2.0, 19]   // Virtual (α = 2.0)
+        [6.8, 1.1, 5]    // Optane (α = 1.1)
     ];
 
     let deviceLabels = [
         "PCI (α = 3.0)", 
+        "Virtual (α = 2.0)",  // **Updated order to match SSDConfigs**
         "SATA (α = 1.5)", 
-        "Optane (α = 1.1)", 
-        "Virtual (α = 2.0)"
+        "Optane (α = 1.1)"
     ];
 
     (function myLoop(i) {
         setTimeout(function() {
             progress++;
 
-            if (i >= 10) {  // **Start at 10 to match RW graph positioning**
-                LRUx.push(i);
+            if (i >= 0) {  // **Start from 0 to match RWgraph**
+                xVals.push(i);
 
                 for (let j = 0; j < SSDConfigs.length; j++) {
                     let workloadStatsLRU = IOcalc(RWWorkload(i), b, a, 0); // LRU
@@ -659,37 +604,37 @@ function ACELRUgraph(){
             update(progress);
 
             if (i < 100){
-                i+=10;
+                i += 10;
                 myLoop(i);
             } else {
                 let speedupTraces = [];
 
                 for (let j = 0; j < SSDConfigs.length; j++) {
                     speedupTraces.push({
-                        x: [0].concat(LRUx), // **Ensure 0 appears at x = 1 position**
-                        y: [null].concat(Speedup[j]), // **Ensure lines don't start from Y-axis**
-                        mode: "lines+markers",
+                        x: xVals,  // **Ensure x-axis values match RWgraph**
+                        y: Speedup[j],  
+                        mode: "scatter",
                         name: deviceLabels[j], // **Proper legend with Greek α values**
-                        marker: { size: 10, symbol: 'triangle-up' }, // **Uniform 'triangle-up' marker**
-                        line: { dash: "solid" } // **Keep solid lines for readability**
+                        marker: { size: 12, symbol: 'triangle-up-open' }, // **Matching RWgraph markers**
+                        line: { dash: "solid" } // **Consistent line style**
                     });
                 }
 
                 let layout = {
-                    xaxis: { 
-                        title: "% Read/Write Ratio",
-                        range: [0, 100], // **Ensure x-axis starts at 0**
-                        showline: true,  // **Ensure X-axis line is always visible**
-                        showgrid: false, // **Remove background grid**
-                        zeroline: false  // **Remove zero line at X=0**
+                    xaxis: {
+                        autorange: true,
+                        showgrid: false,
+                        zeroline: false,
+                        showline: true,
+                        title: "Read Ratio (%)"
                     },
-                    yaxis: { 
-                        title: "Speedup",
-                        showline: true,  // **Ensure Y-axis line is always visible**
-                        showgrid: false, // **Remove background grid**
-                        zeroline: false  // **Remove zero line at Y=0**
-                    },
-                    showlegend: true  // **Keep legend visible**
+                    yaxis: {
+                        autorange: true,
+                        showgrid: false,
+                        zeroline: false,
+                        showline: true, 
+                        title: "Speedup"
+                    }
                 };
 
                 Plotly.newPlot('LRUplot', speedupTraces, layout);
@@ -702,8 +647,9 @@ function ACELRUgraph(){
                 }
             }
         }, 100);
-    })(10); // Start at i = 10, ensuring the first point is not at X=0
+    })(0); // **Start from 0 to match RWgraph exactly**
 }
+
 
 
 
