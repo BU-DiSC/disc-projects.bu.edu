@@ -574,7 +574,7 @@ function ACELRUgraph(){
 
     let deviceLabels = [
         "PCI (α = 3.0)", 
-        "Virtual (α = 2.0)",  // **Updated order to match SSDConfigs**
+        "Cloud-based (α = 2.0)",  // **Updated order to match SSDConfigs**
         "SATA (α = 1.5)", 
         "Optane (α = 1.1)"
     ];
