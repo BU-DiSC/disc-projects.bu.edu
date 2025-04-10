@@ -1183,169 +1183,401 @@ function ACECFLRU(p){
     }
 }
 
-function baseLRUWSR(p){
 
-    var type = workload[p][0];
-    var page = workload[p][1];
 
-    // add to dirty if "W"
-    if (type == "W" && !dirty.includes(page)){
+function baseLRUWSR(p) {
+    const type = workload[p][0];
+    const page = workload[p][1];
+
+    console.log(`\n[STEP ${p}] Access: ${type} Page: ${page}`);
+
+    // Mark page dirty if it's a write
+    if (type === "W" && !dirty.includes(page)) {
         dirty.push(page);
+        console.log(`Marked page ${page} as dirty.`);
     }
-    
-    // if buffer has page
-    if (buffer.includes(page)){
+
+    // Page is in buffer (HIT)
+    if (buffer.includes(page)) {
         bufferHit++;
-        //move page to the end of buffer array
-        buffer.push(buffer.splice(buffer.indexOf(page), 1)[0]);
-        if(dirty.includes(page)){
-            dirty.push(dirty.splice(dirty.indexOf(page),1)[0]);
-            coldflag[coldflag.indexOf(page)] = 1;
+        console.log(`Page ${page} is in buffer (HIT). Moving to MRU.`);
+
+        const idx = buffer.indexOf(page);
+
+        // Move page and its cold-flag to MRU (end)
+        const pg = buffer.splice(idx, 1)[0];
+        const flag = coldflag.splice(idx, 1)[0];
+        buffer.push(pg);
+        coldflag.push(flag);
+
+        // Reset cold-flag if dirty
+        if (dirty.includes(page)) {
+            coldflag[coldflag.length - 1] = 0;
+            console.log(`Reset cold-flag for dirty page ${page} to 0.`);
         }
-        coldflag.push(coldflag.splice(coldflag.indexOf(page), 1)[0]);
 
-    }else{
-
+    } else {
+        // Page Miss (not in buffer)
         bufferMiss++;
         readIO++;
-        //if buffer not full
-        if (buffer.length < bufferLength){
+        pagesRead++;
+        console.log(`Page ${page} is NOT in buffer (MISS).`);
+
+        // Buffer has room
+        console.log(`buffer length ${bufferLength}`);
+        if (buffer.length < bufferLength) {
             buffer.push(page);
-            if(dirty.includes(page)){
-                coldflag.push(1);
-            }else{
-                coldflag.push(0);
+            const flag = 0;
+            coldflag.push(flag);
+            if (type === "W" && !dirty.includes(page)) {
+                dirty.push(page);
             }
-            pagesRead++;
-        }else{
-            let eviction = 0;
-            while(eviction < 1){
-                //cycle untile cold flag of 0 is found
-                const first = buffer[0];
-                if (dirty.includes(first)){
-                    if(coldflag[0] == 0){
-                        dirty.splice(dirty.indexOf(first), 1);
-                        eviction++;
+            console.log(`Inserted page ${page} (flag=${flag}) into buffer.`);
+
+        } else {
+            // Buffer Full: Start LRU-WSR eviction
+            console.log(`Buffer is full. Starting eviction process.`);
+
+            let evicted = false;
+
+            while (!evicted) {
+
+                const candidate = buffer[0];
+                const isDirty = dirty.includes(candidate);
+                const isCold = coldflag[0] === 1;
+
+                console.log(`Considering LRU page ${candidate} (dirty=${isDirty}, cold=${isCold})`);
+
+                if (isDirty && !isCold) {
+                    // Give second chance: mark cold and move to MRU
+                    buffer.push(buffer.shift());
+                    coldflag.push(1); coldflag.shift();
+                    console.log(`Second-chance for dirty page ${candidate}. Set cold-flag to 1 and moved to MRU.`);
+                } else {
+                    // Evict this page (clean or cold-dirty)
+                    if (isDirty) {
+                        dirty.splice(dirty.indexOf(candidate), 1);
                         pagesWritten++;
                         writeIO++;
-                    }else{
-                        coldflag[0] = 0;
-                        coldflag.push(coldflag.splice(0, 1)[0]);
-                        buffer.push(buffer.splice(0, 1)[0]);
-                        dirty.push(dirty.splice(dirty.indexOf(first),1)[0]);
+                        console.log(`Evicting dirty page ${candidate}. Flushed to storage.`);
+                    } else {
+                        console.log(`Evicting clean page ${candidate}.`);
                     }
-                    
-                }else{
-                    eviction++;
-                }
-                
-            }
-            
-            coldflag.shift();
-            buffer.shift(); // remove one item from buffer (evict page)
-            
-            pagesEvicted++;
-            //add page to bufferpool and log flag
-            buffer.push(page);
-            if(dirty.includes(page)){
-                coldflag.push(1);
-            }else{
-                coldflag.push(0);
-            }
-            pagesRead++;
 
+                    buffer.shift();
+                    coldflag.shift();
+                    pagesEvicted++;
+                    evicted = true;
+                }
+            }
+
+            // Insert the new page after eviction
+            buffer.push(page);
+            const flag = 0;
+            coldflag.push(flag);
+            if (type === "W" && !dirty.includes(page)) {
+                dirty.push(page);
+            }
+
+            console.log(`Inserted new page ${page} into buffer (flag=${flag}).`);
         }
     }
-    //console.log(buffer);
-    //console.log(coldflag);
-    //console.log(dirty);
 
-    //start with small buffer and bug check
+    // Final state of all data structures
+    console.log(`Buffer:        [${buffer.join(", ")}]`);
+    console.log(`ColdFlags:     [${coldflag.join(", ")}]`);
+    console.log(`Dirty Pages:   [${dirty.join(", ")}]`);
+    console.log(`BufferHits: ${bufferHit}, BufferMisses: ${bufferMiss}, PagesEvicted: ${pagesEvicted}, PagesWritten: ${pagesWritten}, ReadIO: ${readIO}, WriteIO: ${writeIO}`);
 }
 
-function ACELRUWSR(p){
 
-    var type = workload[p][0];
-    var page = workload[p][1];
+// function baseLRUWSR(p){
 
-    // add to dirty if "W"
-    if (type == "W" && !ACEdirty.includes(page)){
-        ACEdirty.push(page);
-    }
+//     var type = workload[p][0];
+//     var page = workload[p][1];
+
+//     // add to dirty if "W"
+//     if (type == "W" && !dirty.includes(page)){
+//         dirty.push(page);
+//     }
     
-    // if buffer has page
-    if (ACEbuffer.includes(page)){
-        ACEbufferHit++;
-        //move page to the end of buffer array
-        if(ACEdirty.includes(page)){
-            ACEdirty.push(ACEdirty.splice(ACEdirty.indexOf(page),1)[0]);
-            ACEcoldflag[ACEbuffer.indexOf(page)] = 1;
-        } 
-        ACEcoldflag.push(ACEcoldflag.splice(ACEbuffer.indexOf(page), 1)[0]);
-        ACEbuffer.push(ACEbuffer.splice(ACEbuffer.indexOf(page), 1)[0]);
-    }else{
+//     // if buffer has page
+//     if (buffer.includes(page)){
+//         bufferHit++;
+//         //move page to the end of buffer array
+//         buffer.push(buffer.splice(buffer.indexOf(page), 1)[0]);
+//         if(dirty.includes(page)){
+//             dirty.push(dirty.splice(dirty.indexOf(page),1)[0]);
+//             coldflag[coldflag.indexOf(page)] = 1;
+//         }
+//         coldflag.push(coldflag.splice(coldflag.indexOf(page), 1)[0]);
 
+//     }else{
+
+//         bufferMiss++;
+//         readIO++;
+//         //if buffer not full
+//         if (buffer.length < bufferLength){
+//             buffer.push(page);
+//             if(dirty.includes(page)){
+//                 coldflag.push(1);
+//             }else{
+//                 coldflag.push(0);
+//             }
+//             pagesRead++;
+//         }else{
+//             let eviction = 0;
+//             while(eviction < 1){
+//                 //cycle untile cold flag of 0 is found
+//                 const first = buffer[0];
+//                 if (dirty.includes(first)){
+//                     if(coldflag[0] == 0){
+//                         dirty.splice(dirty.indexOf(first), 1);
+//                         eviction++;
+//                         pagesWritten++;
+//                         writeIO++;
+//                     }else{
+//                         coldflag[0] = 0;
+//                         coldflag.push(coldflag.splice(0, 1)[0]);
+//                         buffer.push(buffer.splice(0, 1)[0]);
+//                         dirty.push(dirty.splice(dirty.indexOf(first),1)[0]);
+//                     }
+                    
+//                 }else{
+//                     eviction++;
+//                 }
+                
+//             }
+            
+//             coldflag.shift();
+//             buffer.shift(); // remove one item from buffer (evict page)
+            
+//             pagesEvicted++;
+//             //add page to bufferpool and log flag
+//             buffer.push(page);
+//             if(dirty.includes(page)){
+//                 coldflag.push(1);
+//             }else{
+//                 coldflag.push(0);
+//             }
+//             pagesRead++;
+
+//         }
+//     }
+//     //console.log(buffer);
+//     //console.log(coldflag);
+//     //console.log(dirty);
+
+//     //start with small buffer and bug check
+// }
+
+
+
+function ACELRUWSR(p) {
+    const type = workload[p][0];
+    const page = workload[p][1];
+
+    console.log(`\n[ACE STEP ${p}] Access: ${type} Page: ${page}`);
+
+    // Mark page dirty if it's a write
+    if (type === "W" && !ACEdirty.includes(page)) {
+        ACEdirty.push(page);
+        console.log(`Marked page ${page} as dirty.`);
+    }
+
+    // Page is in buffer (HIT)
+    if (ACEbuffer.includes(page)) {
+        ACEbufferHit++;
+        console.log(`Page ${page} is in buffer (HIT). Moving to MRU.`);
+
+        const idx = ACEbuffer.indexOf(page);
+        const pg = ACEbuffer.splice(idx, 1)[0];
+        const flag = ACEcoldflag.splice(idx, 1)[0];
+        ACEbuffer.push(pg);
+        ACEcoldflag.push(flag);
+
+        if (ACEdirty.includes(page)) {
+            ACEcoldflag[ACEcoldflag.length - 1] = 0;
+            console.log(`Reset cold-flag for dirty page ${page} to 0.`);
+        }
+
+    } else {
+        // Page Miss (not in buffer)
         ACEbufferMiss++;
         ACEreadIO++;
-        //if buffer not full
-        if (ACEbuffer.length < bufferLength){
+        ACEpagesRead++;
+        console.log(`Page ${page} is NOT in buffer (MISS).`);
+
+        console.log(`buffer length ${bufferLength}`);
+        if (ACEbuffer.length < bufferLength) {
             ACEbuffer.push(page);
-            if(ACEdirty.includes(page)){
-                ACEcoldflag.push(1);
-            }else{
-                ACEcoldflag.push(0);
+            const flag = 0;
+            ACEcoldflag.push(flag);
+            if (type === "W" && !ACEdirty.includes(page)) {
+                ACEdirty.push(page);
             }
-            ACEpagesRead++;
-        }else{
+            console.log(`Inserted page ${page} (flag=${flag}) into buffer.`);
+        } else {
+            // Buffer Full: Start eviction process
+            console.log(`Buffer is full. Starting eviction process.`);
 
-            const first = ACEbuffer[0];
-            if (ACEdirty.includes(first)){
-                let awru = 0;
-                    for(var i = 0; i < ACEdirty.length; i++){
+            let evicted = false;
 
-                        if(ACEcoldflag[ACEbuffer.indexOf(ACEdirty[i])] == 0){
-                            
-                            ACEdirty.splice(i, 1);
-                            ACEpagesWritten++;
-                            i--;
-                        }else{
+            while (!evicted) {
+                const candidate = ACEbuffer[0];
+                const isDirty = ACEdirty.includes(candidate);
+                const isCold = ACEcoldflag[0] === 1;
 
-                            ACEcoldflag[ACEbuffer.indexOf(ACEdirty[i])] = 0;
-                            ACEcoldflag.push(ACEcoldflag.splice(ACEbuffer.indexOf(ACEdirty[i]), 1)[0]);
-                            ACEbuffer.push(ACEbuffer.splice(ACEbuffer.indexOf(ACEdirty[i]), 1)[0]);
-                            ACEdirty.push(ACEdirty.splice(i,1)[0]);
-                            i--;
+                console.log(`Considering LRU page ${candidate} (dirty=${isDirty}, cold=${isCold})`);
+
+                if (isDirty && !isCold) {
+                    // Second chance: mark cold and move to MRU
+                    ACEbuffer.push(ACEbuffer.shift());
+                    ACEcoldflag.push(1);
+                    ACEcoldflag.shift();
+                    console.log(`Second-chance for dirty page ${candidate}. Set cold-flag to 1 and moved to MRU.`);
+                } else {
+                    // Evict this page (clean or cold-dirty)
+                    if (isDirty) {
+                        console.log(`Dirty and cold. Flushing ${alphaVal} dirty pages concurrently before eviction.`);
+
+                        let flushed = 0;
+                        // write back K pages to exploit the concurrency
+                        for (let y = 0; y < alphaVal; y++) {
+                            for (let i = 0; i < ACEbuffer.length; i++) {
+                                const flushCandidate = ACEbuffer[i];
+                                if (ACEdirty.includes(flushCandidate)) {
+                                    ACEdirty.splice(ACEdirty.indexOf(flushCandidate), 1);
+                                    ACEpagesWritten++;
+                                    flushed++;
+                                    console.log(`Flushed dirty page ${flushCandidate}.`);
+                                    break;
+                                }
+                            }
                         }
-                        awru++;  
-                        if(awru == 8){
-                            break;
+
+                        if (flushed > 0) {
+                            ACEwriteIO++;
+                            console.log(`Total dirty pages flushed: ${flushed}`);
                         }
+
+                        console.log(`Evicting dirty page ${candidate}. Flushed to storage.`);
+                    } else {
+                        console.log(`Evicting clean page ${candidate}.`);
                     }
-                ACEwriteIO++;
+
+                    ACEbuffer.shift();
+                    ACEcoldflag.shift();
+                    ACEpagesEvicted++;
+                    evicted = true;
+                }
             }
-            
-            
-            ACEcoldflag.shift();
-            ACEbuffer.shift(); // remove one item from buffer (evict page)
-            
-            ACEpagesEvicted++;
-            //add page to bufferpool and log flag
+
+            // Insert new page after eviction
             ACEbuffer.push(page);
-            if(ACEdirty.includes(page)){
-                ACEcoldflag.push(1);
-            }else{
-                ACEcoldflag.push(0);
+            const flag = 0;
+            ACEcoldflag.push(flag);
+            if (type === "W" && !ACEdirty.includes(page)) {
+                ACEdirty.push(page);
             }
             ACEpagesRead++;
-
+            console.log(`Inserted new page ${page} into buffer (flag=${flag}).`);
         }
     }
-    //console.log(ACEbuffer);
-    //console.log(ACEcoldflag);
-    //console.log(ACEdirty);
 
-    //start with small buffer and bug check
+    // Final state of all data structures
+    console.log(`Buffer:        [${ACEbuffer.join(", ")}]`);
+    console.log(`ColdFlags:     [${ACEcoldflag.join(", ")}]`);
+    console.log(`Dirty Pages:   [${ACEdirty.join(", ")}]`);
+    console.log(`BufferHits: ${ACEbufferHit}, BufferMisses: ${ACEbufferMiss}, PagesEvicted: ${ACEpagesEvicted}, PagesWritten: ${ACEpagesWritten}, ReadIO: ${ACEreadIO}, WriteIO: ${ACEwriteIO}`);
 }
+
+
+// function ACELRUWSR(p){
+
+//     var type = workload[p][0];
+//     var page = workload[p][1];
+
+//     // add to dirty if "W"
+//     if (type == "W" && !ACEdirty.includes(page)){
+//         ACEdirty.push(page);
+//     }
+    
+//     // if buffer has page
+//     if (ACEbuffer.includes(page)){
+//         ACEbufferHit++;
+//         //move page to the end of buffer array
+//         if(ACEdirty.includes(page)){
+//             ACEdirty.push(ACEdirty.splice(ACEdirty.indexOf(page),1)[0]);
+//             ACEcoldflag[ACEbuffer.indexOf(page)] = 1;
+//         } 
+//         ACEcoldflag.push(ACEcoldflag.splice(ACEbuffer.indexOf(page), 1)[0]);
+//         ACEbuffer.push(ACEbuffer.splice(ACEbuffer.indexOf(page), 1)[0]);
+//     }else{
+
+//         ACEbufferMiss++;
+//         ACEreadIO++;
+//         //if buffer not full
+//         if (ACEbuffer.length < bufferLength){
+//             ACEbuffer.push(page);
+//             if(ACEdirty.includes(page)){
+//                 ACEcoldflag.push(1);
+//             }else{
+//                 ACEcoldflag.push(0);
+//             }
+//             ACEpagesRead++;
+//         }else{
+
+//             const first = ACEbuffer[0];
+//             if (ACEdirty.includes(first)){
+//                 let awru = 0;
+//                     for(var i = 0; i < ACEdirty.length; i++){
+
+//                         if(ACEcoldflag[ACEbuffer.indexOf(ACEdirty[i])] == 0){
+                            
+//                             ACEdirty.splice(i, 1);
+//                             ACEpagesWritten++;
+//                             i--;
+//                         }else{
+
+//                             ACEcoldflag[ACEbuffer.indexOf(ACEdirty[i])] = 0;
+//                             ACEcoldflag.push(ACEcoldflag.splice(ACEbuffer.indexOf(ACEdirty[i]), 1)[0]);
+//                             ACEbuffer.push(ACEbuffer.splice(ACEbuffer.indexOf(ACEdirty[i]), 1)[0]);
+//                             ACEdirty.push(ACEdirty.splice(i,1)[0]);
+//                             i--;
+//                         }
+//                         awru++;  
+//                         if(awru == 8){
+//                             break;
+//                         }
+//                     }
+//                 ACEwriteIO++;
+//             }
+            
+            
+//             ACEcoldflag.shift();
+//             ACEbuffer.shift(); // remove one item from buffer (evict page)
+            
+//             ACEpagesEvicted++;
+//             //add page to bufferpool and log flag
+//             ACEbuffer.push(page);
+//             if(ACEdirty.includes(page)){
+//                 ACEcoldflag.push(1);
+//             }else{
+//                 ACEcoldflag.push(0);
+//             }
+//             ACEpagesRead++;
+
+//         }
+//     }
+//     //console.log(ACEbuffer);
+//     //console.log(ACEcoldflag);
+//     //console.log(ACEdirty);
+
+//     //start with small buffer and bug check
+// }
+
+
 /*Algorithms*/
 function base(page){
     // remove item from dirty (write page)
@@ -1384,8 +1616,6 @@ function ACE(page){
     ACEpagesEvicted++; // remove one item from buffer
     ACEbuffer.push(page);
     ACEpagesRead++;
-    
-
 }
 
 // function baseCC(algorithm){
