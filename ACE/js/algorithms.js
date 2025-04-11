@@ -1461,7 +1461,7 @@ function ACELRUWSR(p) {
                             console.log(`Total dirty pages flushed: ${flushed}`);
                         }
 
-                        console.log(`Evicting dirty page ${candidate}. Flushed to storage.`);
+                        console.log(`Evicting dirty page ${candidate}.`);
                     } else {
                         console.log(`Evicting clean page ${candidate}.`);
                     }

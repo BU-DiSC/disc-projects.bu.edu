@@ -277,7 +277,118 @@ function RWWorkload(e_val) {
     return workload;
 }
 
-function RWgraph(){
+// function RWgraph(){
+//     var b = parseInt($("#cmp_buffer_size_rw").val());
+//     var a = parseInt($("#cmp_kappa_rw").val()); 
+
+//     var read_latency = parseInt($("#cmp_base_latency_rw").val());
+//     var asymmetry = parseInt($("#cmp_alpha_rw").val());
+//     var write_latency = read_latency * asymmetry;
+
+//     var xVals = [];
+//     var LRU_speedup = [];
+//     var CFLRU_speedup = [];
+//     var LRUWSR_speedup = [];
+//     var avg_speedup = [];
+
+//     var LRUstats = [];
+//     var CFLRUstats = [];
+//     var LRUWSRstats = [];
+
+//     var LRUtrace = {};
+//     var CFLRUtrace = {};
+//     var LRUWSRtrace = {};
+//     var AVGtrace = {};
+//     var RWData = [];
+//     var RWlayout = {};
+
+//     (function myLoop(i) {
+//         setTimeout(function() {
+//             progress++;
+
+//             LRUstats = IOcalc(RWWorkload(i), b, a, 0);
+//             CFLRUstats = IOcalc(RWWorkload(i), b, a, 1);
+//             LRUWSRstats = IOcalc(RWWorkload(i), b, a, 2);
+
+//             let LRU_Latency = (LRUstats[0] * write_latency + LRUstats[1] * read_latency) / 1000;
+//             let ACELRU_Latency = (LRUstats[2] * write_latency + LRUstats[3] * read_latency) / 1000;
+//             let CFLRU_Latency = (CFLRUstats[0] * write_latency + CFLRUstats[1] * read_latency) / 1000;
+//             let ACECFLRU_Latency = (CFLRUstats[2] * write_latency + CFLRUstats[3] * read_latency) / 1000;
+//             let LRUWSR_Latency = (LRUWSRstats[0] * write_latency + LRUWSRstats[1] * read_latency) / 1000;
+//             let ACELRUWSR_Latency = (LRUWSRstats[2] * write_latency + LRUWSRstats[3] * read_latency) / 1000;
+
+//             xVals.push(i);
+//             LRU_speedup.push(LRU_Latency / ACELRU_Latency);
+//             CFLRU_speedup.push(CFLRU_Latency / ACECFLRU_Latency);
+//             LRUWSR_speedup.push(LRUWSR_Latency / ACELRUWSR_Latency);
+
+//             update(progress);
+            
+//             if (i < 100){
+//                 i += 10;
+//                 myLoop(i);
+//             }
+//             else if(i >= 100){
+//                 {
+//                     LRUtrace = {
+//                         x: xVals, 
+//                         y: LRU_speedup, 
+//                         mode:"scatter", 
+//                         name:"ACE-LRU",
+//                         marker: { size: 12, symbol: 'x-open' },
+//                         line: { dash: "solid" }
+//                     }
+                    
+//                     CFLRUtrace = {
+//                         x: xVals, 
+//                         y: CFLRU_speedup, 
+//                         mode:"scatter", 
+//                         name:"ACE-CFLRU",
+//                         marker: { size: 12, symbol: 'square-open' },
+//                         line: { dash: "solid" }
+//                     }
+                
+//                     LRUWSRtrace = {
+//                         x: xVals, 
+//                         y: LRUWSR_speedup, 
+//                         mode:"scatter", 
+//                         name:"ACE-LRUWSR",
+//                         marker: { size: 12, symbol: 'circle-open' },
+//                         line: { dash: "solid" }
+//                     }
+
+                
+//                     RWData = [LRUtrace, CFLRUtrace, LRUWSRtrace];
+                    
+//                     RWlayout = {
+//                         xaxis: {
+//                             autorange: true,
+//                             showgrid: false,
+//                             zeroline: false,
+//                             showline: true,
+//                             title: "Read Ratio (%)"
+//                         },
+//                         yaxis: {
+//                             autorange: true,
+//                             showgrid: false,
+//                             zeroline: false,
+//                             showline: true, 
+//                             title: "Speedup"
+//                         },
+
+//                     };
+//                     console.log("graph");
+//                     Plotly.newPlot('RWplot', RWData, RWlayout);
+
+//                     document.getElementById("RWplot-caption").innerHTML =
+//                     `<b>Write-heavy workloads benefit more from ACE</b>`;
+//                 }
+//             }
+//         }, 100);
+//     })(0);  // Start from 0
+// }
+
+function RWgraph() {
     var b = parseInt($("#cmp_buffer_size_rw").val());
     var a = parseInt($("#cmp_kappa_rw").val()); 
 
@@ -285,109 +396,113 @@ function RWgraph(){
     var asymmetry = parseInt($("#cmp_alpha_rw").val());
     var write_latency = read_latency * asymmetry;
 
-    var xVals = [];
-    var LRU_speedup = [];
-    var CFLRU_speedup = [];
-    var LRUWSR_speedup = [];
-    var avg_speedup = [];
+    var xVals = [];  // Read Ratios
 
-    var LRUstats = [];
-    var CFLRUstats = [];
-    var LRUWSRstats = [];
+    var LRU_y = [], ACELRU_y = [];
+    var CFLRU_y = [], ACECFLRU_y = [];
+    var LRUWSR_y = [], ACELRUWSR_y = [];
 
-    var LRUtrace = {};
-    var CFLRUtrace = {};
-    var LRUWSRtrace = {};
-    var AVGtrace = {};
-    var RWData = [];
-    var RWlayout = {};
+    var RWData = [], RWlayout = {};
 
     (function myLoop(i) {
         setTimeout(function() {
             progress++;
 
-            LRUstats = IOcalc(RWWorkload(i), b, a, 0);
-            CFLRUstats = IOcalc(RWWorkload(i), b, a, 1);
-            LRUWSRstats = IOcalc(RWWorkload(i), b, a, 2);
+            const LRUstats = IOcalc(RWWorkload(i), b, a, 0);
+            const CFLRUstats = IOcalc(RWWorkload(i), b, a, 1);
+            const LRUWSRstats = IOcalc(RWWorkload(i), b, a, 2);
 
-            let LRU_Latency = (LRUstats[0] * write_latency + LRUstats[1] * read_latency) / 1000;
-            let ACELRU_Latency = (LRUstats[2] * write_latency + LRUstats[3] * read_latency) / 1000;
-            let CFLRU_Latency = (CFLRUstats[0] * write_latency + CFLRUstats[1] * read_latency) / 1000;
-            let ACECFLRU_Latency = (CFLRUstats[2] * write_latency + CFLRUstats[3] * read_latency) / 1000;
-            let LRUWSR_Latency = (LRUWSRstats[0] * write_latency + LRUWSRstats[1] * read_latency) / 1000;
-            let ACELRUWSR_Latency = (LRUWSRstats[2] * write_latency + LRUWSRstats[3] * read_latency) / 1000;
+            const LRU_Latency = (LRUstats[0] * write_latency + LRUstats[1] * read_latency) / 1000;
+            const ACELRU_Latency = (LRUstats[2] * write_latency + LRUstats[3] * read_latency) / 1000;
+            const CFLRU_Latency = (CFLRUstats[0] * write_latency + CFLRUstats[1] * read_latency) / 1000;
+            const ACECFLRU_Latency = (CFLRUstats[2] * write_latency + CFLRUstats[3] * read_latency) / 1000;
+            const LRUWSR_Latency = (LRUWSRstats[0] * write_latency + LRUWSRstats[1] * read_latency) / 1000;
+            const ACELRUWSR_Latency = (LRUWSRstats[2] * write_latency + LRUWSRstats[3] * read_latency) / 1000;
 
             xVals.push(i);
-            LRU_speedup.push(LRU_Latency / ACELRU_Latency);
-            CFLRU_speedup.push(CFLRU_Latency / ACECFLRU_Latency);
-            LRUWSR_speedup.push(LRUWSR_Latency / ACELRUWSR_Latency);
+            LRU_y.push(LRU_Latency);
+            ACELRU_y.push(ACELRU_Latency);
+            CFLRU_y.push(CFLRU_Latency);
+            ACECFLRU_y.push(ACECFLRU_Latency);
+            LRUWSR_y.push(LRUWSR_Latency);
+            ACELRUWSR_y.push(ACELRUWSR_Latency);
 
             update(progress);
-            
-            if (i < 100){
+
+            if (i < 100) {
                 i += 10;
                 myLoop(i);
-            }
-            else if(i >= 100){
-                {
-                    LRUtrace = {
-                        x: xVals, 
-                        y: LRU_speedup, 
-                        mode:"scatter", 
-                        name:"ACE-LRU",
-                        marker: { size: 12, symbol: 'x-open' },
-                        line: { dash: "solid" }
-                    }
-                    
-                    CFLRUtrace = {
-                        x: xVals, 
-                        y: CFLRU_speedup, 
-                        mode:"scatter", 
-                        name:"ACE-CFLRU",
-                        marker: { size: 12, symbol: 'square-open' },
-                        line: { dash: "solid" }
-                    }
-                
-                    LRUWSRtrace = {
-                        x: xVals, 
-                        y: LRUWSR_speedup, 
-                        mode:"scatter", 
-                        name:"ACE-LRUWSR",
-                        marker: { size: 12, symbol: 'circle-open' },
-                        line: { dash: "solid" }
-                    }
+            } else {
+                // Define plot traces (style matches Bgraph)
+                const LRUtrace = {
+                    x: xVals, y: LRU_y,
+                    mode: "scatter",
+                    name: "LRU",
+                    marker: { size: 12, symbol: 'circle-open' }
+                };
+                const ACELRUtrace = {
+                    x: xVals, y: ACELRU_y,
+                    mode: "scatter",
+                    name: "ACE-LRU",
+                    marker: { size: 12, symbol: 'diamond-open' }
+                };
+                const CFLRUtrace = {
+                    x: xVals, y: CFLRU_y,
+                    mode: "scatter",
+                    name: "CFLRU",
+                    marker: { size: 12, symbol: 'square-open' }
+                };
+                const ACECFLRUtrace = {
+                    x: xVals, y: ACECFLRU_y,
+                    mode: "scatter",
+                    name: "ACE-CFLRU",
+                    marker: { size: 12, symbol: 'x-open' }
+                };
+                const LRUWSRtrace = {
+                    x: xVals, y: LRUWSR_y,
+                    mode: "scatter",
+                    name: "LRU-WSR",
+                    marker: { size: 12, symbol: 'triangle-up-open' }
+                };
+                const ACELRUWSRtrace = {
+                    x: xVals, y: ACELRUWSR_y,
+                    mode: "scatter",
+                    name: "ACE-LRUWSR",
+                    marker: { size: 12, symbol: 'triangle-down-open' }
+                };
 
-                
-                    RWData = [LRUtrace, CFLRUtrace, LRUWSRtrace];
-                    
-                    RWlayout = {
-                        xaxis: {
-                            autorange: true,
-                            showgrid: false,
-                            zeroline: false,
-                            showline: true,
-                            title: "Read Ratio (%)"
-                        },
-                        yaxis: {
-                            autorange: true,
-                            showgrid: false,
-                            zeroline: false,
-                            showline: true, 
-                            title: "Speedup"
-                        },
+                RWData = [
+                    LRUtrace, ACELRUtrace,
+                    CFLRUtrace, ACECFLRUtrace,
+                    LRUWSRtrace, ACELRUWSRtrace
+                ];
 
-                    };
-                    console.log("graph");
-                    Plotly.newPlot('RWplot', RWData, RWlayout);
+                RWlayout = {
+                    xaxis: {
+                        autorange: true,
+                        showgrid: false,
+                        zeroline: false,
+                        showline: true,
+                        title: "Read Ratio (%)"
+                    },
+                    yaxis: {
+                        autorange: true,
+                        showgrid: false,
+                        zeroline: false,
+                        showline: true, 
+                        title: "Workload latency (ms)"
+                    },
+                    title: ""
+                };
 
-                    document.getElementById("RWplot-caption").innerHTML =
-                    `<b>Write-heavy workloads benefit more from ACE</b>`;
-                }
+                Plotly.newPlot('RWplot', RWData, RWlayout);
+
+                document.getElementById("RWplot-caption").innerHTML =
+                    `<b>ACE consistently reduces latency across read/write mixes</b>`;
             }
         }, 100);
-    })(0);  // Start from 0
+    })(0);
 }
-
 
 
 //generate graph for varying Buffer size
