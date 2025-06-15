@@ -814,7 +814,7 @@ progress::-moz-progress-bar {
 .progress-wrapper {
     flex-grow: 1;
     background: white;
-    padding: 6px;
+    padding: 6px 8px;
     border: 1px solid #ccc;
     border-radius: 10px;
     margin: 0 10px;
@@ -832,6 +832,7 @@ progress::-moz-progress-bar {
     position: relative;
 }
 
+
 /* ✅ Dark Grey Progress Fill */
 #progress-bar::-webkit-progress-bar {
     background-color: #ddd;
@@ -844,11 +845,22 @@ progress::-moz-progress-bar {
     appearance: none;
     width: 18px;
     height: 18px;
-    background: #5D6D7E; /* Darker Grey */
+    background: #5D6D7E;
     border-radius: 50%;
     cursor: pointer;
+    margin: 0;  /* Remove margin-left: -10px */
     position: relative;
-    margin-left: -10px;  /* Ensures it starts at the beginning */
+    z-index: 2;
+}
+#progress-bar {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 12px;
+    background: #ddd;
+    border-radius: 6px;
+    position: relative;
+    padding: 0;  /* important */
+    margin: 0;
 }
 
 #progress-bar::-moz-range-thumb {

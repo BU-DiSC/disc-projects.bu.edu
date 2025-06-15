@@ -15,13 +15,13 @@ $(document).ready(function(){
     const $d = $('#d'); // skewness data
 
     //[b,n,x,s,d,e,alpha]
-    const workload1 = [100, 5000, 50000, 80, 15, 60, 6]; //small buffer
-    const workload2 = [250, 5000, 50000, 80, 15, 60, 6]; // large buffer
-    const workload3 = [150, 5000, 50000, 80, 15, 90, 6]; // read heavy
-    const workload4 = [150, 5000, 50000, 80, 15, 20, 6]; //write heavy
-    const workload5 = [150, 10000, 50000, 95, 5, 60, 6];  // skewed
-    const workload6 = [150, 500, 50000, 100, 100, 60, 6];  // uniform
-    const test = [5, 50, 20, 80, 15, 40, 4];
+    const workload1 = [100, 5000, 50000, 80, 15, 60]; //small buffer
+    const workload2 = [250, 5000, 50000, 80, 15, 60]; // large buffer
+    const workload3 = [150, 5000, 50000, 80, 15, 90]; // read heavy
+    const workload4 = [150, 5000, 50000, 80, 15, 20]; //write heavy
+    const workload5 = [150, 10000, 50000, 95, 5, 60];  // skewed
+    const workload6 = [150, 500, 50000, 100, 100, 60];  // uniform
+    const test = [5, 50, 20, 80, 15, 40];
 
     const device1 = [12.4, 3.0, 6]; // PCI
     const device2 = [100, 1.5, 9]; // SATA
@@ -41,7 +41,7 @@ $(document).on("change", "#workload, #cmp_workload_rw, #cmp_workload_bp", functi
     var ids = [];
     
     if (id === "workload") {
-        ids = ["b", "n", "x", "s", "d", "e", "alpha"];
+        ids = ["b", "n", "x", "s", "d", "e"];
     } else if (id === "cmp_workload_rw") {
         ids = ["cmp_buffer_size_rw", "cmp_disk_size_rw", "cmp_operations_rw", 
             "cmp_skew_d_rw", "cmp_skew_t_rw", "cmp_read_percentage_rw", "cmp_kappa_rw"];
@@ -75,6 +75,54 @@ $(document).on("change", "#workload, #cmp_workload_rw, #cmp_workload_bp", functi
     playing = false;
 });
 
+$(document).on("change", "#device, #cmp_device_rw, #cmp_device_bp", function() {
+    const deviceIndex = parseInt($(this).val()) - 1;
+    const id = $(this).attr("id");
+
+    const device = devices[deviceIndex];
+
+    if (!device) {
+        console.warn("Invalid device index selected:", deviceIndex);
+        return;
+    }
+
+    console.log("Device changed:", id, "Index:", deviceIndex, "Values:", device);
+
+    // Assign target input field IDs based on which dropdown was used
+    let latencyId, asymId, alphaId;
+
+    if (id === "device") {
+        latencyId = "lat";
+        asymId = "asym";
+        alphaId = "alpha";
+    } else if (id === "cmp_device_rw") {
+        latencyId = "cmp_base_latency_rw";
+        asymId = "cmp_alpha_rw";
+        alphaId = "cmp_kappa_rw";
+    } else if (id === "cmp_device_bp") {
+        latencyId = "cmp_base_latency_bp";
+        asymId = "cmp_alpha_bp";
+        alphaId = "cmp_kappa_bp";
+    }
+
+    // Update the corresponding fields
+    $("#" + latencyId).val(device[0]);
+    $("#" + asymId).val(device[1]);
+    $("#" + alphaId).val(device[2]);
+
+    // Enable the inputs in case they were disabled
+    $("#" + latencyId).prop("disabled", false);
+    $("#" + asymId).prop("disabled", false);
+    $("#" + alphaId).prop("disabled", false);
+});
+
+// Log user edits to individual input fields
+$(document).on("input", "input[type='number']", function () {
+    const id = $(this).attr("id");
+    const newValue = $(this).val();
+    console.log(`User manually changed ${id} → ${newValue}`);
+});
+
 
 $(document).ready(function(){
     var playing = false;
@@ -106,7 +154,6 @@ $(document).ready(function(){
         }
 
         console.log(workloadData);
-        // Now you can pass this to the simulation
     }
 });
     
@@ -136,13 +183,13 @@ $(document).ready(function(){
     // Play button handler
     $("#play-button").click(function(){
         if(capacity()){
-            if (!playing) { // ✅ Prevent unnecessary resets
+            if (!playing) { // Prevent unnecessary resets
                 var isComparative = $("#comparative-analysis").is(":visible");
                 var b_val = parseInt($(isComparative ? "#cmp-b" : "#b").val());
                 var alpha_val = parseInt($(isComparative ? "#cmp-alpha" : "#alpha").val());
                 var baseAlg = parseInt($(isComparative ? "#cmp-baseAlg" : "#baseAlg").val());
 
-                playing = true; // ✅ Set BEFORE calling calculate()
+                playing = true; // Set BEFORE calling calculate()
                 calculate(generateWorkload(), b_val, alpha_val, baseAlg);
             }
         }
@@ -161,7 +208,7 @@ $(document).ready(function(){
     
         progress = 0;  // Reset progress
     
-        // 🔹 Do NOT clear the previous graphs
+        // Do NOT clear the previous graphs
         // $("#Bplot").empty();
         // $("#RWplot").empty();
     
@@ -771,41 +818,66 @@ function ACELRUgraph(){
 //check if input values are too high
 function capacity() {
     var isComparative = $("#comparative-analysis").is(":visible");
-    
-    var b_val = parseInt($(isComparative ? "#cmp-b" : "#b").val());
-    var n_val = parseInt($(isComparative ? "#cmp-n" : "#n").val());
-    var x_val = parseInt($(isComparative ? "#cmp-x" : "#x").val());
-    var e_val = parseInt($(isComparative ? "#cmp-e" : "#e").val());
-    var alpha_val = parseInt($(isComparative ? "#cmp-alpha" : "#alpha").val());
-    var s_val = parseInt($(isComparative ? "#cmp-s" : "#s").val());
 
-    if (b_val > 500 || b_val < 0) {
-        window.alert("Buffer pool size is too large or invalid");
+    var b_val = parseFloat($(isComparative ? "#cmp-b" : "#b").val());
+    var n_val = parseFloat($(isComparative ? "#cmp-n" : "#n").val());
+    var x_val = parseFloat($(isComparative ? "#cmp-x" : "#x").val());
+    var e_val = parseFloat($(isComparative ? "#cmp-e" : "#e").val());
+    var alpha_val = parseFloat($(isComparative ? "#cmp-alpha" : "#alpha").val());
+    var s_val = parseFloat($(isComparative ? "#cmp-s" : "#s").val());
+    var d_val = parseFloat($(isComparative ? "#cmp-d" : "#d").val());
+    var asym_val = parseFloat($(isComparative ? "#cmp_asym" : "#asym").val());
+    var lat_val = parseFloat($(isComparative ? "#cmp_base_latency_rw" : "#lat").val());
+
+    if (isNaN(b_val) || !Number.isInteger(b_val) || b_val <= 0) {
+        alert("Buffer pool size must be a integer greater than 0.");
         return false;
     }
-    if (n_val > 10000 || n_val < b_val) {
-        window.alert("Disk size is too large or smaller than the buffer size");
+    
+    if (isNaN(n_val) || !Number.isInteger(n_val) || n_val < b_val || b_val <= 0) {
+        alert("Disk size must be an integer at least equal to the buffer size and greater than 0.");
         return false;
     }
-    if (x_val > 100000 || x_val < b_val) {
-        window.alert("Workload size is too large or smaller than the buffer");
+    
+    if (isNaN(x_val) || !Number.isInteger(x_val) || x_val <= 1) {
+        alert("Number of operations must be an integer greater than 1.");
         return false;
     }
-    if (e_val > 100 || e_val < 0) {
-        window.alert("Read ratio cannot exceed 100%");
+    
+    if (isNaN(e_val) || e_val < 0 || e_val > 100) {
+        alert("Read percentage must be between 0% and 100%.");
         return false;
     }
-    if (alpha_val > 20 || alpha_val < 0) {
-        window.alert("Current SSD concurrency is too large or invalid");
+    
+    if (isNaN(alpha_val) || alpha_val <= 0) {
+        alert("Concurrency must be a greater than 0.");
         return false;
     }
-    if (s_val > 100 || s_val < 0) {
-        window.alert("Skewness cannot exceed 100% or be negative");
+    
+    if (isNaN(s_val) || s_val < 0 || s_val > 100) {
+        alert("Skewness must be between 0% and 100%.");
         return false;
     }
+    
+    if (isNaN(d_val) || d_val < 0 || d_val > 100) {
+        alert("Target data skew must be between 0% and 100%.");
+        return false;
+    }
+    
+    if (isNaN(asym_val) || asym_val < 1) {
+        alert("Asymmetry (write/read latency ratio) must be a number greater than or equal to 1");
+        return false;
+    }
+    
+    if (isNaN(lat_val) || lat_val <= 0) {
+        alert("Base latency must be greater than 0 μs");
+        return false;
+    }
+    
 
     return true;
 }
+
 
 
 })

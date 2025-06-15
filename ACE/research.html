@@ -176,7 +176,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Disk size</span>
 									</div>
-									<input type="number" class="form-control" id="n" value=5000 min=0 disabled>
+									<input type="number" class="form-control" id="n" value=5000 min=0>
 								</div>
 							</div>
 
@@ -185,7 +185,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Buffer size</span>
 									</div>
-									<input type="number" class="form-control" id="b" value=100 min=0 disabled>
+									<input type="number" class="form-control" id="b" value=100 min=0>
 								</div>
 							</div>
 
@@ -194,7 +194,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Read (%)</span>
 									</div>
-									<input type="number" class="form-control" id="e" value=60 min=0 disabled>
+									<input type="number" class="form-control" id="e" value=60 min=0>
 									<div class="input-group-append">
 									</div>
 								</div>
@@ -242,7 +242,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Operations skewness (%)</span>
 									</div>
-									<input type="number" class="form-control" value=80 id="s" min=0 disabled>
+									<input type="number" class="form-control" value=80 id="s" min=0>
 									<div class="input-group-append">
 									</div>
 								</div>
@@ -255,7 +255,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Base Latency (μs)</span>
 									</div>
-									<input type="number" class="form-control" id="lat" value=12.4 min=0 max=100000>
+									<input type="number" class="form-control" id="lat" value=12.4 min=0>
 								</div>
 							</div>
 
@@ -264,7 +264,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Concurrency</span>
 									</div>
-									<input type="number" class="form-control" min=0 id="alpha" value=6 disabled>
+									<input type="number" class="form-control" min=0 id="alpha" value=6>
 								</div>
 							</div>
 
@@ -273,7 +273,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text"># Operations</span>
 									</div>
-									<input type="number" class="form-control" id="x" value=50000 min=0 max=100000 disabled>
+									<input type="number" class="form-control" id="x" value="50000" min=0>
 								</div>
 							</div>
 
@@ -282,7 +282,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Target data skewness (%)</span>
 									</div>
-									<input type="number" class="form-control" value=15 id="d" min=0 disabled>
+									<input type="number" class="form-control" value=15 id="d" min=0>
 									<div class="input-group-append">
 									</div>
 								</div>
@@ -562,7 +562,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Operations</span>
 									</div>
-									<input type="number" class="form-control" id="cmp_operations_rw" value="10000" min="0" max="100000">
+									<input type="number" class="form-control" id="cmp_operations_rw" value="10000" min="0">
 								</div>
 							</div>
 							<div class="col-lg-3 border-right">
@@ -570,7 +570,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Base Latency (μs)</span>
 									</div>
-									<input type="number" class="form-control" id="cmp_base_latency_rw" value="12.4" min="0" max="100000">
+									<input type="number" class="form-control" id="cmp_base_latency_rw" value="12.4" min="0">
 								</div>
 							</div>
 					
@@ -579,7 +579,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Operations</span>
 									</div>
-									<input type="number" class="form-control" id="cmp_operations_bp" value="10000" min="0" max="100000">
+									<input type="number" class="form-control" id="cmp_operations_bp" value="10000" min="0">
 								</div>
 							</div>
 							<div class="col-lg-3">
@@ -587,7 +587,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Base Latency (μs)</span>
 									</div>
-									<input type="number" class="form-control" id="cmp_base_latency_bp" value="12.4" min="0" max="100000">
+									<input type="number" class="form-control" id="cmp_base_latency_bp" value="12.4" min="0">
 								</div>
 							</div>
 						</div>
@@ -611,11 +611,11 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text"> &alpha; </span>
 									</div>
-									<input type="number" class="form-control" id="cmp_alpha_rw" value="3.0" min="0" max="100">
+									<input type="number" class="form-control" id="cmp_alpha_rw" value="3.0" min="0">
 									<div class="input-group-append">
 										<span class="input-group-text"> &kappa; </span>
 									</div>
-									<input type="number" class="form-control" id="cmp_kappa_rw" value="6" min="0" max="100">
+									<input type="number" class="form-control" id="cmp_kappa_rw" value="6" min="0">
 								</div>
 							</div>
 					
@@ -636,11 +636,11 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text"> &alpha; </span>
 									</div>
-									<input type="number" class="form-control" id="cmp_alpha_bp" value="3.0" min="0" max="100">
+									<input type="number" class="form-control" id="cmp_alpha_bp" value="3.0" min="0">
 									<div class="input-group-append">
 										<span class="input-group-text"> &kappa; </span>
 									</div>
-									<input type="number" class="form-control" id="cmp_kappa_bp" value="6" min="0" max="100">
+									<input type="number" class="form-control" id="cmp_kappa_bp" value="6" min="0">
 								</div>
 							</div>
 						</div>
