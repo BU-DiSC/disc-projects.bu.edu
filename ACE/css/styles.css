@@ -1,12 +1,18 @@
-body {
-	font-family: "Lato","Helvetica Neue",Helvetica,Arial,sans-serif;
-	font-weight: 400;
-}
+@font-face {
+    font-family: 'Linux Libertine';
+    src: url('fonts/LinLibertine_R.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+  }
+  body {
+    font-family: 'Linux Libertine', serif;
+    color: #111;
+  }
 
 section {
 	padding-top: 100px;
-  padding-left: 50px;
-  padding-right: 50px;
+    padding-left: 50px;
+    padding-right: 50px;
 	padding-bottom: 100px;
 }
 
@@ -455,9 +461,9 @@ input[type=number]::-webkit-inner-spin-button {
 /* LSM performance result display */
 #cost-result {
 	line-height: 2;
-	font-size: 1rem;
-	font-weight: 300;
-	color: #343a40;
+	font-size: 1.25rem;
+	font-weight: 400;
+	color: #111;
 }
 .metrics {
 	padding-left: 0px;
@@ -790,6 +796,7 @@ progress::-moz-progress-bar {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 15px;
+    font-size: 1.25rem;
     padding: 10px;
     background-color: #f8f9fa; /* Light grey background */
     border-radius: 5px;
@@ -800,6 +807,7 @@ progress::-moz-progress-bar {
     display: flex;
     align-items: center;
     width: 100%;
+    font-size: 1.25rem;
 }
 
 /* Progress Bar Container */
@@ -901,3 +909,174 @@ progress::-moz-progress-bar {
     opacity: 0.8; /* Slight transparency */
 }
 
+.toggle-switch {
+    display: inline-flex;
+    border: 1px solid #2C3E50;
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer;
+    user-select: none;
+    font-size: 0.75rem;
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    background-color: #ecf0f1;
+    font-weight: 400;
+    margin-bottom: 8px;
+  }
+  
+  .toggle-option {
+    padding: 4px 8px;
+    background-color: #ecf0f1;
+    color: #2C3E50;
+    transition: background-color 0.3s, color 0.3s;
+    text-align: center;
+  }
+  
+  .toggle-option.active {
+    background-color: #2C3E50;
+    color: #fff;
+    font-weight: 700;
+  }
+  
+  #RWplot, #LRUplot, #Bplot {
+    width: 100%;
+    height: 400px;
+  }
+    /* Center the bottom plot */
+    .row.justify-content-center {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    /* Adjust column width to maintain consistency */
+    .col-md-6 {
+        max-width: 50%; /* Ensures the top two plots are evenly spaced */
+    }
+
+    .col-md-8 {
+        max-width: 50%; /* Centers and resizes the bottom plot */
+    }
+
+    .flex-parent-element {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: flex-start;
+        width: 100%;
+        margin-top: 20px; /* Space between button and plots */
+    }
+
+    .flex-child-element {
+        flex: 1 1 20%;
+        min-width: 500px; /* Wider */
+        height: 400px; /* Ensures proper height */
+        background-color: transparent; /* Removes box background */
+        border: none; /* Removes border */
+        margin: 3px;
+        padding: 0px;
+    }
+
+    #individual-analysis {
+        font-family: 'Linux Libertine', serif;
+        font-size: 1.18rem;      /* Base size for the whole section */
+        color: #111;
+      }
+      
+      #individual-analysis .input-group-text,
+      #individual-analysis .form-control,
+      #individual-analysis select,
+      #individual-analysis input {
+        font-family: 'Linux Libertine', serif;
+        font-size: 1.18rem;      /* Slightly smaller for UI elements */
+        font-weight: 400;
+        color: #111;
+      }
+
+      #control-panel-wrapper {
+        font-family: 'Linux Libertine', serif;
+        font-size: 1.18rem;
+        font-weight: 400;
+        color: #111;
+      }
+      
+      /* Buttons inside the control panel */
+      #control-panel-wrapper .btn {
+        font-family: 'Linux Libertine', serif;
+        font-weight: 400;
+        font-size: 1.18rem;
+      }
+      
+      /* Progress bar text and labels */
+      #control-panel-wrapper .input-group-text,
+      #control-panel-wrapper .progress-box,
+      #control-panel-wrapper .progress-percent {
+        font-family: 'Linux Libertine', serif;
+        font-weight: 400;
+        font-size: 1.18rem;
+      }
+      
+      /* Optional: Style the slider if needed */
+      #control-panel-wrapper input.slider {
+        height: 1.18rem;
+        font-weight: 400;
+        cursor: pointer;
+      }
+      
+      
+/* Main container for comparison panel and plots */
+#comparative-analysis,
+#show-plot-btn,
+#comparative-analysis .container {
+  font-family: 'Linux Libertine', serif;
+  font-size: 1.15rem;
+  color: #111;
+  line-height: 1.6;
+}
+
+/* Section headings (like "Vary Buffer Pool Size") */
+#comparative-analysis h5,
+#comparative-analysis h4,
+#comparative-analysis h3 {
+  font-family: 'Linux Libertine', serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* Labels above inputs (e.g., "Workload", "Device") */
+#comparative-analysis .input-group-text {
+  font-size: 1.18rem;
+  font-family: 'Linux Libertine', serif;
+  font-weight: 400;
+}
+
+/* All inputs and dropdowns */
+#comparative-analysis .form-control,
+#comparative-analysis select,
+#comparative-analysis input {
+  font-size: 1.25rem;
+  font-family: 'Linux Libertine', serif;
+  font-weight: 400;
+}
+
+/* Button: "Run Experiments" */
+#graph.run-button {
+  font-size: 1.01rem !important;
+  font-family: 'Linux Libertine', serif;
+  font-weight: 400;
+}
+
+/* Toggle switch for raw/speedup */
+.toggle-switch .toggle-option {
+  font-family: 'Linux Libertine', serif;
+  font-size: 1.01rem;
+  font-weight: 400;
+}
+
+/* Plot captions */
+.plot-caption {
+  font-family: 'Linux Libertine', serif;
+  font-size: 1.18rem;
+  color: #111;
+  text-align: center;
+}

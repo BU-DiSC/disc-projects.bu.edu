@@ -39,8 +39,17 @@ var aceLatencyval = 0;
 
 var aceWriteBatches = [];
 var traditionalWriteBatches = [];
+
+
 function initializeEmptyPlots() {
     console.log("📊 Initializing empty plots...");
+
+    const libertineFontStyle = {
+        family: 'Linux Libertine, serif',
+        size: 19,
+        color: '#111',
+        weight: 400
+    };
 
     // Empty traces for Write Batches Plot
     var writeBatchesData = [
@@ -50,7 +59,7 @@ function initializeEmptyPlots() {
             type: 'scatter',
             mode: 'lines+markers',
             name: 'ACE-Algorithm',
-            line: {color: '#1B2631'}
+            line: { color: '#1B2631' }
         },
         {
             x: [],
@@ -58,11 +67,12 @@ function initializeEmptyPlots() {
             type: 'scatter',
             mode: 'lines+markers',
             name: 'Traditional Algorithm',
-            line: {color: 'red'}
+            line: { color: 'red' }
         }
     ];
 
     var writeBatchesLayout = {
+        font: libertineFontStyle,
         title: '',
         xaxis: { title: 'Operation Steps' },
         yaxis: { title: '# Write Batches' },
@@ -77,7 +87,7 @@ function initializeEmptyPlots() {
             type: 'scatter',
             mode: 'lines+markers',
             name: 'ACE-Algorithm Latency',
-            line: {color: '#1B2631'}
+            line: { color: '#1B2631' }
         },
         {
             x: [],
@@ -85,11 +95,12 @@ function initializeEmptyPlots() {
             type: 'scatter',
             mode: 'lines+markers',
             name: 'Traditional Algorithm Latency',
-            line: {color: 'red'}
+            line: { color: 'red' }
         }
     ];
 
     var latencyLayout = {
+        font: libertineFontStyle,
         title: '',
         xaxis: { title: 'Operation Steps' },
         yaxis: { title: 'Latency (ms)' },
@@ -100,6 +111,7 @@ function initializeEmptyPlots() {
     Plotly.newPlot('write-batches-graph', writeBatchesData, writeBatchesLayout);
     Plotly.newPlot('latency-graph', latencyData, latencyLayout);
 }
+
 
 function calculateLatency(writeBatches, diskPagesRead, isACE) {
     const baseReadLatency = parseFloat($('#lat').val()) || 1;
@@ -641,6 +653,7 @@ function getAlgorithmDisplayName(algorithmFunction, algorithmList, prefix = "") 
 
 function updateWriteBatchesPlot(aceData, traditionalData) {
     console.log("Updating Write Batches Plot with data: ", aceData, traditionalData);
+    
     let samplingRate = 10;
     let xValues = [];
     for (let i = 0; i <= p; i++) {
@@ -648,7 +661,7 @@ function updateWriteBatchesPlot(aceData, traditionalData) {
             xValues.push(i + 1);
         }
     }
-    
+
     let aceWriteValues = aceData.slice(0, p + 1);
     let tradWriteValues = traditionalData.slice(0, p + 1);
 
@@ -661,13 +674,20 @@ function updateWriteBatchesPlot(aceData, traditionalData) {
     console.log("🔵 ACE Write Batches (cumulative):", aceWriteValues);
     console.log("🔵 Trad Write Batches (cumulative):", tradWriteValues);
 
+    const libertineFontStyle = {
+        family: 'Linux Libertine, serif',
+        size: 19,   // ~1.18rem
+        color: '#111',
+        weight: 400
+    };
+
     var trace1 = {
         x: xValues,
-        y: aceWriteValues,  // ✅ Up to p + 1
+        y: aceWriteValues,
         type: 'scatter',
         mode: 'lines+markers',
         name: aceAlgorithmName,
-        line: { color: '#1B2631', shape: 'spline' }  // Dark color for ACE
+        line: { color: '#1B2631', shape: 'spline' }
     };
 
     var trace2 = {
@@ -680,6 +700,7 @@ function updateWriteBatchesPlot(aceData, traditionalData) {
     };
 
     var layout = {
+        font: libertineFontStyle,
         title: '',
         xaxis: { title: 'Operation steps' },
         yaxis: { title: '#Write Batches' },
@@ -696,8 +717,10 @@ function updateWriteBatchesPlot(aceData, traditionalData) {
 
 
 
+
 function updateLatencyPlot(aceLatency, traditionalLatency) {
     console.log("Updating Latency Plot with data: ", aceLatency, traditionalLatency);
+    
     let samplingRate = 10;
     let xValues = [];
     for (let i = 0; i <= p; i++) {
@@ -705,20 +728,27 @@ function updateLatencyPlot(aceLatency, traditionalLatency) {
             xValues.push(i + 1);
         }
     }
-    
+
     let aceLatencyValues = aceLatency.slice(0, p + 1);
     let traditionalLatencyValues = traditionalLatency.slice(0, p + 1);
 
     let aceAlgorithmName = getAlgorithmDisplayName(ACEAlgorithm, [ACELRU, ACECFLRU, ACELRUWSR], "ACE-");
     let baseAlgorithmName = getAlgorithmDisplayName(baseAlgorithm, [baseLRU, baseCFLRU, baseLRUWSR]);
 
+    const libertineFontStyle = {
+        family: 'Linux Libertine, serif',
+        size: 19,
+        color: '#111',
+        weight: 400
+    };
+
     var trace1 = {
         x: xValues,
         y: aceLatencyValues, 
         type: 'scatter',
         mode: 'lines+markers',
-        name: aceAlgorithmName, // ✅ ACE algorithm name dynamically set
-        line: {color: '#1B2631'}
+        name: aceAlgorithmName,
+        line: { color: '#1B2631' }
     };
 
     var trace2 = {
@@ -726,11 +756,12 @@ function updateLatencyPlot(aceLatency, traditionalLatency) {
         y: traditionalLatencyValues, 
         type: 'scatter',
         mode: 'lines+markers',
-        name: baseAlgorithmName, // ✅ Base algorithm name dynamically set
-        line: {color: 'red'}
+        name: baseAlgorithmName,
+        line: { color: 'red' }
     };
 
     var layout = {
+        font: libertineFontStyle,
         title: '',
         xaxis: { title: 'Operation steps' },
         yaxis: { title: 'Latency (ms)' },
@@ -746,9 +777,6 @@ function updateLatencyPlot(aceLatency, traditionalLatency) {
         Plotly.newPlot('latency-graph', data, layout);
     }
 }
-
-
-
 
 
 /*Base Variables*/
@@ -1367,89 +1395,6 @@ function baseLRUWSR(p) {
     console.log(`BufferHits: ${bufferHit}, BufferMisses: ${bufferMiss}, PagesEvicted: ${pagesEvicted}, PagesWritten: ${pagesWritten}, ReadIO: ${readIO}, WriteIO: ${writeIO}`);
 }
 
-
-// function baseLRUWSR(p){
-
-//     var type = workload[p][0];
-//     var page = workload[p][1];
-
-//     // add to dirty if "W"
-//     if (type == "W" && !dirty.includes(page)){
-//         dirty.push(page);
-//     }
-    
-//     // if buffer has page
-//     if (buffer.includes(page)){
-//         bufferHit++;
-//         //move page to the end of buffer array
-//         buffer.push(buffer.splice(buffer.indexOf(page), 1)[0]);
-//         if(dirty.includes(page)){
-//             dirty.push(dirty.splice(dirty.indexOf(page),1)[0]);
-//             coldflag[coldflag.indexOf(page)] = 1;
-//         }
-//         coldflag.push(coldflag.splice(coldflag.indexOf(page), 1)[0]);
-
-//     }else{
-
-//         bufferMiss++;
-//         readIO++;
-//         //if buffer not full
-//         if (buffer.length < bufferLength){
-//             buffer.push(page);
-//             if(dirty.includes(page)){
-//                 coldflag.push(1);
-//             }else{
-//                 coldflag.push(0);
-//             }
-//             pagesRead++;
-//         }else{
-//             let eviction = 0;
-//             while(eviction < 1){
-//                 //cycle untile cold flag of 0 is found
-//                 const first = buffer[0];
-//                 if (dirty.includes(first)){
-//                     if(coldflag[0] == 0){
-//                         dirty.splice(dirty.indexOf(first), 1);
-//                         eviction++;
-//                         pagesWritten++;
-//                         writeIO++;
-//                     }else{
-//                         coldflag[0] = 0;
-//                         coldflag.push(coldflag.splice(0, 1)[0]);
-//                         buffer.push(buffer.splice(0, 1)[0]);
-//                         dirty.push(dirty.splice(dirty.indexOf(first),1)[0]);
-//                     }
-                    
-//                 }else{
-//                     eviction++;
-//                 }
-                
-//             }
-            
-//             coldflag.shift();
-//             buffer.shift(); // remove one item from buffer (evict page)
-            
-//             pagesEvicted++;
-//             //add page to bufferpool and log flag
-//             buffer.push(page);
-//             if(dirty.includes(page)){
-//                 coldflag.push(1);
-//             }else{
-//                 coldflag.push(0);
-//             }
-//             pagesRead++;
-
-//         }
-//     }
-//     //console.log(buffer);
-//     //console.log(coldflag);
-//     //console.log(dirty);
-
-//     //start with small buffer and bug check
-// }
-
-
-
 function ACELRUWSR(p) {
     const type = workload[p][0];
     const page = workload[p][1];
@@ -1569,92 +1514,6 @@ function ACELRUWSR(p) {
     console.log(`BufferHits: ${ACEbufferHit}, BufferMisses: ${ACEbufferMiss}, PagesEvicted: ${ACEpagesEvicted}, PagesWritten: ${ACEpagesWritten}, ReadIO: ${ACEreadIO}, WriteIO: ${ACEwriteIO}`);
 }
 
-
-// function ACELRUWSR(p){
-
-//     var type = workload[p][0];
-//     var page = workload[p][1];
-
-//     // add to dirty if "W"
-//     if (type == "W" && !ACEdirty.includes(page)){
-//         ACEdirty.push(page);
-//     }
-    
-//     // if buffer has page
-//     if (ACEbuffer.includes(page)){
-//         ACEbufferHit++;
-//         //move page to the end of buffer array
-//         if(ACEdirty.includes(page)){
-//             ACEdirty.push(ACEdirty.splice(ACEdirty.indexOf(page),1)[0]);
-//             ACEcoldflag[ACEbuffer.indexOf(page)] = 1;
-//         } 
-//         ACEcoldflag.push(ACEcoldflag.splice(ACEbuffer.indexOf(page), 1)[0]);
-//         ACEbuffer.push(ACEbuffer.splice(ACEbuffer.indexOf(page), 1)[0]);
-//     }else{
-
-//         ACEbufferMiss++;
-//         ACEreadIO++;
-//         //if buffer not full
-//         if (ACEbuffer.length < bufferLength){
-//             ACEbuffer.push(page);
-//             if(ACEdirty.includes(page)){
-//                 ACEcoldflag.push(1);
-//             }else{
-//                 ACEcoldflag.push(0);
-//             }
-//             ACEpagesRead++;
-//         }else{
-
-//             const first = ACEbuffer[0];
-//             if (ACEdirty.includes(first)){
-//                 let awru = 0;
-//                     for(var i = 0; i < ACEdirty.length; i++){
-
-//                         if(ACEcoldflag[ACEbuffer.indexOf(ACEdirty[i])] == 0){
-                            
-//                             ACEdirty.splice(i, 1);
-//                             ACEpagesWritten++;
-//                             i--;
-//                         }else{
-
-//                             ACEcoldflag[ACEbuffer.indexOf(ACEdirty[i])] = 0;
-//                             ACEcoldflag.push(ACEcoldflag.splice(ACEbuffer.indexOf(ACEdirty[i]), 1)[0]);
-//                             ACEbuffer.push(ACEbuffer.splice(ACEbuffer.indexOf(ACEdirty[i]), 1)[0]);
-//                             ACEdirty.push(ACEdirty.splice(i,1)[0]);
-//                             i--;
-//                         }
-//                         awru++;  
-//                         if(awru == 8){
-//                             break;
-//                         }
-//                     }
-//                 ACEwriteIO++;
-//             }
-            
-            
-//             ACEcoldflag.shift();
-//             ACEbuffer.shift(); // remove one item from buffer (evict page)
-            
-//             ACEpagesEvicted++;
-//             //add page to bufferpool and log flag
-//             ACEbuffer.push(page);
-//             if(ACEdirty.includes(page)){
-//                 ACEcoldflag.push(1);
-//             }else{
-//                 ACEcoldflag.push(0);
-//             }
-//             ACEpagesRead++;
-
-//         }
-//     }
-//     //console.log(ACEbuffer);
-//     //console.log(ACEcoldflag);
-//     //console.log(ACEdirty);
-
-//     //start with small buffer and bug check
-// }
-
-
 /*Algorithms*/
 function base(page){
     // remove item from dirty (write page)
@@ -1694,53 +1553,6 @@ function ACE(page){
     ACEbuffer.push(page);
     ACEpagesRead++;
 }
-
-// function baseCC(algorithm){
-//     for (var j = 0; j < workload.length; j++){
-//         var type = workload[j][0];
-//         var page = workload[j][1];
-
-//         // add to dirty if "W"
-//         if (type == "W" && !dirty.includes(page)){
-//             dirty.push(page);
-//         }
-
-//         // if buffer has page
-//         if (buffer.includes(page)){
-//             bufferHit++;
-//             //move page to the end of buffer array
-//             buffer.push(buffer.splice(buffer.indexOf(page), 1)[0]);
-//         }
-//         // if buffer doesn't have page
-//         else
-//         {
-//             bufferMiss++;
-//             readIO++;
-//             //if buffer not full
-//             if (buffer.length < bufferLength)
-//                 buffer.push(page);
-//             else
-//             {
-//                 if (algorithm == base){
-//                     // remove item from dirty
-//                     var checkIndex = 0;
-//                     var target = buffer[checkIndex];
-//                     while (dirty.includes(target) && checkIndex < buffer.length -1){
-//                         checkIndex++;
-//                         target = buffer[checkIndex];
-//                     }
-//                     buffer.splice(checkIndex,1); // remove one item from buffer
-//                     buffer.push(page);
-//                 } else {
-//                     algorithm(page);
-//                 }
-//             }
-//         }
-//     }
-//     return[bufferMiss, readIO, writeIO, writeCost];
-// }
-
-//returns IO of base and ACE
 
 function IOcalc(wload, bLen, alpha, baseAlg){
     //global variables
