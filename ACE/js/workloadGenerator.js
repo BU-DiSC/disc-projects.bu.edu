@@ -2,9 +2,7 @@ $(document).ready(function(){
     $("#b, #n, #x, #s, #d, #e, #alpha").prop("disabled", false);
     $("#cmp-b-rw, #cmp-n-rw, #cmp-x-rw, #cmp-s-rw, #cmp-d-rw, #cmp-e-rw, #cmp-alpha-rw").prop("disabled", false);
     $("#cmp-b-bp, #cmp-n-bp, #cmp-x-bp, #cmp-s-bp, #cmp-d-bp, #cmp-e-bp, #cmp-alpha-bp").prop("disabled", false);
-
-    var individualPlaying = false;
-    var comparativePlaying = false;    
+    var playing = false;
 
 	/*First & Second Graphs*/
     //input fields
