@@ -2,7 +2,9 @@ $(document).ready(function(){
     $("#b, #n, #x, #s, #d, #e, #alpha").prop("disabled", false);
     $("#cmp-b-rw, #cmp-n-rw, #cmp-x-rw, #cmp-s-rw, #cmp-d-rw, #cmp-e-rw, #cmp-alpha-rw").prop("disabled", false);
     $("#cmp-b-bp, #cmp-n-bp, #cmp-x-bp, #cmp-s-bp, #cmp-d-bp, #cmp-e-bp, #cmp-alpha-bp").prop("disabled", false);
-    var playing = false;
+
+    var individualPlaying = false;
+    var comparativePlaying = false;    
 
 	/*First & Second Graphs*/
     //input fields
@@ -459,6 +461,14 @@ function drawRWplot(mode) {
             { x: x, y: LRUWSR, name: "LRU-WSR", mode: "scatter", marker: { size: 12, symbol: 'triangle-up-open' } },
             { x: x, y: ACELRUWSR, name: "ACE-LRUWSR", mode: "scatter", marker: { size: 12, symbol: 'triangle-down-open' } }
         ];
+        // ✅ Flatten and find max Y value from all raw traces
+        const allY = [...LRU, ...ACELRU, ...CFLRU, ...ACECFLRU, ...LRUWSR, ...ACELRUWSR];
+        let maxY = Math.max(...allY);
+        maxY = Math.ceil(maxY * 100) / 100 + 15;  // Round and pad
+
+        // ✅ Override yaxis layout for raw mode
+        layout.yaxis.autorange = false;
+        layout.yaxis.range = [0, maxY];
 
         document.getElementById("RWplot-caption").innerHTML =
             `<b>ACE consistently reduces latency across read/write mixes</b>`;
@@ -560,7 +570,8 @@ function Bgraph() {
     // ✅ Apply font style and fix x-axis padding
     layout.font = {
         family: 'Linux Libertine',
-        size: 18.88, // 1.18rem ≈ 18.88px
+        size: 19, // 1.18rem ≈ 18.88px
+        color: '#111',
         weight: 400
     };
     layout.xaxis.title = {
@@ -664,11 +675,11 @@ function ACELRUgraph(){
                         line: { dash: "solid" }
                     });
                 }
-
                 let layout = {
                     font: {
                         family: 'Linux Libertine',
-                        size: 18.88,
+                        size: 19,
+                        color: '#111',
                         weight: 400
                     },
                     xaxis: {
