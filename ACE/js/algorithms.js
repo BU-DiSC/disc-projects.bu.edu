@@ -129,7 +129,7 @@ $(document).ready(function(){
         $("#ACE-alg-table tr").each(function () {
             $('td', this).each(function (index) {
                 if (!ACEbuffer[index]) {
-                    $(this).css("background-color", "#F2F3F4");  // ✅ Super Light Grey (empty)
+                    $(this).css("background-color", "#F2F3F4");  // Super Light Grey (empty)
                 }
             });
         });
@@ -172,30 +172,30 @@ $(document).ready(function(){
         function handleInputChange() {
             console.log("🔄 Input changed, resetting stats, stopping simulation, and clearing plots...");
         
-            // ✅ Stop the Simulation
+            // Stop the Simulation
             playing = false;
             pauser = false;
             reloader = 1;  // Ensure myLoop stops execution
         
-            // ✅ Reset Simulation State
+            // Reset Simulation State
             firstWrite = true;
             p = 0; // Reset step counter
         
-            // ✅ Clear Write Batches and Latency Data
+            // Clear Write Batches and Latency Data
             aceWriteBatches = [];
             traditionalWriteBatches = [];
             aceLatency = [];
             traditionalLatency = [];
         
-            // ✅ Hide ACE Alert and Reset Blue Border
+            // Hide ACE Alert and Reset Blue Border
             $("#ACEAlert").css('visibility', 'hidden');
             $("#ACERow").css({ "border-color": "transparent", "border-width": "0px" });
         
-            // ✅ Remove Tables
+            // Remove Tables
             $("#base-alg-table").remove();
             $("#ACE-alg-table").remove();
         
-            // ✅ Reset Buffer and Metrics
+            // Reset Buffer and Metrics
             buffer = [];
             dirty = [];
             coldflag = [];
@@ -224,21 +224,21 @@ $(document).ready(function(){
             ACEpagesEvicted = 0;
             ACEpagesPrefetched = 0;
         
-            // ✅ Reset UI Metrics Display
+            // Reset UI Metrics Display
             resetStats();
             updateProgress(0, 100);
         
-            // ✅ Reset the Plots
+            // Reset the Plots
             resetPlots();
         
-            // ✅ Ensure Play Button is Re-enabled
+            // Ensure Play Button is Re-enabled
             $("#play-button").prop("disabled", false);
         
-            console.log("✅ Simulation reset. Waiting for Play button.");
+            console.log("   Simulation reset. Waiting for Play button.");
         }
         
     
-        // ✅ Attach event listeners to all relevant inputs
+        // Attach event listeners to all relevant inputs
         $("#workload, #n, #b, #e, #device, #asym, #baseAlg, #s, #lat, #alpha, #x, #d").on("change input", handleInputChange);
     });
     
@@ -264,7 +264,7 @@ $(document).ready(function(){
             ACEDisplay();
             updateProgress(p, workload.length);
     
-            // ✅ Plot only every 10 steps or final step
+            // Plot only every 10 steps or final step
             if (p % 10 === 0 || p === workload.length - 1) {
                 updateWriteBatchesPlot(aceWriteBatches.slice(0, p + 1), traditionalWriteBatches.slice(0, p + 1));
                 updateLatencyPlot(aceLatency.slice(0, p + 1), traditionalLatency.slice(0, p + 1));
@@ -329,7 +329,7 @@ $(document).ready(function(){
             // Update Plots with Restored Latency
             updateLatencyPlot(aceLatency.slice(0, stepIndex + 1), traditionalLatency.slice(0, stepIndex + 1));
     
-            console.log(`✅ Successfully restored state at step ${stepIndex}.`);
+            console.log(`   Successfully restored state at step ${stepIndex}.`);
         } catch (error) {
             console.error("❌ Error restoring step state:", error);
         }
@@ -455,17 +455,17 @@ $(document).ready(function(){
             if (reloader == 1) return; // Stop execution if `finisher()` was called
     
             if (!pauser) {
-                // ✅ Step simulation
+                // Step simulation
                 baseAlgorithm(p);
                 ACEAlgorithm(p);
                 baseDisplay();
                 ACEDisplay();
     
-                // ✅ Update latency values regardless of sampling
+                // Update latency values regardless of sampling
                 tradLatency = calculateLatency(writeIO, readIO, false) / 1000;
                 aceLatencyval = calculateLatency(ACEwriteIO, ACEreadIO, true) / 1000;
     
-                // ✅ Sample for plotting every 10 steps or final step
+                // Sample for plotting every 10 steps or final step
                 if (p % 10 === 0 || p === workload.length - 1) {
                     aceWriteBatches.push(ACEwriteIO);
                     traditionalWriteBatches.push(writeIO);
@@ -477,17 +477,17 @@ $(document).ready(function(){
                     updateLatencyPlot(aceLatency, traditionalLatency);
                 }
     
-                // ✅ Update progress bar after increment
+                // Update progress bar after increment
                 if (p < workload.length - 1) {
                     p++;
                     updateProgress(p, workload.length);
                 }
     
-                console.log(`✅ Step after increment: ${p}`);
-                console.log(`✅ Progress updated to: ${Math.round((p / workload.length) * 100)}%`);
+                console.log(`   Step after increment: ${p}`);
+                console.log(`   Progress updated to: ${Math.round((p / workload.length) * 100)}%`);
             }
     
-            // ✅ Show ACE write alert once
+            // Show ACE write alert once
             if (firstWrite && ACEpagesWritten > 0) {
                 $("#ACEAlert").css('visibility', 'visible');
                 $("#ACERow").css({
@@ -498,7 +498,7 @@ $(document).ready(function(){
                 firstWrite = false;
             }
     
-            // ✅ Recurse only if still playing
+            // Recurse only if still playing
             if (playing) {
                 myLoop(remainingSteps - 1);
             } else {
@@ -516,19 +516,19 @@ $(document).ready(function(){
                 console.log("⏸️ Simulation paused.");
             } else {
                 console.log("▶️ Simulation resumed.");
-                reloader = 0; // ✅ Allow myLoop to execute
-                myLoop(workload.length - p); // ✅ Resume from current step
+                reloader = 0; // Allow myLoop to execute
+                myLoop(workload.length - p); // Resume from current step
             }
         } else {
-            playing = true; // ✅ Ensure playing is set to true when resuming
-            pauser = false; // ✅ Ensure it's not paused when starting
-            reloader = 0;   // ✅ Reset reloader so simulation continues
+            playing = true; // Ensure playing is set to true when resuming
+            pauser = false; // Ensure it's not paused when starting
+            reloader = 0;   // Reset reloader so simulation continues
             console.log("▶️ Starting simulation...");
-            myLoop(workload.length - p); // ✅ Start from current step
+            myLoop(workload.length - p); // Start from current step
         }
     });
     
-    // ✅ Plot cumulative write IOs for smoother curve
+    // Plot cumulative write IOs for smoother curve
     function cumulative(arr) {
         let sum = 0;
         return arr.map(v => sum += v);
@@ -547,7 +547,7 @@ $(document).ready(function(){
     
         console.log(`⏩ Manual Progress Change: ${newProgress}% → Step ${newStep}`);
     
-        // ✅ Reset UI and internal state
+        // Reset UI and internal state
         resetStats();
     
         buffer = [];
@@ -578,7 +578,7 @@ $(document).ready(function(){
         ACEpagesEvicted = 0;
         ACEpagesPrefetched = 0;
     
-        // ✅ Reset plotting arrays
+        // Reset plotting arrays
         aceWriteBatches = [];
         traditionalWriteBatches = [];
         aceLatency = [];
@@ -587,7 +587,7 @@ $(document).ready(function(){
     
         let samplingRate = 10;  // ⬅️ Only record every 10 steps
 
-        // ✅ Re-run simulation from step 0 to newStep
+        // Re-run simulation from step 0 to newStep
         for (let i = 0; i <= newStep; i++) {
             if (workload[i] !== undefined) {
                 baseAlgorithm(i);
@@ -605,32 +605,32 @@ $(document).ready(function(){
         }
         p = newStep;
 
-        // ✅ Recompute latency to refresh the panel
+        // Recompute latency to refresh the panel
         let baseReadLatency = parseFloat($('#lat').val()) || 1;
         let asymmetry = parseFloat($('#asym').val()) || 1;
         
         tradLatency = calculateLatency(writeIO, readIO, false, baseReadLatency, asymmetry) / 1000;
         aceLatencyval = calculateLatency(ACEwriteIO, ACEreadIO, true, baseReadLatency, asymmetry) / 1000;
     
-        // ✅ Redraw visuals
+        // Redraw visuals
         cleanACEBufferDisplay();
         baseDisplay();
         ACEDisplay();
         updateProgress(p, workload.length);
     
-        // ✅ Plot cumulative write IOs
+        // Plot cumulative write IOs
         const aceCumulative = cumulative(aceWriteBatches);
         const tradCumulative = cumulative(traditionalWriteBatches);
         
         // ⬅️ Step 2: Log for debugging
-        console.log("✅ ACE cumulative write batches:", aceCumulative);
-        console.log("✅ Trad cumulative write batches:", tradCumulative);
+        console.log("   ACE cumulative write batches:", aceCumulative);
+        console.log("   Trad cumulative write batches:", tradCumulative);
         updateWriteBatchesPlot(
             aceWriteBatches,
             traditionalWriteBatches
         );
     
-        // ✅ Plot latency (already cumulative)
+        // Plot latency (already cumulative)
         updateLatencyPlot(aceLatency, traditionalLatency);
     });
     
@@ -638,7 +638,7 @@ $(document).ready(function(){
 /* Progress Bar Update Function */
 function updateProgress(currentStep, totalSteps) {
     let progressPercent = Math.round((currentStep / totalSteps) * 100);
-    console.log(`✅ Step ${currentStep}/${totalSteps} → Progress: ${progressPercent}%`);
+    console.log(`   Step ${currentStep}/${totalSteps} → Progress: ${progressPercent}%`);
 
     $("#progress-bar").val(progressPercent);  // Update slider value
     $("#progress-label").text(progressPercent + "%");  // Update label
@@ -828,7 +828,7 @@ function calculate(wload, bLen, alpha, baseAlg){
     alphaVal = alpha;
     p = 0;
     let totalSteps = workload.length;
-    console.log("Starting simulation..."); // ✅ Debug log
+    console.log("Starting simulation..."); // Debug log
     updateProgress(0, totalSteps); // Reset progress bar
     //assign selected algorithm
     const ACEalgorithms = [ACELRU, ACECFLRU, ACELRUWSR];
@@ -914,7 +914,7 @@ function finisher() {
     pauser = false;
     reloader = 0;
 
-    // ✅ Reset simulation state (just like progress-bar logic)
+    // Reset simulation state (just like progress-bar logic)
     resetStats();
 
     buffer = [];
@@ -952,7 +952,7 @@ function finisher() {
 
     let samplingRate = 10;
 
-    // ✅ Re-parse the values
+    // Re-parse the values
     let baseReadLatency = parseFloat($('#lat').val()) || 1;
     let asymmetry = parseFloat($('#asym').val()) || 1;
 
@@ -972,7 +972,7 @@ function finisher() {
         }
     }
 
-    // ✅ Final latency calculation (in case last loop iteration didn’t run sampling block)
+    // Final latency calculation (in case last loop iteration didn’t run sampling block)
     tradLatency = calculateLatency(writeIO, readIO, false, baseReadLatency, asymmetry) / 1000;
     aceLatencyval = calculateLatency(ACEwriteIO, ACEreadIO, true, baseReadLatency, asymmetry) / 1000;
 
@@ -1067,7 +1067,7 @@ function ACEDisplay() {
         });
     });
 
-    // ✅ Update metrics to reflect the correct state
+    // Update metrics to reflect the correct state
     $("#ace-alg-buffer-misses").text(ACEbufferMiss);
     $("#ace-alg-buffer-hits").text(ACEbufferHit);
     $("#ace-alg-pages-read").text(ACEpagesRead);
@@ -1087,7 +1087,7 @@ function ACEDisplay() {
     const pagesEvictedDiff = calculatePercentageDifference(pagesEvicted, ACEpagesEvicted);
     const latencydiff = calculatePercentageDifference(tradLatency, aceLatencyval);
 
-    // ✅ Display the values with color-coded percentage differences
+    // Display the values with color-coded percentage differences
     $("#ace-alg-buffer-misses").html(`${ACEbufferMiss} &nbsp; ${formatDifference(bufferMissDiff, true)}`);
     $("#ace-alg-buffer-hits").html(`${ACEbufferHit} &nbsp; ${formatDifference(bufferHitDiff, false)}`);
     $("#ace-alg-pages-read").html(`${ACEpagesRead} &nbsp; ${formatDifference(pagesReadDiff, true)}`);
