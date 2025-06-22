@@ -509,24 +509,40 @@ $(document).ready(function(){
     
     
     
-    $("#play-button").click(function() {
-        if (playing) {
-            pauser = !pauser; // Toggle pause/play
-            if (pauser) {
-                console.log("⏸️ Simulation paused.");
-            } else {
-                console.log("▶️ Simulation resumed.");
-                reloader = 0; // Allow myLoop to execute
-                myLoop(workload.length - p); // Resume from current step
+    $("#play-button").click(function () {
+        const isComparative = $("#comparative-analysis").is(":visible");
+        const b_val = parseInt($(isComparative ? "#cmp-b" : "#b").val());
+        const alpha_val = parseFloat($(isComparative ? "#cmp-alpha" : "#alpha").val());
+        const baseAlg = parseInt($(isComparative ? "#cmp-baseAlg" : "#baseAlg").val());
+    
+        // If simulation is not playing, we need to start everything
+        if (!playing) {
+            if (capacity()) {
+                // Reset all necessary flags
+                playing = true;
+                pauser = false;
+                reloader = 0;
+    
+                // Initialize simulation state
+                const newWorkload = generateWorkload();
+                calculate(newWorkload, b_val, alpha_val, baseAlg);
+    
+                console.log("▶️ Starting simulation...");
+                myLoop(newWorkload.length); // Start from scratch
             }
         } else {
-            playing = true; // Ensure playing is set to true when resuming
-            pauser = false; // Ensure it's not paused when starting
-            reloader = 0;   // Reset reloader so simulation continues
-            console.log("▶️ Starting simulation...");
-            myLoop(workload.length - p); // Start from current step
+            // If simulation is already playing, just toggle pause/resume
+            pauser = !pauser;
+            if (pauser) {
+                console.log("Simulation paused.");
+            } else {
+                console.log("Simulation resumed.");
+                reloader = 0;
+                myLoop(workload.length - p);
+            }
         }
     });
+    
     
     // Plot cumulative write IOs for smoother curve
     function cumulative(arr) {
