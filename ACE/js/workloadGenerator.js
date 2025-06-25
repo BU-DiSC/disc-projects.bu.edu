@@ -132,8 +132,8 @@ function BPWorkload(){
 
 $(document).ready(function(){
     $("#b, #n, #x, #s, #d, #e, #alpha").prop("disabled", false);
-    $("#cmp-b-rw, #cmp-n-rw, #cmp-x-rw, #cmp-s-rw, #cmp-d-rw, #cmp-e-rw, #cmp-alpha-rw").prop("disabled", false);
-    $("#cmp-b-bp, #cmp-n-bp, #cmp-x-bp, #cmp-s-bp, #cmp-d-bp, #cmp-e-bp, #cmp-alpha-bp").prop("disabled", false);
+    $("#cmp-b-rw, #cmp-n-rw, #cmp-x-rw, #cmp-s-rw, #cmp-d-rw, #cmp-e-rw").prop("disabled", false);
+    $("#cmp-b-bp, #cmp-n-bp, #cmp-x-bp, #cmp-s-bp, #cmp-d-bp, #cmp-e-bp").prop("disabled", false);
     var playing = false;
 
 	/*First & Second Graphs*/
@@ -147,12 +147,12 @@ $(document).ready(function(){
     const $d = $('#d'); // skewness data
 
     //[b,n,x,s,d,e,alpha]
-    const workload1 = [100, 5000, 50000, 80, 15, 60]; //small buffer
-    const workload2 = [250, 5000, 50000, 80, 15, 60]; // large buffer
-    const workload3 = [150, 5000, 50000, 80, 15, 90]; // read heavy
-    const workload4 = [150, 5000, 50000, 80, 15, 20]; //write heavy
-    const workload5 = [150, 10000, 50000, 95, 5, 60];  // skewed
-    const workload6 = [150, 500, 50000, 100, 100, 60];  // uniform
+    const workload1 = [100, 5000, 10000, 80, 15, 60]; //small buffer
+    const workload2 = [250, 5000, 10000, 80, 15, 60]; // large buffer
+    const workload3 = [150, 5000, 10000, 80, 15, 90]; // read heavy
+    const workload4 = [150, 5000, 10000, 80, 15, 20]; //write heavy
+    const workload5 = [150, 10000, 10000, 95, 5, 60];  // skewed
+    const workload6 = [150, 500, 10000, 100, 100, 60];  // uniform
     const test = [5, 50, 20, 80, 15, 40];
 
     const device1 = [12.4, 3.0, 6]; // PCI
@@ -192,10 +192,10 @@ $(document).on("change", "#workload, #cmp_workload_rw, #cmp_workload_bp", functi
         ids = ["b", "n", "x", "s", "d", "e"];
     } else if (id === "cmp_workload_rw") {
         ids = ["cmp_buffer_size_rw", "cmp_disk_size_rw", "cmp_operations_rw", 
-            "cmp_skew_d_rw", "cmp_skew_t_rw", "cmp_read_percentage_rw", "cmp_kappa_rw"];
+            "cmp_skew_d_rw", "cmp_skew_t_rw", "cmp_read_percentage_rw"];
     } else if (id === "cmp_workload_bp") {
         ids = ["cmp_buffer_size_bp", "cmp_disk_size_bp", "cmp_operations_bp", 
-            "cmp_skew_d_bp", "cmp_skew_t_bp", "cmp_read_percentage_bp", "cmp_kappa_bp"];
+            "cmp_skew_d_bp", "cmp_skew_t_bp", "cmp_read_percentage_bp"];
     }
 
     if (workloadIndex > 0 && workloadIndex <= workloads.length) {
@@ -310,7 +310,14 @@ $(document).on("input", "input[type='number']", function () {
         g.setAttribute("value", progress);
         g.setAttribute("max", "30");
         document.getElementById("loadingbar").appendChild(g);
-    
+        // ✅ Set toggle back to "Raw" visually
+        $(".toggle-switch").each(function () {
+            const $switch = $(this);
+            const $options = $switch.find(".toggle-option");
+
+            $options.removeClass("active");  // Remove any active
+            $switch.find('.toggle-option[data-mode="raw"]').addClass("active");  // Activate raw
+        });
         setTimeout(() => {
             RWgraph();  // Now the RW plot updates only when the user clicks the button
             Bgraph();   // Buffer pool graph updates only when the user clicks the button
@@ -335,9 +342,7 @@ $(document).on("input", "input[type='number']", function () {
                 drawBplot(mode);
                 break;
         }
-    });
-    
-    
+    });   
     
     
 function update(p){
@@ -471,14 +476,6 @@ function drawRWplot(mode) {
             { x: x, y: LRUWSR, name: "LRU-WSR", mode: "scatter", marker: { size: 12, symbol: 'triangle-up-open' } },
             { x: x, y: ACELRUWSR, name: "ACE-LRUWSR", mode: "scatter", marker: { size: 12, symbol: 'triangle-down-open' } }
         ];
-        // ✅ Flatten and find max Y value from all raw traces
-        const allY = [...LRU, ...ACELRU, ...CFLRU, ...ACECFLRU, ...LRUWSR, ...ACELRUWSR];
-        let maxY = Math.max(...allY);
-        maxY = Math.ceil(maxY * 100) / 100 + 15;  // Round and pad
-
-        // ✅ Override yaxis layout for raw mode
-        layout.yaxis.autorange = false;
-        layout.yaxis.range = [0, maxY];
 
         document.getElementById("RWplot-caption").innerHTML =
             `<b>ACE consistently reduces latency across read/write mixes</b>`;
@@ -727,3 +724,5 @@ function ACELRUgraph(){
 }
 
 })
+
+
