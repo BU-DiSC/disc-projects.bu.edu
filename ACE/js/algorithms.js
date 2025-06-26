@@ -353,6 +353,7 @@ $(document).ready(function(){
             // Reset Control + Step Tracker
             s.firstWrite = true;
             s.p = 0;
+            s.workload = [];
         
             // Clear Write Batches and Latency Arrays
             s.aceWriteBatches = [];
@@ -386,6 +387,19 @@ $(document).ready(function(){
     
         // Attach event listeners to all relevant inputs
         $("#workload, #n, #b, #e, #device, #asym, #baseAlg, #s, #lat, #alpha, #x, #d").on("change input", handleInputChange);
+    });
+    
+    $(document).on("change", "#baseAlg", function () {
+        const selectedAlg = parseInt($(this).val());
+        const s = state.indiv;
+    
+        const baseAlgorithms = [baseLRU, baseCFLRU, baseLRUWSR];
+        const aceAlgorithms = [ACELRU, ACECFLRU, ACELRUWSR];
+    
+        s.baseAlgorithm = baseAlgorithms[selectedAlg];
+        s.ACEAlgorithm = aceAlgorithms[selectedAlg];
+    
+        console.log(`🔄 Algorithm changed: base → ${baseAlgorithms[selectedAlg].name}, ACE → ${aceAlgorithms[selectedAlg].name}`);
     });
     
     $("#backward-button").click(function () {
@@ -700,16 +714,20 @@ $(document).ready(function(){
         const s = state.indiv;
     
         if (!s.playing) {
+            console.log("inside playing");
             if (capacity()) {
-                // Always regenerate workload on fresh start
+                console.log("inside capacity");
+                // ✅ Always refresh algorithms from dropdown
+                const baseAlgorithms = [baseLRU, baseCFLRU, baseLRUWSR];
+                const aceAlgorithms = [ACELRU, ACECFLRU, ACELRUWSR];
+                s.baseAlgorithm = baseAlgorithms[baseAlg];
+                s.ACEAlgorithm = aceAlgorithms[baseAlg];
+    
+                console.log(`Checking workload state: s.p = ${s.p}, s.workload.length = ${s.workload.length}`);
                 if (s.workload.length === 0 || s.p === 0) {
+                    console.log("inside workload");
                     const newworkload = generateWorkload();
                     calculate(newworkload, b_val, alpha_val, baseAlg);
-    
-                    const baseAlgorithms = [baseLRU, baseCFLRU, baseLRUWSR];
-                    const aceAlgorithms = [ACELRU, ACECFLRU, ACELRUWSR];
-                    s.baseAlgorithm = baseAlgorithms[baseAlg];
-                    s.ACEAlgorithm = aceAlgorithms[baseAlg];
                 }
     
                 s.playing = true;
@@ -731,10 +749,6 @@ $(document).ready(function(){
             }
         }
     });
-    
-    
-    
-    
     
     // Plot cumulative write IOs for smoother curve
     function cumulative(arr) {
@@ -1216,6 +1230,10 @@ function formatDifference(diffStr, isLowerBetter) {
 }
 
 function baseLRU(p, s) {
+    if (!s.workload || !s.workload[p]) {
+        console.warn(`⚠️ Skipping step ${p}: workload not ready.`);
+        return;
+    }
     const type = s.workload[p][0];
     const page = s.workload[p][1];
 
@@ -1243,6 +1261,10 @@ function baseLRU(p, s) {
 }
 
 function ACELRU(p, s) {
+    if (!s.workload || !s.workload[p]) {
+        console.warn(`⚠️ Skipping step ${p}: workload not ready.`);
+        return;
+    }
     const type = s.workload[p][0];
     const page = s.workload[p][1];
 
@@ -1269,6 +1291,10 @@ function ACELRU(p, s) {
 
 
 function baseCFLRU(p, s) {
+    if (!s.workload || !s.workload[p]) {
+        console.warn(`⚠️ Skipping step ${p}: workload not ready.`);
+        return;
+    }
     const cleanPer = 1 / 3;
     const cleanSize = Math.floor(s.buffer.length * cleanPer);
 
@@ -1323,6 +1349,10 @@ function baseCFLRU(p, s) {
 
 
 function ACECFLRU(p, s) {
+    if (!s.workload || !s.workload[p]) {
+        console.warn(`⚠️ Skipping step ${p}: workload not ready.`);
+        return;
+    }
     const ACEcleanPer = 1 / 3;
     const ACEcleanSize = Math.floor(s.ACEbuffer.length * ACEcleanPer);
 
@@ -1378,6 +1408,10 @@ function ACECFLRU(p, s) {
 
 
 function baseLRUWSR(p, s) {
+    if (!s.workload || !s.workload[p]) {
+        console.warn(`⚠️ Skipping step ${p}: workload not ready.`);
+        return;
+    }
     const type = s.workload[p][0];
     const page = s.workload[p][1];
 
@@ -1483,6 +1517,10 @@ function baseLRUWSR(p, s) {
 }
 
 function ACELRUWSR(p, s) {
+    if (!s.workload || !s.workload[p]) {
+        console.warn(`⚠️ Skipping step ${p}: workload not ready.`);
+        return;
+    }
     const type = s.workload[p][0];
     const page = s.workload[p][1];
 
