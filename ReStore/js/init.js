@@ -15,8 +15,10 @@ tier3 = [];
 function createPage(id) {
     return {
         id: id,
-        lastRequestRound: 0,
-        frequency: 0
+        lastRequestRound: -1,
+        frequency: 0,
+        temperature: 0.5,
+        reqRounds: []
     };
 }
 

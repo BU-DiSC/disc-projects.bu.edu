@@ -81,6 +81,7 @@ function generateWorkload(){
     e_val = parseInt($("#e").val());
     s_val = parseInt($("#s").val());
     d_val = parseInt($("#d").val());
+    x_val = parseInt($("#x").val());
 
     // Generate workload
     var pageId;
@@ -211,16 +212,16 @@ $(document).ready(function(){
 
     var devices = [pciSSD, sataSSD, optaneSSD, virtualSSD]
 
-    $("#lat1").val(optaneSSD[1]);
-    $("#asym1").val(optaneSSD[0]);
+    $("#lat1").val(optaneSSD[0]);
+    $("#asym1").val(optaneSSD[1]);
     $("#alpha1").val(optaneSSD[2]);
 
-    $("#lat2").val(pciSSD[1]);
-    $("#asym2").val(pciSSD[0]);
+    $("#lat2").val(pciSSD[0]);
+    $("#asym2").val(pciSSD[1]);
     $("#alpha2").val(pciSSD[2]);
 
-    $("#lat3").val(sataSSD[1]);
-    $("#asym3").val(sataSSD[0]);
+    $("#lat3").val(sataSSD[0]);
+    $("#asym3").val(sataSSD[1]);
     $("#alpha3").val(sataSSD[2]);
 
     // var workloads = [workload1, workload2, workload3, workload4, workload5, workload6, test];
