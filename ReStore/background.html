@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>ReStore : RL Guided Data Migration in Tiered Storage</title>
+	<!-- Bootswatch CSS based on Bootstrao -->
+	<!-- Theme: http://bootswatch.com/flatly/ -->
+	<link rel="stylesheet" href="css/bootstrap.min.css">
+	<!-- Plugin CSS -->
+	<link rel="stylesheet" href="css/bootstrap-slider.min.css">
+	<!-- Custom CSS -->
+	<link rel="stylesheet" href="css/styles.css">
+	<link rel="stylesheet" href="css/tooltip.css">
+	<!-- Google Font -->
+	<link href="https://fonts.googleapis.com/css?family=Lato:300,400&display=swap" rel="stylesheet">
+	<!-- Google Material Icon-->
+	<link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Material+Icons+Outlined" rel="stylesheet">
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script src="js/plotly.js"></script>
+  <!-- jQuery (Bootstrap JS plugins depend on it) -->
+	<script src="js/jquery-3.4.1.min.js"></script>
+	<!-- <script src="js/bootstrap.min.js"></script> -->
+	<script src="js/bootstrap.bundle.min.js"></script>
+	<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({tex2jax: {preview: "none", inlineMath: [['$','$'], ['\\(','\\)']]}, "fast-preview": {disabled: true}});
+  </script>
+	<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML' async></script>
+	<script src="js/bootstrap-slider.js"></script>
+	<script src="js/popper.min.js"></script>
+	<script src="js/init.js"></script>
+</head>
+
+<body>
+	<header id="page-top"></header>
+	<div id="left-sidebar"></div>
+
+	<section id="problem" style="padding-top:100px">
+		<div class="container">
+      <!-- SSE: change ACE to ReStore, update texts in the following part -->
+			<div class="row section-title text-center">
+        <h2> What is ACE and why do we need it? </h2>
+			</div>
+      <div class="row">
+        <p>
+          <img class="img-responsive img-centered" src="./img/modern_devices.png" alt="" align="left" width=20% style="margin-left:10%;margin-right:10%" />
+          <b>ACE</b> is a new bufferpool manager that addresses two challenges of the state-of-the-art bufferpool managers. 
+          First, existing bufferpool managers often assume that the underlying devices have no concurrency. As a result,
+          they write (evict) one page at a time, missing the opportunity to exploit the device's ability to handle parallel writes.
+          Second, page replacement policies generally do not consider the device asymmetry, instead, they treat read and write requests equally.
+          </p>
+    		</div>
+      <hr >
+      <div class="row">
+        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 mt-3"  >
+          <div class="row section-title text-center" style="border-width:5px;border-radius: 20px;
+    border-style:dotted;">
+    				<h3> Classical buffer pool design space </h3>
+    			</div>
+        </div>
+        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 mt-3">
+          <div class="row section-title text-center" style="border-width:5px;border-radius: 20px;
+    border-style:dotted;">
+    				<h3> ACE buffer pool design space </h3>
+    			</div>
+        </div>
+      </div>
+      <div class="row text-center" style="margin-top:-30px">
+        <img class="img-responsive img-centered" src="./img/defualt-design1024_1.png" alt="" width=50% />
+        <img class="img-responsive img-centered" src="./img/new-design1024_1.png" alt = "" width="50%" />
+      </div>
+			<div class="row">
+				<div>
+          <br>
+          <p>
+            To address these issues, we propose ACE, a bufferpool manager that utilizes the underlying device concurrency and assymetry. 
+            Our approach uses asymmetry/concurrency-aware write-back and eviction policies. 
+            The write-back policy always writes multiple pages concurrently, hence amortizing the write cost. 
+            The eviction policy evicts one or multiple pages at the same time from the bufferpool to enable prefetching.
+            When multiple pages are evicted at once, <i>ACE</i> can concurrently prefetch pages to exploit the device's read concurrency.
+          </p>
+				</div>
+			</div>
+
+			</div>
+	</section>
+
+	<section class="bg-light">
+		<div class="container">
+			<div class="row section-title text-center">
+				<h2> Abstract Overview of ACE Components </h2>
+			</div>
+
+      <div class="row">
+        <p>
+          When a request for reading or writing page P is received, we first search through the bufferpool.
+          If P is not found and the bufferpool is full, then at least one page has to be evicted.
+          The page replacement algorithm determines the page to be evicted.
+          If the top page is clean, it is evicted and paage P is fetched. Until this part,
+          Ace is identical to any state-of-the-art bufferpool manager. However, if the top page is dirty, ACE proceeds as follows: <br>
+          • ACE without prefetching: concurrently write nw dirty pages and evict a single page. <br>
+          • ACE with prefetching: concurrently write nw dirty pages, evict ne pages, and concurrently prefetch ne - 1 pages. <br>
+          The values nw and ne depend on the underlying device concurrency and the potential benefits of prefetching. 
+          When prefetching is enabled, ACE evicts ne pages in order to prefetch ne - 1 pages exploiting the read concurrency of the device.
+        </p>
+        <br>
+        <img class="img-responsive img-centered" src="./img/design-space1024_1.png" alt="" width="1000px">
+        <br>
+      </div>
+
+		</div>
+	</section>
+
+  <section id="research" style="margin:0 10px">
+    <div class="container">
+      <div class="row text-center">
+        <h2> ACE: Case Example </h2>
+      </div>
+      <div class="row">
+        <div class="col-lg-12">
+            <p> Below is an example of ACE processing through one read request with a full bufferpool using LRU.
+            </p>
+            <br>
+        </div>
+      </div>
+      <div class="col-lg-12 text-center">
+        <img class="img-responsive img-centered" src="./img/ace_example.png" alt="" width="650px">
+        <!-- SSE: Change this with restore_example.png -->
+      </div>
+      <div class="row">
+        <div class="col-lg-12">
+          <br>
+          <p> ACE page selection policies for nw = 3 and ne = 3. ACE writes three dirty pages (p6, p4, p2) following the
+          LRU order; if prefetching is enabled three pages (p6, p5, p4) are evicted, otherwise one page (p6) is evicted.
+          </p>
+        </div>
+      </div>
+    </div>
+
+	</section>
+
+  <footer id="page-bottom"></footer>
+</body>
+
+</html>
