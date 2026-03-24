@@ -1,10 +1,17 @@
-const tier1Size = 4;
-const tier2Size = 12;
-const tier3Size = 24;
+const threadPoolEnabled = false;
 
-const tier1PerRow = 4;
-const tier2PerRow = 6;
-const tier3PerRow = 8;
+const totalPages = 40; // Total number of unique pages in the system
+const tier1Ratio = 0.12;
+const tier2Ratio = 0.16;
+
+const tier1Size = Math.round(totalPages * tier1Ratio);
+const tier2Size = Math.round(totalPages * tier2Ratio);
+// const tier3Size = totalPages;
+const tier3Size = totalPages - tier1Size - tier2Size; // As per original implementation, tier3 gets the remaining pages
+
+const tier1PerRow = tier1Size;
+const tier2PerRow = Math.ceil(tier2Size/2);
+const tier3PerRow = Math.ceil(tier3Size/3);
 
 const highestPageId = tier3Size - 1; // Assuming page IDs start from 0 and go up to tier3Size-1
 
@@ -41,25 +48,17 @@ function emptyTiers() {
 }
 
 function initTiers() {
-
+  let currentId = 0;
   tier1 = Array.from({ length: tier1Size }, () =>
-      createPage(randomInt(0, highestPageId))
+      createPage(currentId++)
   );
-
   tier2 = Array.from({ length: tier2Size }, () =>
-      createPage(randomInt(0, highestPageId))
+      createPage(currentId++)
   );
 
-  tier3 = Array.from({ length: highestPageId + 1 }, (_, i) => createPage(i));
-
-  // Shuffle using Fisher-Yates
-  for (let i = tier3.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [tier3[i], tier3[j]] = [tier3[j], tier3[i]];
-  }
-
-  // Take only tier3Size pages
-  tier3 = tier3.slice(0, tier3Size);
+  tier3 = Array.from({ length: tier3Size }, () =>
+      createPage(currentId++)
+  );
 }
 
 async function loadHTML(id, file) {
@@ -73,5 +72,5 @@ window.addEventListener('DOMContentLoaded', () => {
   loadHTML('left-sidebar', 'left-sidebar.html');
   loadHTML('page-bottom', 'footer.html');
   emptyTiers();
-  renderTiers(tier1, tier2, tier3);
+  renderTiers(tier1, tier2, tier3, state.tiers.algorithms.length);
 });

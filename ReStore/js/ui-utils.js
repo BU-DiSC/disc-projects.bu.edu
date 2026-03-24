@@ -1,15 +1,9 @@
-function renderTiers(tier1, tier2, tier3) {
-    renderTier(1, "tier1alg0", tier1);
-    renderTier(2, "tier2alg0", tier2);
-    renderTier(3, "tier3alg0", tier3);
-
-    renderTier(1, "tier1alg1", tier1);
-    renderTier(2, "tier2alg1", tier2);
-    renderTier(3, "tier3alg1", tier3);
-
-    renderTier(1, "tier1alg2", tier1);
-    renderTier(2, "tier2alg2", tier2);
-    renderTier(3, "tier3alg2", tier3);
+function renderTiers(tier1, tier2, tier3, numAlgo = 3) {
+    for (let algNo = 0; algNo < numAlgo; algNo++) {
+        renderTier(1, `tier1alg${algNo}`, tier1);
+        renderTier(2, `tier2alg${algNo}`, tier2);
+        renderTier(3, `tier3alg${algNo}`, tier3);
+    }
 }
 
 function renderUpdatedTiers(fromTier, toTier, fromPos, toPos, algNo) {
@@ -52,16 +46,23 @@ function highlightCells(cells, className, delay) {
     cells.forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
-
+        console.log(`Adding ${className} to ${id} for ${delay}ms`);
         el.classList.add(className);
 
         // auto remove highlight
         setTimeout(() => {
+            console.log(`Removing ${className} from ${id}`);
             el.classList.remove(className);
         }, delay);
     });
 }
 
-function sleep(ms) {
+function asyncSleep(ms) {
     return new Promise(r => setTimeout(r, ms));
+}
+
+function sleep(ms) {
+    setTimeout(() => {
+        // Do nothing
+    }, ms);
 }

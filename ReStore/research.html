@@ -33,7 +33,6 @@
 	<script src="js/popper.min.js"></script>
 	<script src="js/init.js"></script>
 	<script src="js/ui-utils.js"></script>
-
 	<script>
 		window.onload = function(){
 			loadHTML('publication', 'publication.html');
@@ -53,6 +52,7 @@
 	<script src="js/popper.min.js"></script>
 	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   	<script src="js/plotly.js"></script>
+	<!-- <script src="js/hotness.js"></script> -->
   	<script src="js/workloadGenerator.js"></script>
   	<script src="js/algorithms.js"></script>
 </head>
@@ -70,7 +70,7 @@
 				<h2>
 					<a target="_blank" href="https://disc-projects.bu.edu/compactionary/files/LSM_Compact_Demo.mp4">
 						<span class="metric-title" data-toggle="tooltip" data-placement="right"
-							  title="Watch walkthrough this video" style="color:#000"> ReStore in action </span>
+							  title="Watch walkthrough this video" style="color:#000"> ReStore in Action </span>
 					</a>
 					<!-- SSE: Change the link -->
 				</h2>
@@ -357,7 +357,8 @@
 
 					
 					<!-- Simulation Panel -->
-					<div id="indiv-bush-row" class="row">
+				<div id="sim-panel-horizontal-scroll">
+					<div id="indiv-bush-row" class="row flex-nowrap">
 						<div class="col-sm-2 text-right">
 							<div class="lsm-title cmp-indiv-mp">
 								&nbsp;
@@ -384,15 +385,24 @@
 						<div class="col-sm-3">
 							<div id="cmp-lsm-cmpct-pp-2-mp" class="row cmp-indiv-mp">
 								<div class="lsm-title">
-									<span id="alg2-table-title" class="row cmp-indiv-mp">ReStore</span>
+									<span id="alg2-table-title" class="row cmp-indiv-mp">tTemp</span>
 								</div>
 								<!-- <span id="ACEAlert">The streaks of clean pages formed by concurrently writing dirty pages</span> -->
 							</div>
 							<div id="table2"></div>
 						</div>
+						<div class="col-sm-3">
+							<div id="cmp-lsm-cmpct-pp-2-mp" class="row cmp-indiv-mp">
+								<div class="lsm-title">
+									<span id="alg3-table-title" class="row cmp-indiv-mp">ReStore</span>
+								</div>
+								<!-- <span id="ACEAlert">The streaks of clean pages formed by concurrently writing dirty pages</span> -->
+							</div>
+							<div id="table3"></div>
+						</div>
 					</div>
 
-					<div class="row">
+					<div class="row flex-nowrap">
 						<div class="col-sm-2 text-right">
 							<div class="lsm-title cmp-indiv-mp">
 								Tier 1
@@ -407,10 +417,13 @@
 						<div class="col-sm-3">
 							<div id="tier1alg2" class="tier justify-content-center"></div>
 						</div>
+						<div class="col-sm-3">
+							<div id="tier1alg3" class="tier justify-content-center"></div>
+						</div>
 					</div>
 					<br>
 
-					<div class="row">
+					<div class="row flex-nowrap">
 						<div class="col-sm-2 text-right">
 							<div class="lsm-title cmp-indiv-mp">
 								Tier 2
@@ -425,10 +438,14 @@
 						<div class="col-sm-3">
 							<div id="tier2alg2" class="tier justify-content-center"></div>
 						</div>
+						<div class="col-sm-3">
+							<div id="tier2alg3" class="tier justify-content-center"></div>
+						</div>
+
 					</div>
 					<br>
 
-					<div class="row">
+					<div class="row flex-nowrap">
 						<div class="col-sm-2 text-right">
 							<div class="lsm-title cmp-indiv-mp">
 								Tier 3
@@ -443,13 +460,16 @@
 						<div class="col-sm-3">
 							<div id="tier3alg2" class="tier justify-content-center"></div>
 						</div>
+						<div class="col-sm-3">
+							<div id="tier3alg3" class="tier justify-content-center"></div>
 					</div>
+				</div>
 					<br>
 
 					<!-- Performance Metrics Panel -->
 					<div id="cost-result" class="container">
 						<!-- #Disk Pages Written-->
-						<div class="row">
+						<div class="row flex-nowrap">
 							<div class="col-sm-2 text-left">
 								<span class="metric-title" data-toggle="tooltip" data-placement="left"
 									title="The number of pages written."># Pages Written (Tier 1)</span>
@@ -464,9 +484,12 @@
 							<div class="col-sm-3 text-left">
 								<span id="alg2-pages-written-t1" class="cost uncertain">0</span>
 							</div>
+							<div class="col-sm-3 text-left">
+								<span id="alg3-pages-written-t1" class="cost uncertain">0</span>
+							</div>
 						</div>
 
-						<div class="row">
+						<div class="row flex-nowrap">
 							<div class="col-sm-2 text-left">
 								<span class="metric-title" data-toggle="tooltip" data-placement="left"
 									title="The number of pages written."># Pages Written (Tier 2)</span>
@@ -481,9 +504,12 @@
 							<div class="col-sm-3 text-left">
 								<span id="alg2-pages-written-t2" class="cost uncertain">0</span>
 							</div>
+							<div class="col-sm-3 text-left">
+								<span id="alg3-pages-written-t2" class="cost uncertain">0</span>
+							</div>
 						</div>
 
-						<div class="row">
+						<div class="row flex-nowrap">
 							<div class="col-sm-2 text-left">
 								<span class="metric-title" data-toggle="tooltip" data-placement="left"
 									title="The number of pages written."># Pages Written (Tier 3)</span>
@@ -491,17 +517,19 @@
 							<div class="col-sm-3 text-left">
 								<span id="alg0-pages-written-t3" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
 							</div>
-							
 							<div class="col-sm-3 text-left">
 								<span id="alg1-pages-written-t3" class="cost uncertain">0</span>
 							</div>
 							<div class="col-sm-3 text-left">
 								<span id="alg2-pages-written-t3" class="cost uncertain">0</span>
 							</div>
+							<div class="col-sm-3 text-left">
+								<span id="alg3-pages-written-t3" class="cost uncertain">0</span>
+							</div>
 						</div>
 
 						<!-- #Disk Pages Read-->
-						<div class="row">
+						<div class="row flex-nowrap">
 							<div class="col-sm-2 text-left">
 								<span class="metric-title" data-toggle="tooltip" data-placement="left"
 									title="The number of pages read."># Pages Read (Tier 1)</span>
@@ -516,9 +544,12 @@
 							<div class="col-sm-3 text-left">
 								<span id="alg2-pages-read-t1" class="cost uncertain">0</span>
 							</div>
+							<div class="col-sm-3 text-left">
+								<span id="alg3-pages-read-t1" class="cost uncertain">0</span>
+							</div>
 						</div>
 
-						<div class="row">
+						<div class="row flex-nowrap">
 							<div class="col-sm-2 text-left">
 								<span class="metric-title" data-toggle="tooltip" data-placement="left"
 									title="The number of pages read."># Pages Read (Tier 2)</span>
@@ -533,9 +564,12 @@
 							<div class="col-sm-3 text-left">
 								<span id="alg2-pages-read-t2" class="cost uncertain">0</span>
 							</div>
+							<div class="col-sm-3 text-left">
+								<span id="alg3-pages-read-t2" class="cost uncertain">0</span>
+							</div>
 						</div>
 
-						<div class="row">
+						<div class="row flex-nowrap">
 							<div class="col-sm-2 text-left">
 								<span class="metric-title" data-toggle="tooltip" data-placement="left"
 									title="The number of pages read."># Pages Read (Tier 3)</span>
@@ -550,10 +584,13 @@
 							<div class="col-sm-3 text-left">
 								<span id="alg2-pages-read-t3" class="cost uncertain">0</span>
 							</div>
+							<div class="col-sm-3 text-left">
+								<span id="alg3-pages-read-t3" class="cost uncertain">0</span>
+							</div>
 						</div>
 
 						<!-- #Disk Pages Migrated-->
-						<div class="row">
+						<div class="row flex-nowrap">
 							<div class="col-sm-2 text-left">
 								<span class="metric-title" data-toggle="tooltip" data-placement="left"
 									title="The number of pages migrated."># Pages Migrated (Tier 1 &#8596 2)</span>
@@ -567,6 +604,9 @@
 							</div>
 							<div class="col-sm-3 text-left">
 								<span id="alg2-pages-migrated-t1t2" class="cost uncertain">0</span>
+							</div>
+							<div class="col-sm-3 text-left">
+								<span id="alg3-pages-migrated-t1t2" class="cost uncertain">0</span>
 							</div>
 						</div>
 
@@ -588,7 +628,7 @@
 						</div> -->
 
 
-						<div class="row">
+						<div class="row flex-nowrap">
 							<div class="col-sm-2 text-left">
 								<span class="metric-title" data-toggle="tooltip" data-placement="left"
 									title="The number of pages migrated."># Pages Migrated (Tier 2 &#8596 3)</span>
@@ -602,6 +642,9 @@
 							</div>
 							<div class="col-sm-3 text-left">
 								<span id="alg2-pages-migrated-t2t3" class="cost uncertain">0</span>
+							</div>
+							<div class="col-sm-3 text-left">
+								<span id="alg3-pages-migrated-t2t3" class="cost uncertain">0</span>
 							</div>
 						</div>
 
@@ -677,6 +720,7 @@
 							</div>
 						</div> -->
 					</div>
+				
 
 
 					<!-- After the Performance Metrics Panel -->
