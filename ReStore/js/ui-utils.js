@@ -46,12 +46,12 @@ function highlightCells(cells, className, delay) {
     cells.forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
-        console.log(`Adding ${className} to ${id} for ${delay}ms`);
+        // console.log(`Adding ${className} to ${id} for ${delay}ms`);
         el.classList.add(className);
 
         // auto remove highlight
         setTimeout(() => {
-            console.log(`Removing ${className} from ${id}`);
+            // console.log(`Removing ${className} from ${id}`);
             el.classList.remove(className);
         }, delay);
     });
