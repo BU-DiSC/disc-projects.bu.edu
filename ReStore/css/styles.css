@@ -736,13 +736,13 @@ progress::-moz-progress-bar {
 
 /* Finish button */
 #finish-button {
-    background: linear-gradient(135deg, #922B21 0%, #C0392B 100%) !important; /* Dark red to lighter red gradient */
+    background: linear-gradient(135deg, #085da3 0%, #177acc 100%) !important; /* Dark red to lighter red gradient */
     border: none;
     color: white;
 }
 
 #finish-button:hover {
-    background: linear-gradient(135deg, #7B241C 0%, #A93226 100%) !important;
+    background: linear-gradient(135deg, #054e8a 0%, #1574c3 100%) !important;
 }
 
 /* Speed buttons (Fast, Medium, Slow) */

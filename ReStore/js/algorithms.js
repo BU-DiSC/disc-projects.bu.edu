@@ -1,7 +1,13 @@
 const state = {
+    config: {
+        fast_step_delay: 20,
+        medium_step_delay: 200,
+        slow_step_delay: 2000,
+        finisher_step_delay: 1,
+        plotUpdateInterval: 10, // Update plots every 10 steps
+    },
+
     tiers: {
-        // pages in different tiers acc. to different algorithms
-        // we may need to change this based on # of algorithms to be shown
         tier1CurPages: [[],[],[],[],[],[],[]],
         tier2CurPages: [[],[],[],[],[],[],[]],
         tier3CurPages: [[],[],[],[],[],[],[]],
@@ -44,7 +50,6 @@ const state = {
         pauser: false,
         reloader: 0,
         playing: false,
-        firstWrite: true,
         delay: 2000,
         started: false,
 
@@ -85,325 +90,32 @@ const state = {
         approxT1QueueSizeEstimate: 0,
         approxT2QueueSizeEstimate: 0,
         approxT3QueueSizeEstimate: 0,
-    },
 
-    indiv: {
-        // Base Variables
-        buffer: [],
-        dirty: [],
-        coldflag: [],
-        uses: {},
-        baseTotalBuffer: [],
-
-        bufferHit: 0,
-        bufferMiss: 0,
-        readIO: 0,
-        writeIO: 0,
-        baseWriteIO: 0,
-        pagesWritten: 0,
-        pagesRead: 0,
-        pagesEvicted: 0,
-        pagesPrefetched: 0,
-
-        // Base Variables for Tiered Algorithms
-        t1Buffer: [],
-        t1Dirty: [],
-        t1Coldflag: [],
-        t1Uses: {},
-        t1BaseTotalBuffer: [],
-
-        t1bufferHit: 0,
-        t1bufferMiss: 0,
-        t1readIO: 0,
-        t1writeIO: 0,
-        t1baseWriteIO: 0,
-        t1pagesWritten: 0,
-        t1pagesRead: 0,
-        t1pagesEvicted: 0,
-        t1pagesPrefetched: 0,
-
-        t2Buffer: [],
-        t2Dirty: [],
-        t2Coldflag: [],
-        t2Uses: {},
-        t2BaseTotalBuffer: [],
-
-        t2bufferHit: 0,
-        t2bufferMiss: 0,
-        t2readIO: 0,
-        t2writeIO: 0,
-        t2baseWriteIO: 0,
-        t2pagesWritten: 0,
-        t2pagesRead: 0,
-        t2pagesEvicted: 0,
-        t2pagesPrefetched: 0,
-
-        t3Buffer: [],
-        t3Dirty: [],
-        t3Coldflag: [],
-        t3Uses: {},
-        t3BaseTotalBuffer: [],
-
-        t3bufferHit: 0,
-        t3bufferMiss: 0,
-        t3readIO: 0,
-        t3writeIO: 0,
-        t3baseWriteIO: 0,
-        t3pagesWritten: 0,
-        t3pagesRead: 0,
-        t3pagesEvicted: 0,
-        t3pagesPrefetched: 0,
-
-        // ACE Variables
-        ACEbuffer: [],
-        ACEdirty: [],
-        ACEcoldflag: [],
-        ACEuses: {},
-        ACETotalBuffer: [],
-
-        ACEbufferHit: 0,
-        ACEbufferMiss: 0,
-        ACEreadIO: 0,
-        ACEwriteIO: 0,
-        ACEpagesWritten: 0,
-        ACEpagesRead: 0,
-        ACEpagesEvicted: 0,
-        ACEpagesPrefetched: 0,
-
-        // Independent Variables
-        bufferLength: 0,
-        alphaVal: 0,
-        workload: [],
-        p: 0,
-        ACEAlgorithm: null,
-        baseAlgorithm: null,
-
-        // Independent Variables for Tiered Algorithms
-        t1BufferLength: 0,
-        t1AlphaVal: 0,
-        t2BufferLength: 0,
-        t2AlphaVal: 0,
-        t3BufferLength: 0,
-        t3AlphaVal: 0,
-
-        workload: [],
-        p: 0,
-        baseAlgorithm: null,
-
-
-
-        // Playback Control
-        pauser: false,
-        reloader: 0,
-        playing: false,
-        firstWrite: true,
-        delay: 200,
-    
-        // Latency & Write Batch Tracking
-        aceLatency: [],
-        // traditionalLatency: [],
-        aceWriteBatches: [],
-        // traditionalWriteBatches: [],
-    
-        // History Tracking
-        bufferHistory: [],
-        dirtyHistory: [],
-        coldflagHistory: [],
-        usesHistory: [],
-    
-        ACEbufferHistory: [],
-        ACEdirtyHistory: [],
-        ACEcoldflagHistory: [],
-        ACEusesHistory: [],
-    
-        bufferHitHistory: [],
-        bufferMissHistory: [],
-        readIOHistory: [],
-        writeIOHistory: [],
-        pagesWrittenHistory: [],
-        pagesReadHistory: [],
-        pagesEvictedHistory: [],
-        pagesPrefetchedHistory: [],
-    
-        ACEbufferHitHistory: [],
-        ACEbufferMissHistory: [],
-        ACEreadIOHistory: [],
-        ACEwriteIOHistory: [],
-        ACEpagesWrittenHistory: [],
-        ACEpagesReadHistory: [],
-        ACEpagesEvictedHistory: [],
-        ACEpagesPrefetchedHistory: [],
-    
-        // Temporary latency tracking
-        tradLatency: 0,
-        aceLatencyval: 0,
-        sampled_steps: []       
-    },
-
-    cmp: {
-        // Base Variables
-        buffer: [],
-        dirty: [],
-        coldflag: [],
-        uses: {},
-        baseTotalBuffer: [],
-
-        bufferHit: 0,
-        bufferMiss: 0,
-        readIO: 0,
-        writeIO: 0,
-        baseWriteIO: 0,
-        pagesWritten: 0,
-        pagesRead: 0,
-        pagesEvicted: 0,
-        pagesPrefetched: 0,
-
-        // ACE Variables
-        ACEbuffer: [],
-        ACEdirty: [],
-        ACEcoldflag: [],
-        ACEuses: {},
-        ACETotalBuffer: [],
-
-        ACEbufferHit: 0,
-        ACEbufferMiss: 0,
-        ACEreadIO: 0,
-        ACEwriteIO: 0,
-        ACEpagesWritten: 0,
-        ACEpagesRead: 0,
-        ACEpagesEvicted: 0,
-        ACEpagesPrefetched: 0,
-
-        // Independent Variables
-        bufferLength: 0,
-        alphaVal: 0,
-        workload: [],
-        p: 0,
-        ACEAlgorithm: null,
-        baseAlgorithm: null
+        latencyValuesForPlot: [[], [], [], [], [], [], []],
+        migrationCountsForPlot: [[], [], [], [], [], [], []],
+        t2t1MigrationCountsForPlot: [[], [], [], [], [], [], []],
+        t2t3MigrationCountsForPlot: [[], [], [], [], [], [], []]
     }
 };
-
-function resetIndivState() {
-    const s = state.indiv;
-
-    // Control flags
-    s.playing = false;
-    s.pauser = false;
-    s.reloader = 0;
-
-    // Buffers
-    s.buffer = [];
-    s.dirty = [];
-    s.coldflag = [];
-    s.uses = {};
-
-    s.ACEbuffer = [];
-    s.ACEdirty = [];
-    s.ACEcoldflag = [];
-    s.ACEuses = {};
-
-    // Metrics
-    s.bufferHit = 0;
-    s.bufferMiss = 0;
-    s.readIO = 0;
-    s.writeIO = 0;
-    s.pagesWritten = 0;
-    s.pagesRead = 0;
-    s.pagesEvicted = 0;
-    s.pagesPrefetched = 0;
-
-    s.ACEbufferHit = 0;
-    s.ACEbufferMiss = 0;
-    s.ACEreadIO = 0;
-    s.ACEwriteIO = 0;
-    s.ACEpagesWritten = 0;
-    s.ACEpagesRead = 0;
-    s.ACEpagesEvicted = 0;
-    s.ACEpagesPrefetched = 0;
-
-    // Latency tracking
-    s.aceLatency = [];
-    s.traditionalLatency = [];
-    s.tradLatency = 0;
-    s.aceLatencyval = 0;
-    s.sampled_steps = [];
-    // Write batches
-    s.aceWriteBatches = [];
-    s.traditionalWriteBatches = [];
-}
-
-function resetCmpState() {
-    const s = state.cmp;
-
-    // Base buffers
-    s.buffer = [];
-    s.dirty = [];
-    s.coldflag = [];
-    s.uses = {};
-    s.baseTotalBuffer = [];
-
-    // Metrics
-    s.bufferHit = 0;
-    s.bufferMiss = 0;
-    s.readIO = 0;
-    s.writeIO = 0;
-    s.baseWriteIO = 0;
-    s.pagesWritten = 0;
-    s.pagesRead = 0;
-    s.pagesEvicted = 0;
-    s.pagesPrefetched = 0;
-
-    // ACE buffers
-    s.ACEbuffer = [];
-    s.ACEdirty = [];
-    s.ACEcoldflag = [];
-    s.ACEuses = {};
-    s.ACETotalBuffer = [];
-
-    // ACE metrics
-    s.ACEbufferHit = 0;
-    s.ACEbufferMiss = 0;
-    s.ACEreadIO = 0;
-    s.ACEwriteIO = 0;
-    s.ACEpagesWritten = 0;
-    s.ACEpagesRead = 0;
-    s.ACEpagesEvicted = 0;
-    s.ACEpagesPrefetched = 0;
-
-    // Independent variables
-    s.bufferLength = 0;
-    s.alphaVal = 0;
-    s.workload = [];
-    s.p = 0;
-
-    s.ACEAlgorithm = null;
-    s.baseAlgorithm = null;
-}
 
 // revisit this after finalizing the page structure and any other changes to the tier structure
 function resetTiersState() {
     const s = state.tiers;
-
     // Tier page lists
     s.tier1CurPages = [[],[],[],[],[],[],[]];
     s.tier2CurPages = [[],[],[],[],[],[],[]];
     s.tier3CurPages = [[],[],[],[],[],[],[]];
-
     // Reads
     s.tier1read = [0,0,0,0,0,0,0];
     s.tier2read = [0,0,0,0,0,0,0];
     s.tier3read = [0,0,0,0,0,0,0];
-
     // Writes
     s.tier1write = [0,0,0,0,0,0,0];
     s.tier2write = [0,0,0,0,0,0,0];
     s.tier3write = [0,0,0,0,0,0,0];
-
     // Migration stats
     s.tier2_1Migration = [0,0,0,0,0,0,0];
     s.tier2_3Migration = [0,0,0,0,0,0,0];
-
     // Queues
     s.tier1Queue = [[],[],[],[],[],[],[]];
     s.tier2Queue = [[],[],[],[],[],[],[]];
@@ -422,8 +134,7 @@ function resetTiersState() {
     s.pauser = false;
     s.reloader = 0;
     s.playing = false;
-    s.firstWrite = true;
-    s.delay = 1000;
+    s.delay = state.config.medium_step_delay;
     s.started = false;
 
     // Independent tier variables
@@ -448,9 +159,11 @@ function resetTiersState() {
     s.lastCostT1 = 0;
     s.lastCostT2 = 0;
     s.lastCostT3 = 0;
+
     s.approxT1QueueSizeEstimate = 0;
     s.approxT2QueueSizeEstimate = 0;
     s.approxT3QueueSizeEstimate = 0;
+
     s.lastStateT1 = null;
     s.lastStateT2 = null;
     s.lastStateT3 = null;
@@ -471,42 +184,17 @@ function resetTiersState() {
     s.tier3ActiveThreads = [0,0,0,0,0,0,0];
 }
 
-
-// function resetStats(){
-//     $("#base-alg-buffer-misses").text(0);
-//     $("#base-alg-buffer-hits").text(0);
-//     $("#base-alg-pages-read").text(0);
-//     $("#base-alg-pages-written").text(0);
-//     $("#base-alg-read-IO").text(0);
-//     $("#base-alg-write-IO").text(0);
-//     $("#base-alg-pages-evicted").text(0);
-//     $("#base-alg-latency").text(0);
-
-//     $("#ace-alg-buffer-misses").text(0);
-//     $("#ace-alg-buffer-hits").text(0);
-//     $("#ace-alg-pages-read").text(0);
-//     $("#ace-alg-pages-written").text(0);
-//     $("#ace-alg-read-IO").text(0);
-//     $("#ace-alg-write-IO").text(0);
-//     $("#ace-alg-pages-evicted").text(0);
-//     $("#ace-alg-latency").text(0);
-// }
-
 function resetStats() {
-    const numAlgos = 3;
-
+    const numAlgos = state.tiers.algorithms.length;
     for (let algoIndex = 0; algoIndex < numAlgos; algoIndex++) {
-
         // WRITES
         $(`#alg${algoIndex}-pages-written-t1`).text(0);
         $(`#alg${algoIndex}-pages-written-t2`).text(0);
         $(`#alg${algoIndex}-pages-written-t3`).text(0);
-
         // READS
         $(`#alg${algoIndex}-pages-read-t1`).text(0);
         $(`#alg${algoIndex}-pages-read-t2`).text(0);
         $(`#alg${algoIndex}-pages-read-t3`).text(0);
-
         // MIGRATIONS
         $(`#alg${algoIndex}-pages-migrated-t1t2`).text(0);
         $(`#alg${algoIndex}-pages-migrated-t2t3`).text(0);
@@ -515,12 +203,10 @@ function resetStats() {
 
 function resetState() {
     resetTiersState();
-    resetIndivState();
-    resetCmpState();
 }
 
 
-function initializeEmptyPlots() {
+function initializeEmptyPlots(s) {
     console.log("📊 Initializing empty plots...");
 
     const libertineFontStyle = {
@@ -530,228 +216,185 @@ function initializeEmptyPlots() {
         weight: 400
     };
 
-    // Empty traces for Write Batches Plot
-    var writeBatchesData = [
-        {
-            x: [],
-            y: [],
-            type: 'scatter',
-            mode: 'lines+markers',
-            name: 'ACE-Algorithm',
-            line: { color: '#1B2631' }
-        },
-        {
-            x: [],
-            y: [],
-            type: 'scatter',
-            mode: 'lines+markers',
-            name: 'Traditional Algorithm',
-            line: { color: 'red' }
-        }
-    ];
-
-    var writeBatchesLayout = {
-        font: libertineFontStyle,
-        title: '',
-        xaxis: { title: 'Operation Steps' },
-        yaxis: { title: '# Write Batches' },
-        showlegend: true
-    };
-
-    // Empty traces for Latency Plot
-    var latencyData = [
-        {
-            x: [],
-            y: [],
-            type: 'scatter',
-            mode: 'lines+markers',
-            name: 'ACE-Algorithm Latency',
-            line: { color: '#1B2631' }
-        },
-        {
-            x: [],
-            y: [],
-            type: 'scatter',
-            mode: 'lines+markers',
-            name: 'Traditional Algorithm Latency',
-            line: { color: 'red' }
-        }
-    ];
-
-    var latencyLayout = {
-        font: libertineFontStyle,
-        title: '',
-        xaxis: { title: 'Operation Steps' },
-        yaxis: { title: 'Latency (ms)' },
-        showlegend: true
-    };
-
-    // Create the empty plots
-    Plotly.newPlot('write-batches-graph', writeBatchesData, writeBatchesLayout);
-    Plotly.newPlot('latency-graph', latencyData, latencyLayout);
+    updateLatencyPlot(s);
+    updateMigrationCountPlot(s);
 }
 
+function resetPlots() {
+    console.log("🔄 Resetting # Total Migrations and Latency plots...");
 
-function calculateLatency(writeBatches, diskPagesRead, isACE) {
-    const baseReadLatency = parseFloat($('#lat').val()) || 1;
-    const asymmetry = parseFloat($('#asym').val()) || 1;
-    const writeLatency = baseReadLatency * (isACE ? asymmetry : 1);
-    return (writeBatches * writeLatency + diskPagesRead * baseReadLatency);
+    const migrationCountPlot = document.getElementById('migration_count-graph');
+    if (migrationCountPlot) {
+        Plotly.react(migrationCountPlot, [], {
+            title: '',
+            xaxis: { title: 'Operation steps' },
+            yaxis: { title: '#Total Migrations' },
+            showlegend: true
+        });
+    }
+
+    const latencyPlot = document.getElementById('latency-graph');
+    if (latencyPlot) {
+        Plotly.react(latencyPlot, [], {
+            title: '',
+            xaxis: { title: 'Operation steps' },
+            yaxis: { title: 'Latency (ms)' },
+            showlegend: true
+        });
+    }
 }
+
+function handleInputChange() {
+    const s = state.tiers;
+    console.log("Input changed, resetting stats, stopping simulation, and clearing plots...");
+
+    // Stop the Simulation
+    s.playing = false;
+    s.pauser = false;
+    s.reloader = 1;  // Ensure myLoop stops execution
+
+    // Reset Control + Step Tracker
+    s.p = 0;
+    s.workload = [];
+
+    // Reset Buffer States and Metrics via utility
+    resetTiersState();
+
+    // Reset UI Panels
+    resetStats();
+    updateProgress(0, 100);
+    resetPlots();
+
+    // Re-enable play button
+    $("#play-button").prop("disabled", false);
+
+    console.log("Simulation reset. Waiting for Play button.");
+}
+
+// Log user edits to individual input fields
+$(document).on("input", "input[type='number']", function () {
+    const id = $(this).attr("id");
+    const newValue = $(this).val();
+    console.log(`User manually changed ${id} → ${newValue}`);
+});
+
+$(document).on("change", "#device1, #device2, #device3", function() {
+    const deviceIndex = parseInt($(this).val()) - 1;
+    const id = $(this).attr("id");
+
+    const device = devices[deviceIndex];
+
+    if (!device) {
+        console.warn("Invalid device index selected:", deviceIndex);
+        return;
+    }
+
+    console.log("Device changed:", id, "Index:", deviceIndex, "Values:", device);
+
+    // Assign target input field IDs based on which dropdown was used
+    let latencyId, asymId, alphaId;
+
+    if (id === "device1") {
+        latencyId = "lat1";
+        asymId = "asym1";
+        alphaId = "alpha1";
+    } else if (id === "device2") {
+        latencyId = "lat2";
+        asymId = "asym2";
+        alphaId = "alpha2";
+    } else if (id === "device3") {
+        latencyId = "lat3";
+        asymId = "asym3";
+        alphaId = "alpha3";
+    } else if (id === "cmp_device_rw") {
+        latencyId = "cmp_base_latency_rw";
+        asymId = "cmp_alpha_rw";
+        alphaId = "cmp_kappa_rw";
+    } else if (id === "cmp_device_bp") {
+        latencyId = "cmp_base_latency_bp";
+        asymId = "cmp_alpha_bp";
+        alphaId = "cmp_kappa_bp";
+    }
+
+    // Update the corresponding fields
+    $("#" + latencyId).val(device[0]);
+    $("#" + asymId).val(device[1]);
+    $("#" + alphaId).val(device[2]);
+
+    // Enable the inputs in case they were disabled
+    $("#" + latencyId).prop("disabled", false);
+    $("#" + asymId).prop("disabled", false);
+    $("#" + alphaId).prop("disabled", false);
+});
+
+$(document).on("change", "#tierRatios", function() {
+    const configIndex = parseInt($(this).val()) - 1;
+    tierConfig = tierRatioCapacities[configIndex];
+    initTierConfig(tierConfig)
+});
+
+// ensure in this function that changing top/mid tier capacity reflects in the bottom tier capacity so that sum is 100
+$(document).on("change", "#topTierCapacity, #midTierCapacity", function() {
+    const id = $(this).attr("id");
+    if (id === "topTierCapacity") {
+    }
+    else if (id === "midTierCapacity") {
+    }
+});
 
 
 $(document).ready(function(){
-    initializeEmptyPlots(); 
-    $("#ACEAlert").css('visibility', 'hidden');
-    function cleanACEBufferDisplay() {
-        console.log("🔄 Cleaning ACE buffer display...");
-    
-        const s = state.indiv;
-    
-        $("#ACE-alg-table tr").each(function () {
-            $('td', this).each(function (index) {
-                if (!s.ACEbuffer[index]) {
-                    $(this).css("background-color", "#F2F3F4");  // Super Light Grey (empty)
-                }
-            });
-        });
-    }
-    
-    $(document).ready(function() {
-        function resetPlots() {
-            const s = state.indiv;
-        
-            console.log("🔄 Resetting Write Batches and Latency plots...");
-        
-            // Clear latency and write batch arrays
-            s.aceWriteBatches = [];
-            s.traditionalWriteBatches = [];
-            s.aceLatency = [];
-            s.traditionalLatency = [];
-        
-            // Reset the Write Batches Plot
-            const writeBatchesPlot = document.getElementById('write-batches-graph');
-            if (writeBatchesPlot) {
-                Plotly.react(writeBatchesPlot, [], {
-                    title: '',
-                    xaxis: { title: 'Operation steps' },
-                    yaxis: { title: '#Write Batches' },
-                    showlegend: true
-                });
-            }
-        
-            // Reset the Latency Plot
-            const latencyPlot = document.getElementById('latency-graph');
-            if (latencyPlot) {
-                Plotly.react(latencyPlot, [], {
-                    title: '',
-                    xaxis: { title: 'Operation steps' },
-                    yaxis: { title: 'Latency (ms)' },
-                    showlegend: true
-                });
-            }
-        }
-        
-        
+    $("#lat1").val(optaneSSD[0]);
+    $("#asym1").val(optaneSSD[1]);
+    $("#alpha1").val(optaneSSD[2]);
 
-        function handleInputChange() {
-            const s = state.indiv;
-        
-            console.log("Input changed, resetting stats, stopping simulation, and clearing plots...");
-        
-            // Stop the Simulation
-            s.playing = false;
-            s.pauser = false;
-            s.reloader = 1;  // Ensure myLoop stops execution
-        
-            // Reset Control + Step Tracker
-            s.firstWrite = true;
-            s.p = 0;
-            s.workload = [];
-        
-            // Clear Write Batches and Latency Arrays
-            s.aceWriteBatches = [];
-            s.traditionalWriteBatches = [];
-            s.aceLatency = [];
-            s.traditionalLatency = [];
-        
-            // Hide ACE Alert and Reset Highlight Border
-            $("#ACEAlert").css('visibility', 'hidden');
-            $("#ACERow").css({ "border-color": "transparent", "border-width": "0px" });
-        
-            // Remove Visual Buffer Tables
-            $("#base-alg-table").remove();
-            $("#ACE-alg-table").remove();
-        
-            // Reset Buffer States and Metrics via utility
-            resetIndivState();
-        
-            // Reset UI Panels
-            resetStats();
-            updateProgress(0, 100);
-            resetPlots();
-        
-            // Re-enable play button
-            $("#play-button").prop("disabled", false);
-        
-            console.log("   Simulation reset. Waiting for Play button.");
-        }
-        
-        
-    
-        // Attach event listeners to all relevant inputs
-        $("#workload, #n, #b, #e, #baseAlg, #s, #lat, #alpha, #x, #d").on("change input", handleInputChange);
-        $("#asym1, #asym2, #asym3, #lat1, #lat2, #lat3, #alpha1, #alpha2, #alpha3, #device1, #device2, #device3").on("change input", handleInputChange);
-    });
-    
-    $(document).on("change", "#baseAlg", function () {
-        const selectedAlg = parseInt($(this).val());
-        const s = state.indiv;
-    
-        // const baseAlgorithms = [baseLRU, baseCFLRU, baseLRUWSR];
-        // const aceAlgorithms = [ACELRU, ACECFLRU, ACELRUWSR];
-        const baseAlgorithms = [tLRU, tLFU, baseLRU, baseCFLRU, baseLRUWSR];
-        const aceAlgorithms = [tTemp, tTemp, ACELRU, ACECFLRU, ACELRUWSR];
-    
-        s.baseAlgorithm = baseAlgorithms[selectedAlg];
-        s.ACEAlgorithm = aceAlgorithms[selectedAlg];
-    
-        console.log(`🔄 Algorithm changed: base → ${baseAlgorithms[selectedAlg].name}, ACE → ${aceAlgorithms[selectedAlg].name}`);
-    });
+    $("#lat2").val(pciSSD[0]);
+    $("#asym2").val(pciSSD[1]);
+    $("#alpha2").val(pciSSD[2]);
+
+    $("#lat3").val(sataSSD[0]);
+    $("#asym3").val(sataSSD[1]);
+    $("#alpha3").val(sataSSD[2]);
+
+    tierConfig = tierRatioCapacities[5]; // Default to last (custom) configuration
+    initTierConfig(tierConfig);
+    resetPlots();
+
+    // Attach event listeners to all relevant inputs
+    $("#workload, #n, #b, #e, #baseAlg, #s, #lat, #alpha, #x, #d").on("change input", handleInputChange);
+    $("#asym1, #asym2, #asym3, #lat1, #lat2, #lat3, #alpha1, #alpha2, #alpha3, #device1, #device2, #device3").on("change input", handleInputChange);
+    $("#tierRatio, #topTierCapacity, #midTierCapacity, #bottomTierCapacity").on("change input", handleInputChange);
     
     $("#backward-button").click(function () {
         const s = state.tiers;
         // need to fix the following later (if needed)
-    
         if (!s.workload || s.workload.length === 0) {
             console.warn("No workload loaded. Cannot step backward.");
             return;
         }
-    
         // Pause simulation
         s.playing = false;
         s.pauser = true;
         s.reloader = 1;
-    
+        
         if (s.p > 0) {
             s.p--;  // Step back BEFORE restoring state
             console.log(`⏪ Backward: Step ${s.p}`);
-    
             // Restore state
             resetStepState(s.p);
-    
+        
             // Recalculate latency values
             s.tradLatency = calculateLatency(s.writeIO, s.readIO, false) / 1000;
             s.aceLatencyval = calculateLatency(s.ACEwriteIO, s.ACEreadIO, true) / 1000;
-    
+
             $("#base-alg-latency").text(s.tradLatency.toFixed(2));
             $("#ace-alg-latency").text(s.aceLatencyval.toFixed(2));
-    
+
             // Update visuals
             baseDisplay();
             ACEDisplay();
             updateProgress(s.p, s.workload.length);
-    
+
             // Remove sample *if* this step is just before a sample
             const lastSample = s.sampled_steps[s.sampled_steps.length - 1];
             if (lastSample !== undefined && s.p < lastSample) {
@@ -760,88 +403,17 @@ $(document).ready(function(){
                 s.aceWriteBatches.pop();
                 s.traditionalWriteBatches.pop();
                 s.sampled_steps.pop();
-    
+
                 // Update plot immediately after removal
-                updateLatencyPlot();
-                updateWriteBatchesPlot();
+                updateLatencyPlot(s);
+                updateMigrationCountPlot(s);
             }
-    
+
         } else {
             console.warn("Already at the first step.");
         }
     });
-    
-    
-    
 
-    function resetStepState(stepIndex) {
-        const s = state.indiv;
-        console.log(`🔄 Rolling back to step ${stepIndex}...`);
-    
-        if (stepIndex < 0) {
-            console.warn("⚠️ Cannot go below step 0.");
-            return;
-        }
-    
-        if (
-            !s.bufferHistory[stepIndex] ||
-            !s.dirtyHistory[stepIndex] ||
-            !s.ACEbufferHistory[stepIndex]
-        ) {
-            console.warn(`⚠️ Missing history for step ${stepIndex}, skipping rollback.`);
-            return;
-        }
-    
-        try {
-            // Restore buffer states
-            s.buffer = JSON.parse(JSON.stringify(s.bufferHistory[stepIndex]));
-            s.dirty = JSON.parse(JSON.stringify(s.dirtyHistory[stepIndex]));
-            s.coldflag = JSON.parse(JSON.stringify(s.coldflagHistory[stepIndex]));
-            s.uses = JSON.parse(JSON.stringify(s.usesHistory[stepIndex]));
-    
-            s.ACEbuffer = JSON.parse(JSON.stringify(s.ACEbufferHistory[stepIndex]));
-            s.ACEdirty = JSON.parse(JSON.stringify(s.ACEdirtyHistory[stepIndex]));
-            s.ACEcoldflag = JSON.parse(JSON.stringify(s.ACEcoldflagHistory[stepIndex]));
-            s.ACEuses = JSON.parse(JSON.stringify(s.ACEusesHistory[stepIndex]));
-    
-            // Restore base metrics
-            s.bufferHit = s.bufferHitHistory[stepIndex] || 0;
-            s.bufferMiss = s.bufferMissHistory[stepIndex] || 0;
-            s.readIO = s.readIOHistory[stepIndex] || 0;
-            s.writeIO = s.writeIOHistory[stepIndex] || 0;
-            s.pagesWritten = s.pagesWrittenHistory[stepIndex] || 0;
-            s.pagesRead = s.pagesReadHistory[stepIndex] || 0;
-            s.pagesEvicted = s.pagesEvictedHistory[stepIndex] || 0;
-            s.pagesPrefetched = s.pagesPrefetchedHistory[stepIndex] || 0;
-    
-            // Restore ACE metrics
-            s.ACEbufferHit = s.ACEbufferHitHistory[stepIndex] || 0;
-            s.ACEbufferMiss = s.ACEbufferMissHistory[stepIndex] || 0;
-            s.ACEreadIO = s.ACEreadIOHistory[stepIndex] || 0;
-            s.ACEwriteIO = s.ACEwriteIOHistory[stepIndex] || 0;
-            s.ACEpagesWritten = s.ACEpagesWrittenHistory[stepIndex] || 0;
-            s.ACEpagesRead = s.ACEpagesReadHistory[stepIndex] || 0;
-            s.ACEpagesEvicted = s.ACEpagesEvictedHistory[stepIndex] || 0;
-            s.ACEpagesPrefetched = s.ACEpagesPrefetchedHistory[stepIndex] || 0;
-    
-            // Restore latency
-            s.tradLatency = s.traditionalLatency[stepIndex] || 0;
-            s.aceLatencyval = s.aceLatency[stepIndex] || 0;
-    
-            updateLatencyPlot(
-                s.aceLatency.slice(0, stepIndex + 1),
-                s.traditionalLatency.slice(0, stepIndex + 1)
-            );
-    
-            console.log(`   Successfully restored state at step ${stepIndex}.`);
-        } catch (error) {
-            console.error("Error restoring step state:", error);
-        }
-    }
-    
-    
-
-    
     $("#forward-button").click(function () {
         const s = state.tiers;
         // need to fix the following later (if needed)
@@ -849,24 +421,24 @@ $(document).ready(function(){
             console.warn("⚠️ No workload loaded. Cannot step forward.");
             return;
         }
-    
+
         // Pause simulation
         s.playing = false;
         s.pauser = true;
         s.reloader = 0;
-    
+
         if (s.p < s.workload.length - 1) {
             // Backup current state for rollback
             s.bufferHistory[s.p] = JSON.parse(JSON.stringify(s.buffer));
             s.dirtyHistory[s.p] = JSON.parse(JSON.stringify(s.dirty));
             s.coldflagHistory[s.p] = JSON.parse(JSON.stringify(s.coldflag));
             s.usesHistory[s.p] = JSON.parse(JSON.stringify(s.uses));
-    
+
             s.ACEbufferHistory[s.p] = JSON.parse(JSON.stringify(s.ACEbuffer));
             s.ACEdirtyHistory[s.p] = JSON.parse(JSON.stringify(s.ACEdirty));
             s.ACEcoldflagHistory[s.p] = JSON.parse(JSON.stringify(s.ACEcoldflag));
             s.ACEusesHistory[s.p] = JSON.parse(JSON.stringify(s.ACEuses));
-    
+
             s.bufferHitHistory[s.p] = s.bufferHit;
             s.bufferMissHistory[s.p] = s.bufferMiss;
             s.readIOHistory[s.p] = s.readIO;
@@ -875,7 +447,7 @@ $(document).ready(function(){
             s.pagesReadHistory[s.p] = s.pagesRead;
             s.pagesEvictedHistory[s.p] = s.pagesEvicted;
             s.pagesPrefetchedHistory[s.p] = s.pagesPrefetched;
-    
+
             s.ACEbufferHitHistory[s.p] = s.ACEbufferHit;
             s.ACEbufferMissHistory[s.p] = s.ACEbufferMiss;
             s.ACEreadIOHistory[s.p] = s.ACEreadIO;
@@ -884,23 +456,23 @@ $(document).ready(function(){
             s.ACEpagesReadHistory[s.p] = s.ACEpagesRead;
             s.ACEpagesEvictedHistory[s.p] = s.ACEpagesEvicted;
             s.ACEpagesPrefetchedHistory[s.p] = s.ACEpagesPrefetched;
-    
+
             // Step forward
             s.p++;
             console.log(`▶️ Forward: Step ${s.p}`);
-    
+
             // Execute simulation step
             s.baseAlgorithm(s.p, s);
             s.ACEAlgorithm(s.p, s);
-    
+
             // Calculate latency in milliseconds
             s.tradLatency = calculateLatency(s.writeIO, s.readIO, false) / 1000;
             s.aceLatencyval = calculateLatency(s.ACEwriteIO, s.ACEreadIO, true) / 1000;
-    
+
             // Update on-screen latency values
             $("#base-alg-latency").text(s.tradLatency.toFixed(2));
             $("#ace-alg-latency").text(s.aceLatencyval.toFixed(2));
-    
+
             // ✅ Sample every 10 steps or final step
             if (s.p % 10 === 0 || s.p === s.workload.length - 1) {
                 // Record sample
@@ -912,39 +484,34 @@ $(document).ready(function(){
                 // Track sample point
                 s.sampled_steps.push(s.p);
             
-                updateWriteBatchesPlot();
-                updateLatencyPlot();
+                updateMigrationCountPlot(s);
+                updateLatencyPlot(s);
             }
             
-    
+
             // Update visual state
             baseDisplay();
             ACEDisplay();
             updateProgress(s.p, s.workload.length);
-    
+
         } else {
             console.warn("⚠️ Already at the last step.");
         }
     });
-    
-    
-    
-    
-    
-
+        
     $("#fast-button").click(function(){
-        const s = state.tiers;
-        s.delay = 15;
+        const s = state;
+        s.tiers.delay = s.config.fast_step_delay;
     });
-    
+
     $("#medium-button").click(function(){
-        const s = state.tiers;
-        s.delay = 200;
+        const s = state;
+        s.tiers.delay = s.config.medium_step_delay;
     });
 
     $("#slow-button").click(function(){
-        const s = state.tiers;
-        s.delay = 1000;
+        const s = state;
+        s.tiers.delay = s.config.slow_step_delay;
     });
 
     $("#finish-button").click(function(){
@@ -952,231 +519,6 @@ $(document).ready(function(){
         finisher();
     });
 
-    function myLoop(s) {
-        const remainingSteps = s.workload.length - s.p;
-    
-        if (s.reloader === 1) {
-            console.warn("myLoop stopped.");
-            return;
-        }
-    
-        if (remainingSteps <= 0) {
-            console.log("myLoop completed all steps.");
-            s.playing = false;
-            return;
-        }
-    
-        setTimeout(function () {
-            if (s.reloader === 1) return;
-    
-            if (!s.pauser) {
-                for (let i = 0; i < s.algorithms.length; i++) {
-                    s.algorithms[i](s);
-                }
-                for (let i = 0; i < s.algorithms.length; i++) {
-                    algoDisplay(i, s);
-                }
-    
-                if (s.p < s.workload.length) {
-                    s.p++;
-                    updateProgress(s.p, s.workload.length);
-                }
-    
-                // console.log(`Step after increment: ${s.p}`);
-            }
-    
-            if (s.playing) {
-                myLoop(s);
-            } else {
-                console.log("Simulation paused or stopped.");
-            }
-        }, s.delay);
-    }
-
-    // function myLoop(s) {
-    //     // const s = state.indiv;
-        
-    //     remainingSteps = s.workload.length - s.p; // Calculate remaining steps based on current position
-
-    //     if (s.reloader === 1) { 
-    //         console.warn("myLoop has been stopped.");
-    //         return;
-    //     }
-    
-    //     if (remainingSteps <= 0) {
-    //         console.log("myLoop completed all steps.");
-    //         s.playing = false;
-    //         return;
-    //     }
-        
-    //     // console.log("Workload length:", s.workload.length);
-    //     // console.log("Current step (s.p):", s.p);
-    //     setTimeout(function () {
-    //         if (s.reloader === 1) return; // Stop execution if `finisher()` was called
-            
-    //         if (!s.pauser) {
-    //             // Step simulation
-    //             // s.baseAlgorithm(s.p, s);
-    //             // s.ACEAlgorithm(s.p, s);
-    //             // baseDisplay();
-    //             // ACEDisplay();
-    //             for (let i=0; i<s.algorithms.length; i++) {
-    //                 s.algorithms[i](s);
-    //             }
-    //             for (let i=0; i<s.algorithms.length; i++) {
-    //                 algoDisplay(i, s);
-    //             }
-    //             // Update latency values
-    //             // Later
-    //             // s.tradLatency = calculateLatency(s.writeIO, s.readIO, false) / 1000;
-    //             // s.aceLatencyval = calculateLatency(s.ACEwriteIO, s.ACEreadIO, true) / 1000;
-    
-    //             // Sample for plotting every 10 steps or final step
-    //             // Later
-    //             // if (s.p % 10 === 0 || s.p === s.workload.length - 1) {
-    //             //     s.aceWriteBatches.push(s.ACEwriteIO);
-    //             //     s.traditionalWriteBatches.push(s.writeIO);
-    
-    //             //     s.aceLatency.push(s.aceLatencyval);
-    //             //     s.traditionalLatency.push(s.tradLatency);
-    
-    //             //     updateWriteBatchesPlot(s.aceWriteBatches, s.traditionalWriteBatches);
-    //             //     updateLatencyPlot(s.aceLatency, s.traditionalLatency);
-    //             // }
-    
-    //             // Update progress bar
-    //             if (s.p < s.workload.length) {
-    //                 s.p++;
-    //                 updateProgress(s.p, s.workload.length);
-    //             }
-    
-    //             console.log(`Step after increment: ${s.p}`);
-    //             console.log(`Progress updated to: ${Math.round((s.p / s.workload.length) * 100)}%`);
-    //         }
-    
-    //         // Show ACE write alert once
-    //         // if (s.firstWrite && s.ACEpagesWritten > 0) {
-    //         //     $("#ACEAlert").css('visibility', 'visible');
-    //         //     $("#ACERow").css({
-    //         //         "border-color": "blue",
-    //         //         "border-width": "4px",
-    //         //         "border-style": "solid"
-    //         //     });
-    //         //     s.firstWrite = false;
-    //         // }
-    
-    //         // Continue loop only if still playing
-    //         if (s.playing) {
-    //             myLoop(s);
-    //         } else {
-    //             console.log("⏸️ Simulation paused or manually stepped forward.");
-    //         }
-    //     }, s.delay);
-    // }
-
-    function myLoopTP(s) {
-        if (s.reloader === 1 || !s.playing) return;
-    
-        // Reset tracking state for a fresh run
-        s.wFinishedIdx = [];
-        s.firstPendingIndex = 0;
-    
-        for (let i = 0; i < s.algorithms.length; i++) {
-            s.tier1ActiveThreads[i] = 0;
-            s.tier2ActiveThreads[i] = 0;
-            s.tier3ActiveThreads[i] = 0;
-        }
-    
-        spawnWorkers(s);
-    }
-    
-    function spawnWorkers(s) {
-        const numAlgos = s.algorithms.length;
-    
-        for (let algIndex = 0; algIndex < numAlgos; algIndex++) {
-            const t1Count = s.t1Concurrency || 1;
-            const t2Count = s.t2Concurrency || 1;
-            const t3Count = s.t3Concurrency || 1;
-    
-            for (let w = 0; w < t1Count; w++) worker(s, 1, algIndex, `${algIndex}-T1-${w}`);
-            for (let w = 0; w < t2Count; w++) worker(s, 2, algIndex, `${algIndex}-T2-${w}`);
-            for (let w = 0; w < t3Count; w++) worker(s, 3, algIndex, `${algIndex}-T3-${w}`);
-        }
-    }
-
-    async function worker(s, tierNo, algIndex, id) {
-        const name        = `Worker-${id} Tier${tierNo} Alg${algIndex}`;
-        const capKey      = `tier${tierNo}ActiveThreads`;
-        const cap         = () => [s.t1Concurrency, s.t2Concurrency, s.t3Concurrency][tierNo - 1];
-        const tierPages   = () => s[`tier${tierNo}CurPages`][algIndex];
-        const algoFns     = [tLRU_TP, tLFU_TP, tTemp_TP];
-    
-        while (s.wFinishedIdx.length < s.workload.length) {
-    
-            // Hard stop
-            if (s.reloader === 1) {
-                console.log(`${name}: stopped by reloader.`);
-                return;
-            }
-    
-            // Pause — spin cheaply; unblocks as soon as s.pauser is cleared
-            if (s.pauser) {
-                await sleep(100);
-                continue;
-            }
-    
-            // Concurrency cap for this tier
-            if (s[capKey][algIndex] >= cap()) {
-                await sleep(s.delay);
-                continue;
-            }
-    
-            // Find next unclaimed entry whose page lives in this worker's tier
-            let claimedIndex = -1;
-            for (let i = s.firstPendingIndex; i < s.workload.length; i++) {
-                if (s.wFinishedIdx.includes(i)) continue;
-    
-                const entry = s.workload[i];
-                if (!entry) continue;
-    
-                const pageId = entry[1];
-                const inThisTier = tierPages().some(p => p.id === pageId);
-                if (inThisTier) { claimedIndex = i; break; }
-            }
-    
-            // Nothing claimable right now — wait and retry
-            if (claimedIndex === -1) {
-                await sleep(s.delay);
-                continue;
-            }
-    
-            // Claim
-            s[capKey][algIndex]++;
-            s.wFinishedIdx.push(claimedIndex);
-    
-            // Advance firstPendingIndex past any contiguous finished entries
-            while (s.wFinishedIdx.includes(s.firstPendingIndex)) {
-                s.firstPendingIndex++;
-            }
-    
-            // Execute — temporarily set s.p so the _TP function reads the right entry
-            const savedP = s.p;
-            s.p = claimedIndex;
-            algoFns[algIndex](s, tierNo, id);
-            await sleep(s.delay);
-            s.p = savedP;
-    
-            s[capKey][algIndex]--;
-    
-            algoDisplay(algIndex, s);
-            updateProgress(s.wFinishedIdx.length, s.workload.length);
-        }
-    
-        console.log(`${name}: workload complete.`);
-    }
-    
-    
-    
     $("#play-button").click(function () {
         console.log("Play button clicked.");
         // need to fix ui naming
@@ -1192,7 +534,7 @@ $(document).ready(function(){
             $("#alpha2").val(),
             $("#alpha3").val()
         );
-    
+
         const t1AlphaVal       = parseFloat($("#asym1").val());
         const t2AlphaVal       = parseFloat($("#asym2").val());
         const t3AlphaVal       = parseFloat($("#asym3").val());
@@ -1208,9 +550,9 @@ $(document).ready(function(){
             t1ConcurrencyVal, t2ConcurrencyVal, t3ConcurrencyVal,
             t1AlphaVal, t2AlphaVal, t3AlphaVal
         );
-    
+
         const s = state.tiers;
-    
+
         // Latch parameters once on first start
         if (!s.started) {
             s.started      = true;
@@ -1230,19 +572,19 @@ $(document).ready(function(){
             s.t1Concurrency, s.t2Concurrency, s.t3Concurrency,
             s.t1Alpha, s.t2Alpha, s.t3Alpha
         );
-    
+
         // ── State 1: Fresh start ─────────────────────────────────────────────────
         if (!s.playing) {
             if (!capacity()) return;
-    
+
             const algorithms = [tLRU, tLFU, tTemp, tRL];
-    
+
             if (s.workload.length === 0) {
                 s.workload   = generateWorkload();
                 s.p          = 0;
                 s.algorithms = algorithms;
                 console.log("Workload generated, length:", s.workload.length);
-    
+
                 initTiers();
                 for (let i = 0; i < algorithms.length; i++) {
                     s.tier1CurPages[i] = tier1.map(p => ({ ...p }));
@@ -1250,13 +592,14 @@ $(document).ready(function(){
                     s.tier3CurPages[i] = tier3.map(p => ({ ...p }));
                 }
                 renderTiers(tier1, tier2, tier3, algorithms.length);
+                initializeEmptyPlots(s);
                 calculate(s, algorithms);
             }
-    
+
             s.playing  = true;
             s.pauser   = false;
             s.reloader = 0;
-    
+
             console.log("▶️ Starting simulation...");
             if (threadPoolEnabled) {
                 myLoopTP(s);   // spawns workers once; they run until workload exhausted
@@ -1265,19 +608,19 @@ $(document).ready(function(){
             }
             return;
         }
-    
+
         // ── State 2: Pause ───────────────────────────────────────────────────────
         if (!s.pauser) {
             s.pauser = true;
             console.log("⏸ Simulation paused.");
             return;
         }
-    
+
         // ── State 3: Resume ──────────────────────────────────────────────────────
         s.pauser   = false;
         s.reloader = 0;
         console.log("▶️ Simulation resumed.");
-    
+
         if (!threadPoolEnabled) {
             // Non-TP: myLoop stopped rescheduling itself while paused, so kick it again
             myLoop(s);
@@ -1285,43 +628,36 @@ $(document).ready(function(){
         // TP: existing workers are alive and looping on sleep(100);
         // clearing s.pauser is all they need — no re-spawn required.
     });
-    
-    // Plot cumulative write IOs for smoother curve
-    function cumulative(arr) {
-        let sum = 0;
-        return arr.map(v => sum += v);
-    }
 
-    
     $("#progress-bar").on("input", function () {
-        const s = state.indiv;
-    
+        const s = state.tiers;
+        // need to fix this later (if needed)
         if (!s.workload || s.workload.length === 0) {
             console.warn("⚠️ No workload loaded. Cannot update progress.");
             return;
         }
-    
+
         let newProgress = parseInt($(this).val());
         let newStep = Math.round((newProgress / 100) * (s.workload.length - 1));
         newStep = Math.max(0, Math.min(newStep, s.workload.length - 1)); // clamp
-    
+
         console.log(`⏩ Manual Progress Change: ${newProgress}% → Step ${newStep}`);
-    
+
         // Reset UI and internal state
         resetStats();        // If this clears DOM visuals
-        resetIndivState();   // Clear metrics, buffer, flags, etc.
-    
+        resetTiersState();   // Clear metrics, buffer, flags, etc.
+
         const samplingRate = 10;
-    
+
         for (let i = 0; i <= newStep; i++) {
             if (s.workload[i] !== undefined) {
                 s.baseAlgorithm(i,s);
                 s.ACEAlgorithm(i,s);
-    
+
                 if (i % samplingRate === 0 || i === newStep) {
                     s.aceWriteBatches.push(s.ACEwriteIO);
                     s.traditionalWriteBatches.push(s.writeIO);
-    
+
                     s.aceLatency.push(
                         calculateLatency(s.ACEwriteIO, s.ACEreadIO, true) / 1000
                     );
@@ -1331,32 +667,247 @@ $(document).ready(function(){
                 }
             }
         }
-    
+
         s.p = newStep;
-    
+
         let baseReadLatency = parseFloat($('#lat').val()) || 1;
         let asymmetry = parseFloat($('#asym').val()) || 1;
-    
+
         s.tradLatency = calculateLatency(s.writeIO, s.readIO, false, baseReadLatency, asymmetry) / 1000;
         s.aceLatencyval = calculateLatency(s.ACEwriteIO, s.ACEreadIO, true, baseReadLatency, asymmetry) / 1000;
-    
+
         cleanACEBufferDisplay();
         baseDisplay();
         ACEDisplay();
         updateProgress(s.p, s.workload.length);
-    
+
         const aceCumulative = cumulative(s.aceWriteBatches);
         const tradCumulative = cumulative(s.traditionalWriteBatches);
-    
+
         console.log("   ACE cumulative write batches:", aceCumulative);
         console.log("   Trad cumulative write batches:", tradCumulative);
-    
-        updateWriteBatchesPlot(s.aceWriteBatches, s.traditionalWriteBatches);
-        updateLatencyPlot(s.aceLatency, s.traditionalLatency);
+
+        // updateMigrationCountPlot(s.aceWriteBatches, s.traditionalWriteBatches);
+        // updateLatencyPlot(s.aceLatency, s.traditionalLatency);
+        updateLatencyPlot(s);
+        updateMigrationCountPlot(s);
     });
-    
-    
 });
+    
+function resetStepState(stepIndex) {
+    const s = state.indiv;
+    console.log(`🔄 Rolling back to step ${stepIndex}...`);
+
+    if (stepIndex < 0) {
+        console.warn("⚠️ Cannot go below step 0.");
+        return;
+    }
+
+    if (
+        !s.bufferHistory[stepIndex] ||
+        !s.dirtyHistory[stepIndex] ||
+        !s.ACEbufferHistory[stepIndex]
+    ) {
+        console.warn(`⚠️ Missing history for step ${stepIndex}, skipping rollback.`);
+        return;
+    }
+
+    try {
+        // Restore buffer states
+        s.buffer = JSON.parse(JSON.stringify(s.bufferHistory[stepIndex]));
+        s.dirty = JSON.parse(JSON.stringify(s.dirtyHistory[stepIndex]));
+        s.coldflag = JSON.parse(JSON.stringify(s.coldflagHistory[stepIndex]));
+        s.uses = JSON.parse(JSON.stringify(s.usesHistory[stepIndex]));
+
+        s.ACEbuffer = JSON.parse(JSON.stringify(s.ACEbufferHistory[stepIndex]));
+        s.ACEdirty = JSON.parse(JSON.stringify(s.ACEdirtyHistory[stepIndex]));
+        s.ACEcoldflag = JSON.parse(JSON.stringify(s.ACEcoldflagHistory[stepIndex]));
+        s.ACEuses = JSON.parse(JSON.stringify(s.ACEusesHistory[stepIndex]));
+
+        // Restore base metrics
+        s.bufferHit = s.bufferHitHistory[stepIndex] || 0;
+        s.bufferMiss = s.bufferMissHistory[stepIndex] || 0;
+        s.readIO = s.readIOHistory[stepIndex] || 0;
+        s.writeIO = s.writeIOHistory[stepIndex] || 0;
+        s.pagesWritten = s.pagesWrittenHistory[stepIndex] || 0;
+        s.pagesRead = s.pagesReadHistory[stepIndex] || 0;
+        s.pagesEvicted = s.pagesEvictedHistory[stepIndex] || 0;
+        s.pagesPrefetched = s.pagesPrefetchedHistory[stepIndex] || 0;
+
+        // Restore ACE metrics
+        s.ACEbufferHit = s.ACEbufferHitHistory[stepIndex] || 0;
+        s.ACEbufferMiss = s.ACEbufferMissHistory[stepIndex] || 0;
+        s.ACEreadIO = s.ACEreadIOHistory[stepIndex] || 0;
+        s.ACEwriteIO = s.ACEwriteIOHistory[stepIndex] || 0;
+        s.ACEpagesWritten = s.ACEpagesWrittenHistory[stepIndex] || 0;
+        s.ACEpagesRead = s.ACEpagesReadHistory[stepIndex] || 0;
+        s.ACEpagesEvicted = s.ACEpagesEvictedHistory[stepIndex] || 0;
+        s.ACEpagesPrefetched = s.ACEpagesPrefetchedHistory[stepIndex] || 0;
+
+        // Restore latency
+        s.tradLatency = s.traditionalLatency[stepIndex] || 0;
+        s.aceLatencyval = s.aceLatency[stepIndex] || 0;
+
+        updateLatencyPlot(s);
+
+        console.log(`   Successfully restored state at step ${stepIndex}.`);
+    } catch (error) {
+        console.error("Error restoring step state:", error);
+    }
+}
+
+    
+
+function myLoop(s) {
+    const remainingSteps = s.workload.length - s.p;
+
+    if (s.reloader === 1) {
+        console.warn("myLoop stopped.");
+        return;
+    }
+
+    if (remainingSteps <= 0) {
+        console.log("myLoop completed all steps.");
+        s.playing = false;
+        return;
+    }
+
+    setTimeout(function () {
+        if (s.reloader === 1) return;
+
+        if (!s.pauser) {
+            for (let i = 0; i < s.algorithms.length; i++) {
+                s.algorithms[i](s);
+            }
+            for (let i = 0; i < s.algorithms.length; i++) {
+                algoDisplay(i, s);
+            }
+
+            if (s.p < s.workload.length) {
+                s.p++;
+                updateProgress(s.p, s.workload.length);
+            }
+
+            if ((s.p - 1) % state.config.plotUpdateInterval === 0) { // || s.p === s.workload.length - 1) {
+                updateLatencyPlot(s);
+                updateMigrationCountPlot(s);
+            }
+        }
+
+        if (s.playing) {
+            myLoop(s);
+        } else {
+            console.log("Simulation paused or stopped.");
+        }
+    }, s.delay);
+}
+
+function myLoopTP(s) {
+    if (s.reloader === 1 || !s.playing) return;
+
+    // Reset tracking state for a fresh run
+    s.wFinishedIdx = [];
+    s.firstPendingIndex = 0;
+
+    for (let i = 0; i < s.algorithms.length; i++) {
+        s.tier1ActiveThreads[i] = 0;
+        s.tier2ActiveThreads[i] = 0;
+        s.tier3ActiveThreads[i] = 0;
+    }
+
+    spawnWorkers(s);
+}
+
+function spawnWorkers(s) {
+    const numAlgos = s.algorithms.length;
+
+    for (let algIndex = 0; algIndex < numAlgos; algIndex++) {
+        const t1Count = s.t1Concurrency || 1;
+        const t2Count = s.t2Concurrency || 1;
+        const t3Count = s.t3Concurrency || 1;
+
+        for (let w = 0; w < t1Count; w++) worker(s, 1, algIndex, `${algIndex}-T1-${w}`);
+        for (let w = 0; w < t2Count; w++) worker(s, 2, algIndex, `${algIndex}-T2-${w}`);
+        for (let w = 0; w < t3Count; w++) worker(s, 3, algIndex, `${algIndex}-T3-${w}`);
+    }
+}
+
+async function worker(s, tierNo, algIndex, id) {
+    const name        = `Worker-${id} Tier${tierNo} Alg${algIndex}`;
+    const capKey      = `tier${tierNo}ActiveThreads`;
+    const cap         = () => [s.t1Concurrency, s.t2Concurrency, s.t3Concurrency][tierNo - 1];
+    const tierPages   = () => s[`tier${tierNo}CurPages`][algIndex];
+    const algoFns     = [tLRU_TP, tLFU_TP, tTemp_TP];
+
+    while (s.wFinishedIdx.length < s.workload.length) {
+
+        // Hard stop
+        if (s.reloader === 1) {
+            console.log(`${name}: stopped by reloader.`);
+            return;
+        }
+
+        // Pause — spin cheaply; unblocks as soon as s.pauser is cleared
+        if (s.pauser) {
+            await sleep(100);
+            continue;
+        }
+
+        // Concurrency cap for this tier
+        if (s[capKey][algIndex] >= cap()) {
+            await sleep(s.delay);
+            continue;
+        }
+
+        // Find next unclaimed entry whose page lives in this worker's tier
+        let claimedIndex = -1;
+        for (let i = s.firstPendingIndex; i < s.workload.length; i++) {
+            if (s.wFinishedIdx.includes(i)) continue;
+
+            const entry = s.workload[i];
+            if (!entry) continue;
+
+            const pageId = entry[1];
+            const inThisTier = tierPages().some(p => p.id === pageId);
+            if (inThisTier) { claimedIndex = i; break; }
+        }
+
+        // Nothing claimable right now — wait and retry
+        if (claimedIndex === -1) {
+            await sleep(s.delay);
+            continue;
+        }
+
+        // Claim
+        s[capKey][algIndex]++;
+        s.wFinishedIdx.push(claimedIndex);
+
+        // Advance firstPendingIndex past any contiguous finished entries
+        while (s.wFinishedIdx.includes(s.firstPendingIndex)) {
+            s.firstPendingIndex++;
+        }
+
+        // Execute — temporarily set s.p so the _TP function reads the right entry
+        const savedP = s.p;
+        s.p = claimedIndex;
+        algoFns[algIndex](s, tierNo, id);
+        await sleep(s.delay);
+        s.p = savedP;
+
+        s[capKey][algIndex]--;
+
+        algoDisplay(algIndex, s);
+        updateProgress(s.wFinishedIdx.length, s.workload.length);
+    }
+
+    console.log(`${name}: workload complete.`);
+}
+
+// Plot cumulative write IOs for smoother curve
+function cumulative(arr) {
+    let sum = 0;
+    return arr.map(v => sum += v);
+}
 
 /* Progress Bar Update Function */
 function updateProgress(currentStep, totalSteps) {
@@ -1374,35 +925,87 @@ function getAlgorithmDisplayName(algorithmFunction, algorithmList, prefix = "") 
     return index !== -1 ? prefix + algorithmNames[index] : "Unknown Algorithm";
 }
 
-function updateWriteBatchesPlot() {
-    const s = state.indiv;
+function calculateTotalMigrationCountFromTiers(algoIndex) {
+    tier1MigrationCount = state.tiers.tier2_1Migration[algoIndex];
+    tier3MigrationCount = state.tiers.tier2_3Migration[algoIndex];
+    tier2MigrationCount = tier1MigrationCount + tier3MigrationCount;
+    return tier2MigrationCount;
+}
 
-    const aceWriteValues = s.aceWriteBatches;
-    const tradWriteValues = s.traditionalWriteBatches;
+function calculateLatencyFromTiers(algoIndex){
+    const s = state.tiers;
+    tier1ReadCounts = s.tier1read[algoIndex];
+    tier1WriteCounts = s.tier1write[algoIndex];
+    tier2ReadCounts = s.tier2read[algoIndex];
+    tier2WriteCounts = s.tier2write[algoIndex];
+    tier3ReadCounts = s.tier3read[algoIndex];
+    tier3WriteCounts = s.tier3write[algoIndex];
+    tier1MigrationCount = s.tier2_1Migration[algoIndex];
+    tier3MigrationCount = s.tier2_3Migration[algoIndex];
+    tier2MigrationCount = tier1MigrationCount + tier3MigrationCount;
+    
+    // 1 migration = 1 read + 1 write on source tier, 1 write + 1 read on dest tier
+    // so read counts and write counts for both tiers should be incremented by the migration count
+    tier1ReadCounts += tier1MigrationCount;
+    tier1WriteCounts += tier1MigrationCount;
+    tier3ReadCounts += tier3MigrationCount;
+    tier3WriteCounts += tier3MigrationCount;
+    tier2ReadCounts += tier2MigrationCount;
+    tier2WriteCounts += tier2MigrationCount;
 
-    // X-values correspond to the steps where batches were recorded: 1, 11, 21, ...
-    const xValues = aceWriteValues.map((_, i) => i * 10 + 1);
+    tier1Latency = s.t1ReadLatency * (tier1ReadCounts +  tier1WriteCounts * s.t1Alpha);
+    tier2Latency = s.t2ReadLatency * (tier2ReadCounts +  tier2WriteCounts * s.t2Alpha);
+    tier3Latency = s.t3ReadLatency * (tier3ReadCounts +  tier3WriteCounts * s.t3Alpha);
 
-    const aceAlgorithmName = getAlgorithmDisplayName(s.ACEAlgorithm, [ACELRU, ACECFLRU, ACELRUWSR], "ACE-");
-    const baseAlgorithmName = getAlgorithmDisplayName(s.baseAlgorithm, [baseLRU, baseCFLRU, baseLRUWSR]);
+    accumulatedLatency = Math.max(tier1Latency, tier2Latency, tier3Latency);    // since they will be executed in parallel
+    
+    return accumulatedLatency;
+}
 
-    const trace1 = {
-        x: xValues,
-        y: aceWriteValues,
-        type: 'scatter',
-        mode: 'lines+markers',
-        name: aceAlgorithmName,
-        line: { color: '#1B2631', shape: 'spline' }
-    };
+function updateMigrationCountPlot(s) {
+    let algorithmNames = [];
+    for (let i = 0; i < s.algorithms.length; i++) {
+        s.migrationCountsForPlot[i].push(calculateTotalMigrationCountFromTiers(i));
+        algorithmNames.push(s.algorithms[i].name==="tRL" ? "ReStore" : s.algorithms[i].name);
+    }
+    const xValues = Array.from({ length: s.p }, (_, i) => i*state.config.plotUpdateInterval);
 
-    const trace2 = {
-        x: xValues,
-        y: tradWriteValues,
-        type: 'scatter',
-        mode: 'lines+markers',
-        name: baseAlgorithmName,
-        line: { color: 'red', shape: 'spline' }
-    };
+    console.log("Migration count values for plot:", s.migrationCountsForPlot);
+
+    const traces = [
+        {
+            x: xValues,
+            y: s.migrationCountsForPlot[0],
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: algorithmNames[0],
+            line: { color: 'forestgreen' }
+        },
+        {
+            x: xValues,
+            y: s.migrationCountsForPlot[1],
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: algorithmNames[1],
+            line: { color: 'cornflowerblue' }
+        },
+        {
+            x: xValues,
+            y: s.migrationCountsForPlot[2],
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: algorithmNames[2],
+            line: { color: 'coral' }
+        },
+        {
+            x: xValues,
+            y: s.migrationCountsForPlot[3],
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: algorithmNames[3],
+            line: { color: 'black' }
+        }
+    ];
 
     const layout = {
         font: {
@@ -1412,58 +1015,71 @@ function updateWriteBatchesPlot() {
             weight: 400
         },
         xaxis: { title: 'Operation steps' },
-        yaxis: { title: '#Write Batches' },
+        yaxis: { title: '# Total Migrations' },
         showlegend: true
     };
 
-    const plotDiv = document.getElementById('write-batches-graph');
+    const plotDiv = document.getElementById('migration_count-graph');
     if (plotDiv) {
-        Plotly.react(plotDiv, [trace1, trace2], layout);
+        Plotly.react(plotDiv, traces, layout);
     } else {
-        Plotly.newPlot('write-batches-graph', [trace1, trace2], layout);
+        Plotly.newPlot('migration_count-graph', traces, layout);
     }
 }
 
+function updateLatencyPlot(s) {
+    let algorithmNames = [];
 
+    for (let i = 0; i < s.algorithms.length; i++) {
+        s.latencyValuesForPlot[i].push(calculateLatencyFromTiers(i) / 1000);
+        algorithmNames.push(s.algorithms[i].name==="tRL" ? "ReStore" : s.algorithms[i].name);
+    }
 
-function updateLatencyPlot() {
-    const s = state.indiv;
+    // console.log("Latency values for plot:", latencyValues);
 
-    const aceLatencyValues = s.aceLatency;
-    const traditionalLatencyValues = s.traditionalLatency;
-    const xValues = aceLatencyValues.map((_, i) => i * 10 + 1);  // infer steps
+    // TODO: replace with history if needed
+    const xValues = Array.from({ length: s.p }, (_, i) => i*state.config.plotUpdateInterval);
 
-    const aceAlgorithmName = getAlgorithmDisplayName(
-        s.ACEAlgorithm, [ACELRU, ACECFLRU, ACELRUWSR], "ACE-"
-    );
-    const baseAlgorithmName = getAlgorithmDisplayName(
-        s.baseAlgorithm, [baseLRU, baseCFLRU, baseLRUWSR]
-    );
-
-    const trace1 = {
-        x: xValues,
-        y: aceLatencyValues,
-        type: 'scatter',
-        mode: 'lines+markers',
-        name: aceAlgorithmName,
-        line: { color: '#1B2631' }
-    };
-
-    const trace2 = {
-        x: xValues,
-        y: traditionalLatencyValues,
-        type: 'scatter',
-        mode: 'lines+markers',
-        name: baseAlgorithmName,
-        line: { color: 'red' }
-    };
+    const traces = [
+        {
+            x: xValues,
+            y: s.latencyValuesForPlot[0],
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: algorithmNames[0],
+            line: { color: 'forestgreen' }
+        },
+        {
+            x: xValues,
+            y: s.latencyValuesForPlot[1],
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: algorithmNames[1],
+            line: { color: 'cornflowerblue' }
+        },
+        {
+            x: xValues,
+            y: s.latencyValuesForPlot[2],
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: algorithmNames[2],
+            line: { color: 'coral' }
+        },
+        {
+            x: xValues,
+            y: s.latencyValuesForPlot[3],
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: algorithmNames[3],
+            line: { color: 'black' }
+        }
+    ];
 
     const layout = {
         font: {
             family: 'Linux Libertine, serif',
             size: 19,
-            color: '#111',
-            weight: 400
+            color: '#111'
         },
         xaxis: { title: 'Operation steps' },
         yaxis: { title: 'Latency (ms)' },
@@ -1471,10 +1087,11 @@ function updateLatencyPlot() {
     };
 
     const plotDiv = document.getElementById('latency-graph');
+
     if (plotDiv) {
-        Plotly.react(plotDiv, [trace1, trace2], layout);
+        Plotly.react(plotDiv, traces, layout);
     } else {
-        Plotly.newPlot('latency-graph', [trace1, trace2], layout);
+        Plotly.newPlot('latency-graph', traces, layout);
     }
 }
 
@@ -1544,82 +1161,82 @@ function finisher() {
         console.warn("⚠️ No workload loaded. Cannot finish simulation.");
         return;
     }
+    s.delay = state.config.finisher_step_delay;
+    // console.log("🏁 Finishing simulation from scratch...");
 
-    console.log("🏁 Finishing simulation from scratch...");
+    // s.playing = false;
+    // s.pauser = false;
+    // s.reloader = 0;
 
-    s.playing = false;
-    s.pauser = false;
-    s.reloader = 0;
+    // // Reset simulation state (just like progress-bar logic)
+    // resetStats();
 
-    // Reset simulation state (just like progress-bar logic)
-    resetStats();
+    // s.buffer = [];
+    // s.dirty = [];
+    // s.coldflag = [];
+    // s.uses = {};
 
-    s.buffer = [];
-    s.dirty = [];
-    s.coldflag = [];
-    s.uses = {};
+    // s.ACEbuffer = [];
+    // s.ACEdirty = [];
+    // s.ACEcoldflag = [];
+    // s.ACEuses = {};
 
-    s.ACEbuffer = [];
-    s.ACEdirty = [];
-    s.ACEcoldflag = [];
-    s.ACEuses = {};
+    // s.bufferHit = 0;
+    // s.bufferMiss = 0;
+    // s.readIO = 0;
+    // s.writeIO = 0;
+    // s.pagesWritten = 0;
+    // s.pagesRead = 0;
+    // s.pagesEvicted = 0;
+    // s.pagesPrefetched = 0;
 
-    s.bufferHit = 0;
-    s.bufferMiss = 0;
-    s.readIO = 0;
-    s.writeIO = 0;
-    s.pagesWritten = 0;
-    s.pagesRead = 0;
-    s.pagesEvicted = 0;
-    s.pagesPrefetched = 0;
+    // s.ACEbufferHit = 0;
+    // s.ACEbufferMiss = 0;
+    // s.ACEreadIO = 0;
+    // s.ACEwriteIO = 0;
+    // s.ACEpagesWritten = 0;
+    // s.ACEpagesRead = 0;
+    // s.ACEpagesEvicted = 0;
+    // s.ACEpagesPrefetched = 0;
 
-    s.ACEbufferHit = 0;
-    s.ACEbufferMiss = 0;
-    s.ACEreadIO = 0;
-    s.ACEwriteIO = 0;
-    s.ACEpagesWritten = 0;
-    s.ACEpagesRead = 0;
-    s.ACEpagesEvicted = 0;
-    s.ACEpagesPrefetched = 0;
+    // s.aceWriteBatches = [];
+    // s.traditionalWriteBatches = [];
+    // s.aceLatency = [];
+    // s.traditionalLatency = [];
 
-    s.aceWriteBatches = [];
-    s.traditionalWriteBatches = [];
-    s.aceLatency = [];
-    s.traditionalLatency = [];
+    // let samplingRate = 10;
 
-    let samplingRate = 10;
+    // // Re-parse the values
+    // let baseReadLatency = parseFloat($('#lat').val()) || 1;
+    // let asymmetry = parseFloat($('#asym').val()) || 1;
 
-    // Re-parse the values
-    let baseReadLatency = parseFloat($('#lat').val()) || 1;
-    let asymmetry = parseFloat($('#asym').val()) || 1;
+    // for (let i = 0; i < s.workload.length; i++) {
+    //     s.baseAlgorithm(i, s);
+    //     s.ACEAlgorithm(i, s);
 
-    for (let i = 0; i < s.workload.length; i++) {
-        s.baseAlgorithm(i, s);
-        s.ACEAlgorithm(i, s);
+    //     s.tradLatency = calculateLatency(s.writeIO, s.readIO, false, baseReadLatency, asymmetry) / 1000;
+    //     s.aceLatencyval = calculateLatency(s.ACEwriteIO, s.ACEreadIO, true, baseReadLatency, asymmetry) / 1000;
 
-        s.tradLatency = calculateLatency(s.writeIO, s.readIO, false, baseReadLatency, asymmetry) / 1000;
-        s.aceLatencyval = calculateLatency(s.ACEwriteIO, s.ACEreadIO, true, baseReadLatency, asymmetry) / 1000;
+    //     if (i % samplingRate === 0 || i === s.workload.length - 1) {
+    //         s.aceWriteBatches.push(s.ACEwriteIO);
+    //         s.traditionalWriteBatches.push(s.writeIO);
+    //         s.aceLatency.push(s.aceLatencyval);
+    //         s.traditionalLatency.push(s.tradLatency);
+    //     }
+    // }
 
-        if (i % samplingRate === 0 || i === s.workload.length - 1) {
-            s.aceWriteBatches.push(s.ACEwriteIO);
-            s.traditionalWriteBatches.push(s.writeIO);
-            s.aceLatency.push(s.aceLatencyval);
-            s.traditionalLatency.push(s.tradLatency);
-        }
-    }
+    // // Final latency calculation (in case last loop iteration didn’t run sampling block)
+    // s.tradLatency = calculateLatency(s.writeIO, s.readIO, false, baseReadLatency, asymmetry) / 1000;
+    // s.aceLatencyval = calculateLatency(s.ACEwriteIO, s.ACEreadIO, true, baseReadLatency, asymmetry) / 1000;
 
-    // Final latency calculation (in case last loop iteration didn’t run sampling block)
-    s.tradLatency = calculateLatency(s.writeIO, s.readIO, false, baseReadLatency, asymmetry) / 1000;
-    s.aceLatencyval = calculateLatency(s.ACEwriteIO, s.ACEreadIO, true, baseReadLatency, asymmetry) / 1000;
+    // s.p = s.workload.length - 1;
 
-    s.p = s.workload.length - 1;
-
-    baseDisplay();
-    ACEDisplay();
-    updateProgress(s.p, s.workload.length);
-    updateWriteBatchesPlot(s.aceWriteBatches, s.traditionalWriteBatches);
-    updateLatencyPlot(s.aceLatency, s.traditionalLatency);
-    $("#play-button").prop('disabled', false);
+    // baseDisplay();
+    // ACEDisplay();
+    // updateProgress(s.p, s.workload.length);
+    // updateMigrationCountPlot(s);
+    // updateLatencyPlot(s);
+    // $("#play-button").prop('disabled', false);
 }
 
 
@@ -1677,43 +1294,6 @@ function algoDisplay(algoIndex, s) {
             }, cellDelay/2)
         }
     }
-    // for (let i = 0; i < s.simActions[algoIndex].length; i++) {
-    //     const action = s.simActions[algoIndex][i];
-    //     console.log(action);
-    //     if (action.op === "R") {
-    //         cell1ClassCSS = "highlight-read";
-    //         cell1InHTML = `tier${action.tierId}alg${algoIndex}-${action.cellId}`;
-    //     }
-    //     else if (action.op === "W") {
-    //         cell1ClassCSS = "highlight-write";
-    //         cell1InHTML = `tier${action.tierId}alg${algoIndex}-${action.cellId}`;
-    //     }
-    //     else if (action.op === "M") {
-    //         cell1ClassCSS = "highlight-from";
-    //         cell2ClassCSS = "highlight-to";
-    //         cell1InHTML = `tier${action.tierId}alg${algoIndex}-${action.cellId[0]}`;
-    //         cell2InHTML = `tier${action.tierId-1}alg${algoIndex}-${action.cellId[1]}`;
-    //     }
-    //     console.log(cell1InHTML);
-    //     console.log(cell1ClassCSS);
-    //     console.log(cell2InHTML);
-    //     console.log(cell2ClassCSS);
-    //     console.log(cellDelay);
-    //     if (cell2InHTML !== null) {
-    //         setTimeout(function () {
-    //             highlightCells([cell1InHTML], cell1ClassCSS, cellDelay/2);
-    //             highlightCells([cell2InHTML], cell2ClassCSS, cellDelay/2);
-    //             setTimeout(function () {
-    //                 renderUpdatedTiers(action.tierId, action.tierId - 1, action.cellId[0], action.cellId[1], algoIndex);
-    //                 highlightCells([cell1InHTML], cell2ClassCSS, cellDelay/2);
-    //                 highlightCells([cell2InHTML], cell1ClassCSS, cellDelay/2);
-    //             }, cellDelay/2)
-    //         }, cellDelay/2)
-    //     }
-    //     else {
-    //         highlightCells([cell1InHTML], cell1ClassCSS, cellDelay);
-    //     }
-    // }
 
     s.simActions[algoIndex] = []; // Clear existing actions for this algorithm
     // WRITES
@@ -1728,86 +1308,7 @@ function algoDisplay(algoIndex, s) {
 
     // MIGRATIONS
     $(`#alg${algoIndex}-pages-migrated-t1t2`).text(s.tier2_1Migration[algoIndex]);
-    // $(`#alg${algoIndex}-pages-migrated-t2t1`).text(s.tier2_1Migration[algoIndex]);
     $(`#alg${algoIndex}-pages-migrated-t2t3`).text(s.tier2_3Migration[algoIndex]);
-    // $(`#alg${algoIndex}-pages-migrated-t3t2`).text(s.tier2_3Migration[algoIndex]);
-}
-
-function baseDisplay() {
-    const s = state.indiv;
-
-    console.log("Updating baseDisplay...");
-
-    let i = 0;
-    $("#base-alg-table tr").each(function () {
-        $('td', this).each(function () {
-            if (s.dirty.includes(s.buffer[i])) {
-                $(this).css("background-color", "#892417");  // Dirty
-            } else if (s.buffer[i] == null) {
-                $(this).css("background-color", "#F2F3F4");  // Empty
-            } else {
-                $(this).css("background-color", "#5D6D7E");  // Clean
-            }
-            i++;
-        });
-    });
-
-    $("#base-alg-buffer-misses").text(s.bufferMiss);
-    $("#base-alg-buffer-hits").text(s.bufferHit);
-    $("#base-alg-pages-read").text(s.pagesRead);
-    $("#base-alg-pages-written").text(s.pagesWritten);
-    $("#base-alg-read-IO").text(s.readIO);
-    $("#base-alg-write-IO").text(s.writeIO);
-    $("#base-alg-pages-evicted").text(s.pagesEvicted);
-    $("#base-alg-latency").text(s.tradLatency?.toFixed(2) ?? "0.00");
-}
-
-
-function ACEDisplay() {
-    const s = state.indiv;
-
-    console.log("🔄 Updating ACE Display...");
-
-    let i = 0;
-    $("#ACE-alg-table tr").each(function () {
-        $('td', this).each(function () {
-            if (s.ACEbuffer[i] === undefined || s.ACEbuffer[i] === null) {
-                $(this).css("background-color", "#F2F3F4");
-            } else if (s.ACEdirty.includes(s.ACEbuffer[i])) {
-                $(this).css("background-color", "#892417");
-            } else {
-                $(this).css("background-color", "#5D6D7E");
-            }
-            i++;
-        });
-    });
-
-    $("#ace-alg-buffer-misses").text(s.ACEbufferMiss);
-    $("#ace-alg-buffer-hits").text(s.ACEbufferHit);
-    $("#ace-alg-pages-read").text(s.ACEpagesRead);
-    $("#ace-alg-pages-written").text(s.ACEpagesWritten);
-    $("#ace-alg-read-IO").text(s.ACEreadIO);
-    $("#ace-alg-write-IO").text(s.ACEwriteIO);
-    $("#ace-alg-pages-evicted").text(s.ACEpagesEvicted);
-    $("#ace-alg-latency").text(s.aceLatencyval?.toFixed(2) ?? "0.00");
-
-    const bufferMissDiff = calculatePercentageDifference(s.bufferMiss, s.ACEbufferMiss);
-    const bufferHitDiff = calculatePercentageDifference(s.bufferHit, s.ACEbufferHit);
-    const pagesReadDiff = calculatePercentageDifference(s.pagesRead, s.ACEpagesRead);
-    const pagesWrittenDiff = calculatePercentageDifference(s.pagesWritten, s.ACEpagesWritten);
-    const readIODiff = calculatePercentageDifference(s.readIO, s.ACEreadIO);
-    const writeIODiff = calculatePercentageDifference(s.writeIO, s.ACEwriteIO);
-    const pagesEvictedDiff = calculatePercentageDifference(s.pagesEvicted, s.ACEpagesEvicted);
-    const latencydiff = calculatePercentageDifference(s.tradLatency, s.aceLatencyval);
-
-    $("#ace-alg-buffer-misses").html(`${s.ACEbufferMiss} &nbsp; ${formatDifference(bufferMissDiff, true)}`);
-    $("#ace-alg-buffer-hits").html(`${s.ACEbufferHit} &nbsp; ${formatDifference(bufferHitDiff, false)}`);
-    $("#ace-alg-pages-read").html(`${s.ACEpagesRead} &nbsp; ${formatDifference(pagesReadDiff, true)}`);
-    $("#ace-alg-pages-written").html(`${s.ACEpagesWritten} &nbsp; ${formatDifference(pagesWrittenDiff, true)}`);
-    $("#ace-alg-read-IO").html(`${s.ACEreadIO} &nbsp; ${formatDifference(readIODiff, true)}`);
-    $("#ace-alg-write-IO").html(`${s.ACEwriteIO} &nbsp; ${formatDifference(writeIODiff, true)}`);
-    $("#ace-alg-pages-evicted").html(`${s.ACEpagesEvicted} &nbsp; ${formatDifference(pagesEvictedDiff, true)}`);
-    $("#ace-alg-latency").html(`${s.aceLatencyval?.toFixed(2) ?? "0.00"} &nbsp; ${formatDifference(latencydiff, true)}`);
 }
 
 
@@ -1828,416 +1329,6 @@ function formatDifference(diffStr, isLowerBetter) {
     }
 
     return `<span style="color: ${color};">(${diffStr})</span>`;
-}
-
-function baseLRU(p, s) {
-    if (!s.workload || !s.workload[p]) {
-        console.warn(`⚠️ Skipping step ${p}: workload not ready.`);
-        return;
-    }
-    const type = s.workload[p][0];
-    const page = s.workload[p][1];
-
-    if (type === "W" && !s.dirty.includes(page)) {
-        s.dirty.push(page);
-    }
-
-    if (s.buffer.includes(page)) {
-        s.bufferHit++;
-        s.buffer.push(s.buffer.splice(s.buffer.indexOf(page), 1)[0]);
-        if (s.dirty.includes(page)) {
-            s.dirty.push(s.dirty.splice(s.dirty.indexOf(page), 1)[0]);
-        }
-    } else {
-        s.bufferMiss++;
-        s.readIO++;
-
-        if (s.buffer.length < s.bufferLength) {
-            s.buffer.push(page);
-            s.pagesRead++;
-        } else {
-            base(page, s); // This must also accept state if it modifies buffer
-        }
-    }
-}
-
-function ACELRU(p, s) {
-    if (!s.workload || !s.workload[p]) {
-        console.warn(`⚠️ Skipping step ${p}: workload not ready.`);
-        return;
-    }
-    const type = s.workload[p][0];
-    const page = s.workload[p][1];
-
-    if (type === "W" && !s.ACEdirty.includes(page)) {
-        s.ACEdirty.push(page);
-    }
-
-    if (s.ACEbuffer.includes(page)) {
-        s.ACEbufferHit++;
-        s.ACEbuffer.push(s.ACEbuffer.splice(s.ACEbuffer.indexOf(page), 1)[0]);
-        s.ACEdirty.push(s.ACEdirty.splice(s.ACEdirty.indexOf(page), 1)[0]);
-    } else {
-        s.ACEbufferMiss++;
-        s.ACEreadIO++;
-
-        if (s.ACEbuffer.length < s.bufferLength) {
-            s.ACEbuffer.push(page);
-            s.ACEpagesRead++;
-        } else {
-            ACE(page, s);
-        }
-    }
-}
-
-
-function baseCFLRU(p, s) {
-    if (!s.workload || !s.workload[p]) {
-        console.warn(`⚠️ Skipping step ${p}: workload not ready.`);
-        return;
-    }
-    const cleanPer = 1 / 3;
-    const cleanSize = Math.floor(s.buffer.length * cleanPer);
-
-    const type = s.workload[p][0];
-    const page = s.workload[p][1];
-
-    // add to dirty if "W"
-    if (type === "W" && !s.dirty.includes(page)) {
-        s.dirty.push(page);
-    }
-
-    // if buffer has page
-    if (s.buffer.includes(page)) {
-        s.bufferHit++;
-        // move page to the end of buffer array
-        s.buffer.push(s.buffer.splice(s.buffer.indexOf(page), 1)[0]);
-        s.dirty.push(s.dirty.splice(s.dirty.indexOf(page), 1)[0]);
-    } else {
-        s.bufferMiss++;
-        s.readIO++;
-
-        // if buffer not full
-        if (s.buffer.length < s.bufferLength) {
-            s.buffer.push(page);
-            s.pagesRead++;
-        } else {
-            // if buffer full
-            const cleanFirst = s.buffer.slice(0, cleanSize - 1);
-            let allDirty = true;
-
-            for (let k = 0; k < cleanSize - 1; k++) {
-                if (!s.dirty.includes(cleanFirst[k])) {
-                    allDirty = false;
-                }
-            }
-
-            // if all pages in clean first region are dirty, then run replacement
-            if (allDirty) {
-                base(page, s);  // <-- Ensure `base()` is refactored to accept `s`
-            } else {
-                // find and evict the first clean page in the region
-                let j = 0;
-                while (s.dirty.includes(cleanFirst[j])) {
-                    j++;
-                }
-                s.buffer.splice(s.buffer.indexOf(cleanFirst[j]), 1);
-                s.buffer.push(page);
-            }
-        }
-    }
-}
-
-
-function ACECFLRU(p, s) {
-    if (!s.workload || !s.workload[p]) {
-        console.warn(`⚠️ Skipping step ${p}: workload not ready.`);
-        return;
-    }
-    const ACEcleanPer = 1 / 3;
-    const ACEcleanSize = Math.floor(s.ACEbuffer.length * ACEcleanPer);
-
-    const type = s.workload[p][0];
-    const page = s.workload[p][1];
-
-    // add to dirty if "W"
-    if (type === "W" && !s.ACEdirty.includes(page)) {
-        s.ACEdirty.push(page);
-    }
-
-    // if buffer has page
-    if (s.ACEbuffer.includes(page)) {
-        s.ACEbufferHit++;
-        // move page to the end of buffer array
-        s.ACEbuffer.push(s.ACEbuffer.splice(s.ACEbuffer.indexOf(page), 1)[0]);
-        s.ACEdirty.push(s.ACEdirty.splice(s.ACEdirty.indexOf(page), 1)[0]);
-    } else {
-        s.ACEbufferMiss++;
-        s.ACEreadIO++;
-
-        // if buffer not full
-        if (s.ACEbuffer.length < s.bufferLength) {
-            s.ACEbuffer.push(page);
-            s.ACEpagesRead++;
-        } else {
-            // if buffer full
-            const ACEcleanFirst = s.ACEbuffer.slice(0, ACEcleanSize - 1);
-            let ACEallDirty = true;
-
-            for (let k = 0; k < ACEcleanSize - 1; k++) {
-                if (!s.ACEdirty.includes(ACEcleanFirst[k])) {
-                    ACEallDirty = false;
-                }
-            }
-
-            // if all pages in clean first region are dirty, then run algorithm
-            if (ACEallDirty) {
-                ACE(page, s); // <-- Make sure ACE() also accepts `s`
-            } else {
-                // find and evict a clean page in the clean region
-                let j = 0;
-                while (s.ACEdirty.includes(ACEcleanFirst[j])) {
-                    j++;
-                }
-                s.ACEbuffer.splice(s.ACEbuffer.indexOf(ACEcleanFirst[j]), 1);
-                s.ACEbuffer.push(page);
-            }
-        }
-    }
-}
-
-
-
-function baseLRUWSR(p, s) {
-    if (!s.workload || !s.workload[p]) {
-        console.warn(`⚠️ Skipping step ${p}: workload not ready.`);
-        return;
-    }
-    const type = s.workload[p][0];
-    const page = s.workload[p][1];
-
-    console.log(`\n[STEP ${p}] Access: ${type} Page: ${page}`);
-
-    // Mark page dirty if it's a write
-    if (type === "W" && !s.dirty.includes(page)) {
-        s.dirty.push(page);
-        console.log(`Marked page ${page} as dirty.`);
-    }
-
-    // Page is in buffer (HIT)
-    if (s.buffer.includes(page)) {
-        s.bufferHit++;
-        console.log(`Page ${page} is in buffer (HIT). Moving to MRU.`);
-
-        const idx = s.buffer.indexOf(page);
-
-        // Move page and its cold-flag to MRU (end)
-        const pg = s.buffer.splice(idx, 1)[0];
-        const flag = s.coldflag.splice(idx, 1)[0];
-        s.buffer.push(pg);
-        s.coldflag.push(flag);
-
-        // Reset cold-flag if dirty
-        if (s.dirty.includes(page)) {
-            s.coldflag[s.coldflag.length - 1] = 0;
-            console.log(`Reset cold-flag for dirty page ${page} to 0.`);
-        }
-
-    } else {
-        // Page Miss (not in buffer)
-        s.bufferMiss++;
-        s.readIO++;
-        s.pagesRead++;
-        console.log(`Page ${page} is NOT in buffer (MISS).`);
-
-        // Buffer has room
-        console.log(`buffer length ${s.bufferLength}`);
-        if (s.buffer.length < s.bufferLength) {
-            s.buffer.push(page);
-            const flag = 0;
-            s.coldflag.push(flag);
-            if (type === "W" && !s.dirty.includes(page)) {
-                s.dirty.push(page);
-            }
-            console.log(`Inserted page ${page} (flag=${flag}) into buffer.`);
-
-        } else {
-            // Buffer Full: Start LRU-WSR eviction
-            console.log(`Buffer is full. Starting eviction process.`);
-
-            let evicted = false;
-
-            while (!evicted) {
-                const candidate = s.buffer[0];
-                const isDirty = s.dirty.includes(candidate);
-                const isCold = s.coldflag[0] === 1;
-
-                console.log(`Considering LRU page ${candidate} (dirty=${isDirty}, cold=${isCold})`);
-
-                if (isDirty && !isCold) {
-                    // Give second chance: mark cold and move to MRU
-                    s.buffer.push(s.buffer.shift());
-                    s.coldflag.push(1);
-                    s.coldflag.shift();
-                    console.log(`Second-chance for dirty page ${candidate}. Set cold-flag to 1 and moved to MRU.`);
-                } else {
-                    // Evict this page (clean or cold-dirty)
-                    if (isDirty) {
-                        s.dirty.splice(s.dirty.indexOf(candidate), 1);
-                        s.pagesWritten++;
-                        s.writeIO++;
-                        console.log(`Evicting dirty page ${candidate}. Flushed to storage.`);
-                    } else {
-                        console.log(`Evicting clean page ${candidate}.`);
-                    }
-
-                    s.buffer.shift();
-                    s.coldflag.shift();
-                    s.pagesEvicted++;
-                    evicted = true;
-                }
-            }
-
-            // Insert the new page after eviction
-            s.buffer.push(page);
-            const flag = 0;
-            s.coldflag.push(flag);
-            if (type === "W" && !s.dirty.includes(page)) {
-                s.dirty.push(page);
-            }
-
-            console.log(`Inserted new page ${page} into buffer (flag=${flag}).`);
-        }
-    }
-
-    // Final state of all data structures
-    console.log(`Buffer:        [${s.buffer.join(", ")}]`);
-    console.log(`ColdFlags:     [${s.coldflag.join(", ")}]`);
-    console.log(`Dirty Pages:   [${s.dirty.join(", ")}]`);
-    console.log(`BufferHits: ${s.bufferHit}, BufferMisses: ${s.bufferMiss}, PagesEvicted: ${s.pagesEvicted}, PagesWritten: ${s.pagesWritten}, ReadIO: ${s.readIO}, WriteIO: ${s.writeIO}`);
-}
-
-function ACELRUWSR(p, s) {
-    if (!s.workload || !s.workload[p]) {
-        console.warn(`⚠️ Skipping step ${p}: workload not ready.`);
-        return;
-    }
-    const type = s.workload[p][0];
-    const page = s.workload[p][1];
-
-    console.log(`\n[ACE STEP ${p}] Access: ${type} Page: ${page}`);
-
-    // Mark page dirty if it's a write
-    if (type === "W" && !s.ACEdirty.includes(page)) {
-        s.ACEdirty.push(page);
-        console.log(`Marked page ${page} as dirty.`);
-    }
-
-    // Page is in buffer (HIT)
-    if (s.ACEbuffer.includes(page)) {
-        s.ACEbufferHit++;
-        console.log(`Page ${page} is in buffer (HIT). Moving to MRU.`);
-
-        const idx = s.ACEbuffer.indexOf(page);
-        const pg = s.ACEbuffer.splice(idx, 1)[0];
-        const flag = s.ACEcoldflag.splice(idx, 1)[0];
-        s.ACEbuffer.push(pg);
-        s.ACEcoldflag.push(flag);
-
-        if (s.ACEdirty.includes(page)) {
-            s.ACEcoldflag[s.ACEcoldflag.length - 1] = 0;
-            console.log(`Reset cold-flag for dirty page ${page} to 0.`);
-        }
-
-    } else {
-        // Page Miss (not in buffer)
-        s.ACEbufferMiss++;
-        s.ACEreadIO++;
-        s.ACEpagesRead++;
-        console.log(`Page ${page} is NOT in buffer (MISS).`);
-
-        console.log(`buffer length ${s.bufferLength}`);
-        if (s.ACEbuffer.length < s.bufferLength) {
-            s.ACEbuffer.push(page);
-            const flag = 0;
-            s.ACEcoldflag.push(flag);
-            if (type === "W" && !s.ACEdirty.includes(page)) {
-                s.ACEdirty.push(page);
-            }
-            console.log(`Inserted page ${page} (flag=${flag}) into buffer.`);
-        } else {
-            // Buffer Full: Start eviction process
-            console.log(`Buffer is full. Starting eviction process.`);
-
-            let evicted = false;
-
-            while (!evicted) {
-                const candidate = s.ACEbuffer[0];
-                const isDirty = s.ACEdirty.includes(candidate);
-                const isCold = s.ACEcoldflag[0] === 1;
-
-                console.log(`Considering LRU page ${candidate} (dirty=${isDirty}, cold=${isCold})`);
-
-                if (isDirty && !isCold) {
-                    // Second chance: mark cold and move to MRU
-                    s.ACEbuffer.push(s.ACEbuffer.shift());
-                    s.ACEcoldflag.push(1);
-                    s.ACEcoldflag.shift();
-                    console.log(`Second-chance for dirty page ${candidate}. Set cold-flag to 1 and moved to MRU.`);
-                } else {
-                    // Evict this page (clean or cold-dirty)
-                    if (isDirty) {
-                        console.log(`Dirty and cold. Flushing ${s.alphaVal} dirty pages concurrently before eviction.`);
-
-                        let flushed = 0;
-                        // write back K pages to exploit the concurrency
-                        for (let y = 0; y < s.alphaVal; y++) {
-                            for (let i = 0; i < s.ACEbuffer.length; i++) {
-                                const flushCandidate = s.ACEbuffer[i];
-                                if (s.ACEdirty.includes(flushCandidate)) {
-                                    s.ACEdirty.splice(s.ACEdirty.indexOf(flushCandidate), 1);
-                                    s.ACEpagesWritten++;
-                                    flushed++;
-                                    console.log(`Flushed dirty page ${flushCandidate}.`);
-                                    break;
-                                }
-                            }
-                        }
-
-                        if (flushed > 0) {
-                            s.ACEwriteIO++;
-                            console.log(`Total dirty pages flushed: ${flushed}`);
-                        }
-
-                        console.log(`Evicting dirty page ${candidate}.`);
-                    } else {
-                        console.log(`Evicting clean page ${candidate}.`);
-                    }
-
-                    s.ACEbuffer.shift();
-                    s.ACEcoldflag.shift();
-                    s.ACEpagesEvicted++;
-                    evicted = true;
-                }
-            }
-
-            // Insert new page after eviction
-            s.ACEbuffer.push(page);
-            const flag = 0;
-            s.ACEcoldflag.push(flag);
-            if (type === "W" && !s.ACEdirty.includes(page)) {
-                s.ACEdirty.push(page);
-            }
-            s.ACEpagesRead++;
-            console.log(`Inserted new page ${page} into buffer (flag=${flag}).`);
-        }
-    }
-
-    // Final state of all data structures
-    console.log(`Buffer:        [${s.ACEbuffer.join(", ")}]`);
-    console.log(`ColdFlags:     [${s.ACEcoldflag.join(", ")}]`);
-    console.log(`Dirty Pages:   [${s.ACEdirty.join(", ")}]`);
-    console.log(`BufferHits: ${s.ACEbufferHit}, BufferMisses: ${s.ACEbufferMiss}, PagesEvicted: ${s.ACEpagesEvicted}, PagesWritten: ${s.ACEpagesWritten}, ReadIO: ${s.ACEreadIO}, WriteIO: ${s.ACEwriteIO}`);
 }
 
 async function worker(s, tierNo, algIndex, id) {
@@ -3938,46 +3029,6 @@ function tRL(s) {
     }
     // coming here means did not find page in any tier, which is impossible if implementation is correct
 }
-
-/*Algorithms*/
-function base(page, s) {
-    // remove item from dirty (write page)
-    const first = s.buffer[0];
-    if (s.dirty.includes(first)) {
-        s.dirty.splice(s.dirty.indexOf(first), 1);
-        s.pagesWritten++;
-        s.writeIO++;
-    }
-
-    s.buffer.shift(); // remove one item from buffer (evict page)
-    s.pagesEvicted++;
-    s.buffer.push(page);
-    s.pagesRead++;
-}
-
-function ACE(page, s) {
-    // loop through buffer until N amount of dirty pages are written
-    let first = s.ACEbuffer[0];
-    if (s.ACEdirty.includes(first)) {
-        for (let y = 0; y < s.alphaVal; y++) {
-            for (let i = 0; i < s.bufferLength; i++) {
-                first = s.ACEbuffer[i];
-                if (s.ACEdirty.includes(first)) {
-                    s.ACEdirty.splice(s.ACEdirty.indexOf(first), 1);
-                    s.ACEpagesWritten++;
-                    break;
-                }
-            }
-        }
-        s.ACEwriteIO++;
-    }
-
-    s.ACEbuffer.shift(); // remove one item from buffer
-    s.ACEpagesEvicted++;
-    s.ACEbuffer.push(page);
-    s.ACEpagesRead++;
-}
-
 
 function IOcalc(wload, bLen, alpha, baseAlg) {
     const s = state.cmp; // Use comparative state

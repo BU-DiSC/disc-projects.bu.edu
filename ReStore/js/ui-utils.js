@@ -19,6 +19,7 @@ function renderUpdatedTiers(fromTier, toTier, fromPos, toPos, algNo) {
 }
 
 function renderTier(tierNo, id, arr) {
+    console.log(id);
     const container = document.getElementById(id);
     container.innerHTML = "";
 

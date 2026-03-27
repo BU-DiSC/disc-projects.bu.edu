@@ -14,7 +14,7 @@
 	<!-- Custom CSS -->
 	<link rel="stylesheet" href="css/styles.css">
 	<link rel="stylesheet" href="css/tooltip.css">
-  	<link rel="stylesheet" href="css/loading.css">
+	<link rel="stylesheet" href="css/loading.css">
 	<!-- Google Font -->
 	<link href="https://fonts.googleapis.com/css?family=Lato:300,400&display=swap" rel="stylesheet">
 	<!-- Google Material Icon-->
@@ -34,7 +34,7 @@
 	<script src="js/init.js"></script>
 	<script src="js/ui-utils.js"></script>
 	<script>
-		window.onload = function(){
+		window.onload = function () {
 			loadHTML('publication', 'publication.html');
 			loadHTML('authors', 'authors.html');
 			loadHTML('sponsors', 'sponsors.html');
@@ -51,10 +51,10 @@
 	<script src="js/bootstrap-slider.js"></script>
 	<script src="js/popper.min.js"></script>
 	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-  	<script src="js/plotly.js"></script>
+	<script src="js/plotly.js"></script>
 	<!-- <script src="js/hotness.js"></script> -->
-  	<script src="js/workloadGenerator.js"></script>
-  	<script src="js/algorithms.js"></script>
+	<script src="js/workloadGenerator.js"></script>
+	<script src="js/algorithms.js"></script>
 </head>
 
 <body>
@@ -70,48 +70,35 @@
 				<h2>
 					<a target="_blank" href="https://disc-projects.bu.edu/compactionary/files/LSM_Compact_Demo.mp4">
 						<span class="metric-title" data-toggle="tooltip" data-placement="right"
-							  title="Watch walkthrough this video" style="color:#000"> ReStore in Action </span>
+							title="Watch walkthrough this video" style="color:#000"> ReStore in Action </span>
 					</a>
 					<!-- SSE: Change the link -->
 				</h2>
 			</div>
-			
-				<!-- Radio Buttons for Switching Views (Side by Side & Highlighted) -->
-				<!-- <div class="row justify-content-center mb-5">
-					<div class="btn-group btn-group-toggle" data-toggle="buttons">
-						<label class="btn btn-outline-primary active" id="label-individual">
-							<input id="customRadio2" type="radio" name="customRadio" class="custom-control-input" checked> Individual Analysis
-						</label>
-						<label class="btn btn-outline-primary" id="label-comparative">
-							<input id="customRadio1" type="radio" name="customRadio" class="custom-control-input"> Comparative Analysis
-						</label>
-					</div>
-				</div> -->
 
-				<!-- Individual Analysis Content -->
-				<div id="individual-analysis">
+			<!-- Individual Analysis Content -->
+			<div id="individual-analysis">
 
-					<!-- Input Panel -->
-					<div id="cmp-conf-row" class="row">
-						<div class="row" id="inputs">
-							<div class="col-lg-3">
-								<div class="input-group mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Workload</span>
-									</div>
-									<select class="form-control" id="workload">
-										<option value=1 selected>1 (Mixed)</option>
-										<!-- <option value=2>Workload 2</option> -->
-										<option value=3>3 (Read-heavy)</option>
-										<option value=4>4 (Write-heavy)</option>
-										<option value=5>5 (Very Skewed)</option>
-										<option value=6>6 (Uniform)</option>
-										<option value=0>Custom</option>
-									</select>
+				<!-- Input Panel -->
+				<div id="cmp-conf-row" class="row">
+					<div class="row" id="inputs-workload">
+						<div class="col-sm-3">
+							<div class="input-group mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Workload</span>
 								</div>
+								<select class="form-control" id="workload">
+									<option value=1 selected>1 (Mixed)</option>
+									<option value=2>2 (Read-heavy)</option>
+									<option value=3>3 (Write-heavy)</option>
+									<option value=4>4 (Very Skewed)</option>
+									<option value=5>5 (Uniform)</option>
+									<option value=6>Custom</option>
+								</select>
 							</div>
+						</div>
 
-							<!-- <div class="col-lg-3">
+						<!-- <div class="col-lg-3">
 								<div class="input-group mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Disk size</span>
@@ -129,234 +116,257 @@
 								</div>
 							</div> -->
 
-							<div class="col-lg-2">
-								<div class="input-group mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text"># Op.</span>
-									</div>
-									<input type="number" class="form-control" id="x" value="100" min=0>
-								</div>
-							</div>
-
-							<div class="col-lg-2">
-								<div class="input-group mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Read %</span>
-									</div>
-									<input type="number" class="form-control" id="e" value=60 min=0>
-									<div class="input-group-append">
-									</div>
-								</div>
-							</div>
-
-							<div class="col-lg-2">
-								<div class="input-group mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">% Pages</span>
-									</div>
-									<input type="number" class="form-control" value=15 id="d" min=0>
-									<div class="input-group-append">
-									</div>
-								</div>
-							</div>
-
-							<div class="col-lg-3">
-								<div class="input-group mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">% Access</span>
-									</div>
-									<input type="number" class="form-control" value=80 id="s" min=0>
-									<div class="input-group-append">
-									</div>
-								</div>
-							</div>
-
-						</div>
-
-						<div class="row" id="inputs">
-							<div class="col-lg-3">
-								<div class="input-group mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Top Tier</span>
-									</div>
-									<select class="form-control" id="device1">
-										<option value=3 selected>Optane SSD</option>
-										<option value=1>PCI SSD</option>
-										<option value=2>SATA SSD</option>
-										<option value=4>Virtual SSD</option>
-									</select>
-								</div>
-							</div>
-
-							<div class="col-lg-3">
-								<div class="input-group mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Asymmetry</span>
-									</div>
-									<input type="number" class="form-control" min=0 id="asym1" value=3.0>
-								</div>
-							</div>
-
-							<div class="col-lg-3">
-								<div class="input-group mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Read Latency (μs)</span>
-									</div>
-									<input type="number" class="form-control" id="lat1" value=12.4 min=0>
-								</div>
-							</div>
-
-							<div class="col-lg-3">
-								<div class="input-group mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Concurrency</span>
-									</div>
-									<input type="number" class="form-control" min=0 id="alpha1" value=6>
-								</div>
-							</div>
-						</div>
-
-						<div class="row" id="inputs">
-							<div class="col-lg-3">
-								<div class="input-group mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Mid Tier</span>
-									</div>
-									<select class="form-control" id="device2">
-										<option value=3>Optane SSD</option>
-										<option value=1 selected>PCI SSD</option>
-										<option value=2>SATA SSD</option>
-										<option value=4>Virtual SSD</option>
-									</select>
-								</div>
-							</div>
-
-							<div class="col-lg-3">
-								<div class="input-group mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Asymmetry</span>
-									</div>
-									<input type="number" class="form-control" min=0 id="asym2" value=3.0>
-								</div>
-							</div>
-
-							<div class="col-lg-3">
-								<div class="input-group mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Read Latency (μs)</span>
-									</div>
-									<input type="number" class="form-control" id="lat2" value=12.4 min=0>
-								</div>
-							</div>
-
-							<div class="col-lg-3">
-								<div class="input-group mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Concurrency</span>
-									</div>
-									<input type="number" class="form-control" min=0 id="alpha2" value=6>
-								</div>
-							</div>
-						</div>
-
-						<div class="row" id="inputs">
-							<div class="col-lg-3">
-								<div class="input-group mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Bottom Tier</span>
-									</div>
-									<select class="form-control" id="device3">
-										<option value=3>Optane SSD</option>
-										<option value=1>PCI SSD</option>
-										<option value=2 selected>SATA SSD</option>
-										<option value=4>Virtual SSD</option>
-									</select>
-								</div>
-							</div>
-
-							<div class="col-lg-3">
-								<div class="input-group mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Asymmetry</span>
-									</div>
-									<input type="number" class="form-control" min=0 id="asym3" value=3.0>
-								</div>
-							</div>
-
-							<div class="col-lg-3">
-								<div class="input-group mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Read Latency (μs)</span>
-									</div>
-									<input type="number" class="form-control" id="lat3" value=12.4 min=0>
-								</div>
-							</div>
-
-							<div class="col-lg-3">
-								<div class="input-group mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Concurrency</span>
-									</div>
-									<input type="number" class="form-control" min=0 id="alpha3" value=6>
-								</div>
-							</div>
-						</div>
-
-						<!-- <div class="row" id="inputs">
-							<div class="col-lg-3">
-								<div class="input-group mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Algorithm</span>
-									</div>
-									<select class="form-control" id="baseAlg">
-										<option value=0>tLRU</option>
-										<option value=1>tLFU</option>
-									</select>
-								</div>
-							</div>
-						</div> -->
-					</div>
-
-					<!-- Combined Control Panel & Progress Bar -->
-					<div id="control-panel-wrapper">
-						<div id="control-panel" class="d-flex align-items-center justify-content-between">
-							
-							<!-- Control Buttons -->
-							<div id="lsm-button-group" class="btn-group" role="group" aria-label="progress-control">
-								<button id="backward-button" type="button" class="btn btn-primary"><<</button>
-								<button id="play-button" type="button" class="btn btn-info">
-									<img src="img/play_pause.png" width="40" height="40">
-								</button>
-								<button id="forward-button" type="button" class="btn btn-primary">>></button>								
-								<button id="fast-button" type="button" class="btn btn-warning">Fast</button>
-								<button id="medium-button" type="button" class="btn btn-success">Medium</button>
-								<button id="slow-button" type="button" class="btn btn-secondary">Slow</button>
-								<button id="finish-button" type="button" class="btn btn-danger">Finish</button>
-							</div>
-
-
-							<!-- Progress Bar Container -->
-							<div class="progress-container input-group">
-								<!-- Progress Label -->
+						<div class="col-sm-2">
+							<div class="input-group mb-3">
 								<div class="input-group-prepend">
-									<span class="input-group-text progress-box">Progress</span>
+									<span class="input-group-text"># Op.</span>
 								</div>
-								
-								<!-- White Box around Progress Bar -->
-								<div class="progress-wrapper">
-									<input type="range" id="progress-bar" min="0" max="100" value="0" class="form-control slider">
-								</div>
+								<input type="number" class="form-control" id="x" value="100" min=0>
+							</div>
+						</div>
 
-								<!-- Progress Percentage -->
-								<div class="input-group-append">
-									<span id="progress-label" class="input-group-text progress-percent"><strong>0%</strong></span>
+						<div class="col-sm-2">
+							<div class="input-group mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Read %</span>
 								</div>
+								<input type="number" class="form-control" id="e" value=50 min=0>
+							</div>
+						</div>
+
+						<div class="col-sm-2">
+							<div class="input-group mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">% Pages</span>
+								</div>
+								<input type="number" class="form-control" value=10 id="d" min=0>
+							</div>
+						</div>
+
+						<div class="col-sm-3">
+							<div class="input-group mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">% Access</span>
+								</div>
+								<input type="number" class="form-control" value=80 id="s" min=0>
+							</div>
+						</div>
+
+					</div>
+
+					<div class="row" id="inputs-tier1">
+						<div class="col-sm-3">
+							<div class="input-group mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Top Tier</span>
+								</div>
+								<select class="form-control" id="device1">
+									<option value=3 selected>Optane SSD</option>
+									<option value=1>PCI SSD</option>
+									<option value=2>SATA SSD</option>
+									<option value=4>Virtual SSD</option>
+								</select>
+							</div>
+						</div>
+						<div class="col-sm-3">
+							<div class="input-group mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Read Latency (μs)</span>
+								</div>
+								<input type="number" class="form-control" id="lat1" value=12.4 min=0>
+							</div>
+						</div>
+						<div class="col-sm-3">
+							<div class="input-group mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Concurrency</span>
+								</div>
+								<input type="number" class="form-control" min=0 id="alpha1" value=6>
+							</div>
+						</div>
+						<div class="col-sm-3">
+							<div class="input-group mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Asymmetry</span>
+								</div>
+								<input type="number" class="form-control" min=0 id="asym1" value=3.0>
+							</div>
+						</div>
+
+					</div>
+
+					<div class="row" id="inputs-tier2">
+						<div class="col-sm-3">
+							<div class="input-group mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Mid Tier</span>
+								</div>
+								<select class="form-control" id="device2">
+									<option value=3>Optane SSD</option>
+									<option value=1 selected>PCI SSD</option>
+									<option value=2>SATA SSD</option>
+									<option value=4>Virtual SSD</option>
+								</select>
+							</div>
+						</div>
+
+						<div class="col-sm-3">
+							<div class="input-group mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Read Latency (μs)</span>
+								</div>
+								<input type="number" class="form-control" id="lat2" value=12.4 min=0>
+							</div>
+						</div>
+
+						<div class="col-sm-3">
+							<div class="input-group mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Concurrency</span>
+								</div>
+								<input type="number" class="form-control" min=0 id="alpha2" value=6>
+							</div>
+						</div>
+
+						<div class="col-sm-3">
+							<div class="input-group mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Asymmetry</span>
+								</div>
+								<input type="number" class="form-control" min=0 id="asym2" value=3.0>
 							</div>
 						</div>
 					</div>
 
-					
-					<!-- Simulation Panel -->
+					<div class="row" id="inputs-tier3">
+						<div class="col-sm-3">
+							<div class="input-group mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Bottom Tier</span>
+								</div>
+								<select class="form-control" id="device3">
+									<option value=3>Optane SSD</option>
+									<option value=1>PCI SSD</option>
+									<option value=2 selected>SATA SSD</option>
+									<option value=4>Virtual SSD</option>
+								</select>
+							</div>
+						</div>
+
+						<div class="col-sm-3">
+							<div class="input-group mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Read Latency (μs)</span>
+								</div>
+								<input type="number" class="form-control" id="lat3" value=12.4 min=0>
+							</div>
+						</div>
+
+						<div class="col-sm-3">
+							<div class="input-group mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Concurrency</span>
+								</div>
+								<input type="number" class="form-control" min=0 id="alpha3" value=6>
+							</div>
+						</div>
+
+						<div class="col-sm-3">
+							<div class="input-group mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Asymmetry</span>
+								</div>
+								<input type="number" class="form-control" min=0 id="asym3" value=3.0>
+							</div>
+						</div>
+					</div>
+
+					<div class="row" id="inputs-tierRatio">
+						<div class="col-sm-3">
+							<div class="input-group mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Capacity Ratios</span>
+								</div>
+								<select class="form-control" id="tierRatios">
+									<option value=1>Top: 3%, Mid: 8%</option>
+									<option value=2>Top: 3%, Mid: 16%</option>
+									<option value=3>Top: 6%, Mid: 9%</option>
+									<option value=4 selected>Top: 12%, Mid: 16%</option>
+									<option value=5>Top: 10%, Mid: 20%</option>
+									<option value=6 selected>Custom</option>
+								</select>
+							</div>
+						</div>
+
+						<div class="col-sm-3">
+							<div class="input-group mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Top Tier (%)</span>
+								</div>
+								<input type="number" class="form-control" id="topTierCapacity" value=12 min=1 max=20>
+							</div>
+						</div>
+
+						<div class="col-sm-3">
+							<div class="input-group mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Mid Tier (%)</span>
+								</div>
+								<input type="number" class="form-control" id="midTierCapacity" min=5 max=40 value=16>
+							</div>
+						</div>
+
+						<div class="col-sm-3">
+							<div class="input-group mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Bottom Tier (%)</span>
+								</div>
+								<input type="number" class="form-control" min=0 id="bottomTierCapacity" value=72 disabled style="background-color: #f7f7f7;">
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Combined Control Panel & Progress Bar -->
+				<div id="control-panel-wrapper">
+					<div id="control-panel" class="d-flex align-items-center justify-content-between">
+
+						<!-- Control Buttons -->
+						<div id="lsm-button-group" class="btn-group" role="group" aria-label="progress-control">
+							<button id="backward-button" type="button" class="btn btn-primary"><<</button>
+							<button id="play-button" type="button" class="btn btn-info">
+								<img src="img/play_pause.png" width="40" height="40">
+							</button>
+							<button id="forward-button" type="button" class="btn btn-primary">>></button>
+							<button id="fast-button" type="button" class="btn btn-warning">Fast</button>
+							<button id="medium-button" type="button" class="btn btn-success">Medium</button>
+							<button id="slow-button" type="button" class="btn btn-secondary">Slow</button>
+							<button id="finish-button" type="button" class="btn btn-danger">Finish</button>
+						</div>
+
+						<!-- Progress Bar Container -->
+						<div class="progress-container input-group">
+							<!-- Progress Label -->
+							<div class="input-group-prepend">
+								<span class="input-group-text progress-box">Progress</span>
+							</div>
+
+							<!-- White Box around Progress Bar -->
+							<div class="progress-wrapper">
+								<input type="range" id="progress-bar" min="0" max="100" value="0"
+									class="form-control slider">
+							</div>
+
+							<!-- Progress Percentage -->
+							<div class="input-group-append">
+								<span id="progress-label"
+									class="input-group-text progress-percent"><strong>0%</strong></span>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Simulation Panel -->
 				<div id="sim-panel-horizontal-scroll">
 					<div id="indiv-bush-row" class="row flex-nowrap">
 						<div class="col-sm-2 text-right">
@@ -387,7 +397,6 @@
 								<div class="lsm-title">
 									<span id="alg2-table-title" class="row cmp-indiv-mp">tTemp</span>
 								</div>
-								<!-- <span id="ACEAlert">The streaks of clean pages formed by concurrently writing dirty pages</span> -->
 							</div>
 							<div id="table2"></div>
 						</div>
@@ -396,7 +405,6 @@
 								<div class="lsm-title">
 									<span id="alg3-table-title" class="row cmp-indiv-mp">ReStore</span>
 								</div>
-								<!-- <span id="ACEAlert">The streaks of clean pages formed by concurrently writing dirty pages</span> -->
 							</div>
 							<div id="table3"></div>
 						</div>
@@ -462,8 +470,8 @@
 						</div>
 						<div class="col-sm-3">
 							<div id="tier3alg3" class="tier justify-content-center"></div>
+						</div>
 					</div>
-				</div>
 					<br>
 
 					<!-- Performance Metrics Panel -->
@@ -475,9 +483,10 @@
 									title="The number of pages written."># Pages Written (Tier 1)</span>
 							</div>
 							<div class="col-sm-3 text-left">
-								<span id="alg0-pages-written-t1" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
+								<span id="alg0-pages-written-t1" class="cost uncertain" data-toggle="tooltip"
+									data-placement="right">0</span>
 							</div>
-							
+
 							<div class="col-sm-3 text-left">
 								<span id="alg1-pages-written-t1" class="cost uncertain">0</span>
 							</div>
@@ -495,9 +504,10 @@
 									title="The number of pages written."># Pages Written (Tier 2)</span>
 							</div>
 							<div class="col-sm-3 text-left">
-								<span id="alg0-pages-written-t2" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
+								<span id="alg0-pages-written-t2" class="cost uncertain" data-toggle="tooltip"
+									data-placement="right">0</span>
 							</div>
-							
+
 							<div class="col-sm-3 text-left">
 								<span id="alg1-pages-written-t2" class="cost uncertain">0</span>
 							</div>
@@ -515,7 +525,8 @@
 									title="The number of pages written."># Pages Written (Tier 3)</span>
 							</div>
 							<div class="col-sm-3 text-left">
-								<span id="alg0-pages-written-t3" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
+								<span id="alg0-pages-written-t3" class="cost uncertain" data-toggle="tooltip"
+									data-placement="right">0</span>
 							</div>
 							<div class="col-sm-3 text-left">
 								<span id="alg1-pages-written-t3" class="cost uncertain">0</span>
@@ -535,9 +546,10 @@
 									title="The number of pages read."># Pages Read (Tier 1)</span>
 							</div>
 							<div class="col-sm-3 text-left">
-								<span id="alg0-pages-read-t1" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
+								<span id="alg0-pages-read-t1" class="cost uncertain" data-toggle="tooltip"
+									data-placement="right">0</span>
 							</div>
-							
+
 							<div class="col-sm-3 text-left">
 								<span id="alg1-pages-read-t1" class="cost uncertain">0</span>
 							</div>
@@ -555,9 +567,10 @@
 									title="The number of pages read."># Pages Read (Tier 2)</span>
 							</div>
 							<div class="col-sm-3 text-left">
-								<span id="alg0-pages-read-t2" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
+								<span id="alg0-pages-read-t2" class="cost uncertain" data-toggle="tooltip"
+									data-placement="right">0</span>
 							</div>
-							
+
 							<div class="col-sm-3 text-left">
 								<span id="alg1-pages-read-t2" class="cost uncertain">0</span>
 							</div>
@@ -575,9 +588,10 @@
 									title="The number of pages read."># Pages Read (Tier 3)</span>
 							</div>
 							<div class="col-sm-3 text-left">
-								<span id="alg0-pages-read-t3" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
+								<span id="alg0-pages-read-t3" class="cost uncertain" data-toggle="tooltip"
+									data-placement="right">0</span>
 							</div>
-							
+
 							<div class="col-sm-3 text-left">
 								<span id="alg1-pages-read-t3" class="cost uncertain">0</span>
 							</div>
@@ -596,9 +610,10 @@
 									title="The number of pages migrated."># Pages Migrated (Tier 1 &#8596 2)</span>
 							</div>
 							<div class="col-sm-3 text-left">
-								<span id="alg0-pages-migrated-t1t2" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
+								<span id="alg0-pages-migrated-t1t2" class="cost uncertain" data-toggle="tooltip"
+									data-placement="right">0</span>
 							</div>
-							
+
 							<div class="col-sm-3 text-left">
 								<span id="alg1-pages-migrated-t1t2" class="cost uncertain">0</span>
 							</div>
@@ -610,33 +625,16 @@
 							</div>
 						</div>
 
-						<!-- <div class="row">
-							<div class="col-sm-2 text-left">
-								<span class="metric-title" data-toggle="tooltip" data-placement="left"
-									title="The number of pages migrated."># Pages Migrated (Tier 2 to 1)</span>
-							</div>
-							<div class="col-sm-3 text-left">
-								<span id="alg0-pages-migrated-t2t1" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
-							</div>
-							
-							<div class="col-sm-3 text-left">
-								<span id="alg1-pages-migrated-t2t1" class="cost uncertain">0</span>
-							</div>
-							<div class="col-sm-3 text-left">
-								<span id="alg2-pages-migrated-t2t1" class="cost uncertain">0</span>
-							</div>
-						</div> -->
-
-
 						<div class="row flex-nowrap">
 							<div class="col-sm-2 text-left">
 								<span class="metric-title" data-toggle="tooltip" data-placement="left"
 									title="The number of pages migrated."># Pages Migrated (Tier 2 &#8596 3)</span>
 							</div>
 							<div class="col-sm-3 text-left">
-								<span id="alg0-pages-migrated-t2t3" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
+								<span id="alg0-pages-migrated-t2t3" class="cost uncertain" data-toggle="tooltip"
+									data-placement="right">0</span>
 							</div>
-							
+
 							<div class="col-sm-3 text-left">
 								<span id="alg1-pages-migrated-t2t3" class="cost uncertain">0</span>
 							</div>
@@ -647,356 +645,26 @@
 								<span id="alg3-pages-migrated-t2t3" class="cost uncertain">0</span>
 							</div>
 						</div>
-
-						<!-- <div class="row">
-							<div class="col-sm-2 text-left">
-								<span class="metric-title" data-toggle="tooltip" data-placement="left"
-									title="The number of pages migrated."># Pages Migrated (Tier 3 to 2)</span>
-							</div>
-							<div class="col-sm-3 text-left">
-								<span id="alg0-pages-migrated-t3t2" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
-							</div>
-							
-							<div class="col-sm-3 text-left">
-								<span id="alg1-pages-migrated-t3t2" class="cost uncertain">0</span>
-							</div>
-							<div class="col-sm-3 text-left">
-								<span id="alg2-pages-migrated-t3t2" class="cost uncertain">0</span>
-							</div>
-						</div> -->
-
-
-						<!-- #Buffer Misses -->
-						<!-- <div class="row">
-							<div class="col text-right">
-								<span id="base-alg-buffer-misses" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
-							</div>
-							<div class="col-2 text-center">
-								<span class="metric-title" data-toggle="tooltip" data-placement="left"
-									title="The number of times a requested page is not found in the bufferpool.">#Buffer Misses</span>
-							</div>
-							<div class="col text-left">
-								<span id="ace-alg-buffer-misses" class="cost uncertain">0</span>
-							</div>
-						</div> -->
-
-						<!-- #Buffer Hits-->
-						<!-- <div class="row">
-							<div class="col text-right">
-								<span id="base-alg-buffer-hits" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
-							</div>
-							<div class="col-2 text-center">
-								<span class="metric-title" data-toggle="tooltip" data-placement="left"
-									title="The number of times a requested page is in the bufferpool.">#Buffer Hits</span>
-							</div>
-							<div class="col text-left">
-								<span id="ace-alg-buffer-hits" class="cost uncertain">0</span>
-							</div>
-						</div> -->
-
-						<!-- #Write Batches -->
-						<!-- <div class="row">
-							<div class="col text-right">
-								<span id="base-alg-write-IO" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
-							</div>
-							<div class="col-2 text-center">
-								<span class="metric-title">#Write Batches</span>
-							</div>
-							<div class="col text-left">
-								<span id="ace-alg-write-IO" class="cost uncertain">0</span>
-							</div>
-						</div> -->
-
-						<!-- Latency -->
-						<!-- <div class="row">
-							<div class="col text-right">
-								<span id="base-alg-latency" class="cost uncertain" data-toggle="tooltip" data-placement="right">0</span>
-							</div>
-							<div class="col-2 text-center">
-								<span class="metric-title">Latency (ms)</span>
-							</div>
-							<div class="col text-left">
-								<span id="ace-alg-latency" class="cost uncertain">0</span>
-							</div>
-						</div> -->
 					</div>
-				
+
 
 
 					<!-- After the Performance Metrics Panel -->
 					<div class="container">
 						<div class="row">
-							<div class="col-lg-6"> <!-- Half-width for write-batches plot -->
-								<div id="write-batches-graph"></div> <!-- Placeholder for the plot -->
-							</div>
-							<div class="col-lg-6"> <!-- Half-width for latency plot -->
+							<div class="col-sm-6"> <!-- 1/3-width for latency plot -->
 								<div id="latency-graph"></div> <!-- Placeholder for the latency plot -->
 							</div>
+							<div class="col-sm-6"> <!-- 1/3-width for migration count plot -->
+								<div id="migration_count-graph"></div> <!-- Placeholder for the plot -->
+							</div>
+							<!-- <div class="col-sm-4">
+								<div id="indiv_migration_count-graph"></div>
+							</div> -->
 						</div>
 					</div>
-					
-					<hr class="section-divider">
 
-					<div class="container">
-						<div class="row">
-							<div class="col-lg-6 border-right">
-								<h5 class="text-center"><strong>Vary Read/Write Ratio</strong></h5>
-							</div>
-							<div class="col-lg-6">
-								<h5 class="text-center"><strong>Vary Buffer Pool Size</strong></h5>
-							</div>
-						</div>
-					
-						<!-- First Row: Workload & Device -->
-						<div class="row">
-							<div class="col-lg-3">
-								<div class="input-group mb-2">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Workload</span>
-									</div>
-									<select class="form-control" id="cmp_workload_rw">
-										<option value="1" selected>Small buffer</option>
-										<option value="2">Large buffer</option>
-										<option value="5">Very Skewed</option>
-										<option value="6">Uniform</option>
-									</select>
-								</div>
-							</div>
-							<div class="col-lg-3 border-right">
-								<div class="input-group mb-2">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Device</span>
-									</div>
-									<select class="form-control" id="cmp_device_rw">
-										<option value="1">Device 1 (PCI)</option>
-										<option value="2">Device 2 (SATA)</option>
-										<option value="3">Device 3 (Optane)</option>
-										<option value="4">Device 4 (Virtual)</option>
-									</select>
-								</div>
-							</div>
-					
-							<div class="col-lg-3">
-								<div class="input-group mb-2">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Workload</span>
-									</div>
-									<select class="form-control" id="cmp_workload_bp">
-										<option value="3">Read-heavy</option>
-										<option value="4">Write-heavy</option>
-										<option value="5">Very Skewed</option>
-										<option value="6">Uniform</option>
-									</select>
-								</div>
-							</div>
-							<div class="col-lg-3">
-								<div class="input-group mb-2">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Device</span>
-									</div>
-									<select class="form-control" id="cmp_device_bp">
-										<option value="1">Device 1 (PCI)</option>
-										<option value="2">Device 2 (SATA)</option>
-										<option value="3">Device 3 (Optane)</option>
-										<option value="4">Device 4 (Virtual)</option>
-									</select>
-								</div>
-							</div>
-						</div>
-					
-						<!-- Second Row: Buffer Size, Read %, and Disk Size -->
-						<div class="row">
-							<div class="col-lg-3">
-								<div class="input-group mb-2">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Buffer Size</span>
-									</div>
-									<input type="number" class="form-control" id="cmp_buffer_size_rw" value="100" min="0">
-								</div>
-							</div>
-							<div class="col-lg-3 border-right">
-								<div class="input-group mb-2">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Disk Size</span>
-									</div>
-									<input type="number" class="form-control" id="cmp_disk_size_rw" value="5000" min="0">
-								</div>
-							</div>
-					
-							<div class="col-lg-3">
-								<div class="input-group mb-2">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Read (%)</span>
-									</div>
-									<input type="number" class="form-control" id="cmp_read_percentage_bp" value="50" min="0" max="100">
-								</div>
-							</div>
-							<div class="col-lg-3">
-								<div class="input-group mb-2">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Disk Size</span>
-									</div>
-									<input type="number" class="form-control" id="cmp_disk_size_bp" value="5000" min="0">
-								</div>
-							</div>
-						</div>
-					
-						<!-- Third Row: Operations & Skewness -->
-						<div class="row">
-							<div class="col-lg-3">
-								<div class="input-group mb-2">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Operations</span>
-									</div>
-									<input type="number" class="form-control" id="cmp_operations_rw" value="10000" min="0">
-								</div>
-							</div>
-							<div class="col-lg-3 border-right">
-								<div class="input-group mb-2">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Base Latency (μs)</span>
-									</div>
-									<input type="number" class="form-control" id="cmp_base_latency_rw" value="12.4" min="0">
-								</div>
-							</div>
-					
-							<div class="col-lg-3">
-								<div class="input-group mb-2">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Operations</span>
-									</div>
-									<input type="number" class="form-control" id="cmp_operations_bp" value="10000" min="0">
-								</div>
-							</div>
-							<div class="col-lg-3">
-								<div class="input-group mb-2">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Base Latency (μs)</span>
-									</div>
-									<input type="number" class="form-control" id="cmp_base_latency_bp" value="12.4" min="0">
-								</div>
-							</div>
-						</div>
-					
-						<!-- Fourth Row: Skewness & Alpha-Kappa -->
-						<div class="row">
-							<div class="col-lg-3">
-								<div class="input-group mb-2">
-									<div class="input-group-prepend">
-										<span class="input-group-text"> Skew (%) </span>
-									</div>
-									<input type="number" class="form-control" id="cmp_skew_d_rw" value="90" min="0" max="100">
-									<div class="input-group-append">
-										<span class="input-group-text"> on </span>
-									</div>
-									<input type="number" class="form-control" id="cmp_skew_t_rw" value="10" min="0" max="100">
-								</div>
-							</div>
-							<div class="col-lg-3 border-right">
-								<div class="input-group mb-2">
-									<div class="input-group-prepend">
-										<span class="input-group-text"> &alpha; </span>
-									</div>
-									<input type="number" class="form-control" id="cmp_alpha_rw" value="3.0" min="0">
-									<div class="input-group-append">
-										<span class="input-group-text"> &kappa; </span>
-									</div>
-									<input type="number" class="form-control" id="cmp_kappa_rw" value="6" min="0">
-								</div>
-							</div>
-					
-							<div class="col-lg-3">
-								<div class="input-group mb-2">
-									<div class="input-group-prepend">
-										<span class="input-group-text"> Skew (%) </span>
-									</div>
-									<input type="number" class="form-control" id="cmp_skew_d_bp" value="90" min="0" max="100">
-									<div class="input-group-append">
-										<span class="input-group-text"> on </span>
-									</div>
-									<input type="number" class="form-control" id="cmp_skew_t_bp" value="10" min="0" max="100">
-								</div>
-							</div>
-							<div class="col-lg-3">
-								<div class="input-group mb-2">
-									<div class="input-group-prepend">
-										<span class="input-group-text"> &alpha; </span>
-									</div>
-									<input type="number" class="form-control" id="cmp_alpha_bp" value="3.0" min="0">
-									<div class="input-group-append">
-										<span class="input-group-text"> &kappa; </span>
-									</div>
-									<input type="number" class="form-control" id="cmp_kappa_bp" value="6" min="0">
-								</div>
-							</div>
-						</div>
-					</div>
-					
-						
-	
-							<div class="row" id="show-plot-btn">
-								<div class="col-lg-12 text-center">
-									<div class="d-flex flex-row justify-content-center mt-4">
-										<a id="graph" class="btn btn-primary btn-lg run-button" target="_blank"
-										style="color: white !important; font-size: 1rem;">
-										Run experiments
-									</a>
-									</div>
-									
-									<!-- Loading Bar -->
-									<div id="loadingbar" class="d-flex justify-content-center align-items-center" style="margin-top: 10px;"></div> <!-- Reduced margin -->
-
-									<!-- Add a Spacer -->
-									<div style="height: 30px;"></div>
-
-									<!-- Plots Section -->
-									<div class="container">
-										<div class="row justify-content-center">
-											<!-- First Row (Top 2 Plots) -->
-											<div class="col-md-6">
-												<div class="text-center mb-2">
-													<div class="toggle-switch" data-target="RWplot">
-													  <div class="toggle-option active" data-mode="raw">Raw</div>
-													  <div class="toggle-option" data-mode="speedup">Speedup</div>
-													</div>
-												  </div>												  
-												<div id="RWplot"></div>
-												<p id="RWplot-caption" class="plot-caption"></p>
-											</div>
-											<div class="col-md-6">
-												<div class="text-center mb-2">
-													<div class="toggle-switch" data-target="Bplot">
-													  <div class="toggle-option active" data-mode="raw">Raw</div>
-													  <div class="toggle-option" data-mode="speedup">Speedup</div>
-													</div>
-												  </div>
-												<div id="Bplot"></div>
-												<p id="Bplot-caption" class="plot-caption"></p>
-											</div>
-																						  
-										</div>
-										<div class="row justify-content-center">
-											<div class="col-md-6">
-											  <div id="LRUplot" style="height: 400px; width: 570px"></div>
-											  <p id="LRUplot-caption" class="plot-caption"></p>
-											</div>
-										  </div>
-									</div>
-
-									
-								</div>
-							</div>
-						</div>
 				</div>
-
-				<!-- Comparative Analysis Content -->
-					<div id="comparative-analysis" style="display: none;">
-						<!-- Comparative Analysis Input Panel -->
-
-					<!-- Headings for both experiments -->			
-
-			        </div>
-			
 	</section>
 
 	<section id="publication"></section>
