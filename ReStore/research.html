@@ -88,12 +88,13 @@
 									<span class="input-group-text">Workload</span>
 								</div>
 								<select class="form-control" id="workload">
-									<option value=1 selected>1 (Mixed)</option>
+									<option value=1>1 (Mixed)</option>
 									<option value=2>2 (Read-heavy)</option>
 									<option value=3>3 (Write-heavy)</option>
 									<option value=4>4 (Very Skewed)</option>
 									<option value=5>5 (Uniform)</option>
-									<option value=6>Custom</option>
+									<option value=7>Dynamic</option>
+									<option value=6 selected>Custom</option>
 								</select>
 							</div>
 						</div>
@@ -121,7 +122,7 @@
 								<div class="input-group-prepend">
 									<span class="input-group-text"># Op.</span>
 								</div>
-								<input type="number" class="form-control" id="x" value="100" min=0>
+								<input type="text" class="form-control" id="x" value="1000" min=0>
 							</div>
 						</div>
 
@@ -130,7 +131,7 @@
 								<div class="input-group-prepend">
 									<span class="input-group-text">Read %</span>
 								</div>
-								<input type="number" class="form-control" id="e" value=50 min=0>
+								<input type="text" class="form-control" id="e" value=50 min=0>
 							</div>
 						</div>
 
@@ -139,7 +140,7 @@
 								<div class="input-group-prepend">
 									<span class="input-group-text">% Pages</span>
 								</div>
-								<input type="number" class="form-control" value=10 id="d" min=0>
+								<input type="text" class="form-control" value=15 id="d" min=0>
 							</div>
 						</div>
 
@@ -148,7 +149,7 @@
 								<div class="input-group-prepend">
 									<span class="input-group-text">% Access</span>
 								</div>
-								<input type="number" class="form-control" value=80 id="s" min=0>
+								<input type="text" class="form-control" value=80 id="s" min=0>
 							</div>
 						</div>
 
@@ -173,7 +174,7 @@
 								<div class="input-group-prepend">
 									<span class="input-group-text">Read Latency (μs)</span>
 								</div>
-								<input type="number" class="form-control" id="lat1" value=12.4 min=0>
+								<input type="number" class="form-control" id="lat1" value=30 min=0>
 							</div>
 						</div>
 						<div class="col-sm-3">
@@ -181,7 +182,7 @@
 								<div class="input-group-prepend">
 									<span class="input-group-text">Concurrency</span>
 								</div>
-								<input type="number" class="form-control" min=0 id="alpha1" value=6>
+								<input type="number" class="form-control" min=0 id="alpha1" value=8>
 							</div>
 						</div>
 						<div class="col-sm-3">
@@ -189,7 +190,7 @@
 								<div class="input-group-prepend">
 									<span class="input-group-text">Asymmetry</span>
 								</div>
-								<input type="number" class="form-control" min=0 id="asym1" value=3.0>
+								<input type="number" class="form-control" min=0 id="asym1" value=1.5>
 							</div>
 						</div>
 
@@ -215,7 +216,7 @@
 								<div class="input-group-prepend">
 									<span class="input-group-text">Read Latency (μs)</span>
 								</div>
-								<input type="number" class="form-control" id="lat2" value=12.4 min=0>
+								<input type="number" class="form-control" id="lat2" value=200 min=0>
 							</div>
 						</div>
 
@@ -224,7 +225,7 @@
 								<div class="input-group-prepend">
 									<span class="input-group-text">Concurrency</span>
 								</div>
-								<input type="number" class="form-control" min=0 id="alpha2" value=6>
+								<input type="number" class="form-control" min=0 id="alpha2" value=4>
 							</div>
 						</div>
 
@@ -233,7 +234,7 @@
 								<div class="input-group-prepend">
 									<span class="input-group-text">Asymmetry</span>
 								</div>
-								<input type="number" class="form-control" min=0 id="asym2" value=3.0>
+								<input type="number" class="form-control" min=0 id="asym2" value=2.0>
 							</div>
 						</div>
 					</div>
@@ -258,7 +259,7 @@
 								<div class="input-group-prepend">
 									<span class="input-group-text">Read Latency (μs)</span>
 								</div>
-								<input type="number" class="form-control" id="lat3" value=12.4 min=0>
+								<input type="number" class="form-control" id="lat3" value=500 min=0>
 							</div>
 						</div>
 
@@ -267,7 +268,7 @@
 								<div class="input-group-prepend">
 									<span class="input-group-text">Concurrency</span>
 								</div>
-								<input type="number" class="form-control" min=0 id="alpha3" value=6>
+								<input type="number" class="form-control" min=0 id="alpha3" value=2>
 							</div>
 						</div>
 
@@ -276,7 +277,7 @@
 								<div class="input-group-prepend">
 									<span class="input-group-text">Asymmetry</span>
 								</div>
-								<input type="number" class="form-control" min=0 id="asym3" value=3.0>
+								<input type="number" class="form-control" min=0 id="asym3" value=4>
 							</div>
 						</div>
 					</div>
@@ -291,7 +292,7 @@
 									<option value=1>Top: 3%, Mid: 8%</option>
 									<option value=2>Top: 3%, Mid: 16%</option>
 									<option value=3>Top: 6%, Mid: 9%</option>
-									<option value=4 selected>Top: 12%, Mid: 16%</option>
+									<option value=4>Top: 12%, Mid: 16%</option>
 									<option value=5>Top: 10%, Mid: 20%</option>
 									<option value=6 selected>Custom</option>
 								</select>
@@ -325,6 +326,30 @@
 							</div>
 						</div>
 					</div>
+
+					<div class="row flex-nowrap" id="inputs-selectedAlgos">
+						<div class="col-sm-4">
+							<span class="fw-semibold" style="padding-left: 12px;">Selected Algorithms: </span>
+						</div>
+						<div class="col-sm-2">
+							<label><input type="checkbox" value="tLRU" checked> tLRU</label>
+						</div>
+						<div class="col-sm-2">
+							<label><input type="checkbox" value="tLFU" checked> tLFU</label>
+						</div>
+						<div class="col-sm-2">
+							<label><input type="checkbox" value="tTemp" checked> tTemp</label>
+						</div>
+						<div class="col-sm-2">
+							<label><input type="checkbox" value="tRL" checked> ReStore</label>
+						</div>
+						<div class="col-sm-2">
+							<label><input type="checkbox" value="LRFU"> LRFU</label>
+						</div>
+						<div class="col-sm-2">
+							<label><input type="checkbox" value="exd"> EXD</label>
+						</div>
+					</div>
 				</div>
 
 				<!-- Combined Control Panel & Progress Bar -->
@@ -354,7 +379,7 @@
 							<!-- White Box around Progress Bar -->
 							<div class="progress-wrapper">
 								<input type="range" id="progress-bar" min="0" max="100" value="0"
-									class="form-control slider">
+									class="form-control slider" disabled>
 							</div>
 
 							<!-- Progress Percentage -->
@@ -367,7 +392,7 @@
 				</div>
 
 				<!-- Simulation Panel -->
-				<div id="sim-panel-horizontal-scroll">
+				<div id="sim-panel-horizontal-scroll" style="margin-left: -20px !important">
 					<div id="indiv-bush-row" class="row flex-nowrap">
 						<div class="col-sm-2 text-right">
 							<div class="lsm-title cmp-indiv-mp">
@@ -474,68 +499,93 @@
 					</div>
 					<br>
 
+					
+					<!-- Putting charts before the Performance Metrics Panel -->
+					<div class="container" style="margin-left: -50px !important">
+						<div class="row flex-nowrap">
+							<div class="col-sm-5"> <!-- 1/3-width for latency plot -->
+								<div id="latency-graph"></div> <!-- Placeholder for the latency plot -->
+							</div>
+							<div class="col-sm-4"> <!-- 1/3-width for migration count plot -->
+								<div id="migration_count-graph"></div> <!-- Placeholder for the plot -->
+							</div>
+							<div class="col-sm-6">
+								<div id="indiv_migration_count-graph"></div>
+							</div>
+						</div>
+					</div>
+
 					<!-- Performance Metrics Panel -->
-					<div id="cost-result" class="container">
+					<div id="cost-result" class="container" style="margin-left: -15px !important">
 						<!-- #Disk Pages Written-->
 						<div class="row flex-nowrap">
 							<div class="col-sm-2 text-left">
 								<span class="metric-title" data-toggle="tooltip" data-placement="left"
-									title="The number of pages written."># Pages Written (Tier 1)</span>
+									title="The number of pages written to Tier 1.">Tier 1 # Writes</span>
 							</div>
 							<div class="col-sm-3 text-left">
-								<span id="alg0-pages-written-t1" class="cost uncertain" data-toggle="tooltip"
+								<span id="alg0-pages-written-t1" class="cost uncertain img-left" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
 
 							<div class="col-sm-3 text-left">
-								<span id="alg1-pages-written-t1" class="cost uncertain">0</span>
+								<span id="alg1-pages-written-t1" class="cost uncertain img-left" data-toggle="tooltip"
+									data-placement="right">0</span>
 							</div>
 							<div class="col-sm-3 text-left">
-								<span id="alg2-pages-written-t1" class="cost uncertain">0</span>
+								<span id="alg2-pages-written-t1" class="cost uncertain img-left" data-toggle="tooltip"
+									data-placement="right">0</span>
 							</div>
 							<div class="col-sm-3 text-left">
-								<span id="alg3-pages-written-t1" class="cost uncertain">0</span>
+								<span id="alg3-pages-written-t1" class="cost uncertain img-left" data-toggle="tooltip"
+									data-placement="right">0</span>
 							</div>
 						</div>
 
 						<div class="row flex-nowrap">
 							<div class="col-sm-2 text-left">
 								<span class="metric-title" data-toggle="tooltip" data-placement="left"
-									title="The number of pages written."># Pages Written (Tier 2)</span>
+									title="The number of pages written to Tier 2.">Tier 2 # Writes</span>
 							</div>
 							<div class="col-sm-3 text-left">
-								<span id="alg0-pages-written-t2" class="cost uncertain" data-toggle="tooltip"
+								<span id="alg0-pages-written-t2" class="cost uncertain img-left" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
 
 							<div class="col-sm-3 text-left">
-								<span id="alg1-pages-written-t2" class="cost uncertain">0</span>
+								<span id="alg1-pages-written-t2" class="cost uncertain img-left" data-toggle="tooltip"
+									data-placement="right">0</span>
 							</div>
 							<div class="col-sm-3 text-left">
-								<span id="alg2-pages-written-t2" class="cost uncertain">0</span>
+								<span id="alg2-pages-written-t2" class="cost uncertain img-left" data-toggle="tooltip"
+									data-placement="right">0</span>
 							</div>
 							<div class="col-sm-3 text-left">
-								<span id="alg3-pages-written-t2" class="cost uncertain">0</span>
+								<span id="alg3-pages-written-t2" class="cost uncertain img-left" data-toggle="tooltip"
+									data-placement="right">0</span>
 							</div>
 						</div>
 
 						<div class="row flex-nowrap">
 							<div class="col-sm-2 text-left">
 								<span class="metric-title" data-toggle="tooltip" data-placement="left"
-									title="The number of pages written."># Pages Written (Tier 3)</span>
+									title="The number of pages written to Tier 3.">Tier 3 # Writes</span>
 							</div>
 							<div class="col-sm-3 text-left">
-								<span id="alg0-pages-written-t3" class="cost uncertain" data-toggle="tooltip"
+								<span id="alg0-pages-written-t3" class="cost uncertain img-left" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
 							<div class="col-sm-3 text-left">
-								<span id="alg1-pages-written-t3" class="cost uncertain">0</span>
+								<span id="alg1-pages-written-t3" class="cost uncertain img-left" data-toggle="tooltip"
+									data-placement="right">0</span>
 							</div>
 							<div class="col-sm-3 text-left">
-								<span id="alg2-pages-written-t3" class="cost uncertain">0</span>
+								<span id="alg2-pages-written-t3" class="cost uncertain img-left" data-toggle="tooltip"
+									data-placement="right">0</span>
 							</div>
 							<div class="col-sm-3 text-left">
-								<span id="alg3-pages-written-t3" class="cost uncertain">0</span>
+								<span id="alg3-pages-written-t3" class="cost uncertain img-left" data-toggle="tooltip"
+									data-placement="right">0</span>
 							</div>
 						</div>
 
@@ -543,63 +593,72 @@
 						<div class="row flex-nowrap">
 							<div class="col-sm-2 text-left">
 								<span class="metric-title" data-toggle="tooltip" data-placement="left"
-									title="The number of pages read."># Pages Read (Tier 1)</span>
+									title="The number of pages read from Tier 1.">Tier 1 # Reads</span>
 							</div>
 							<div class="col-sm-3 text-left">
-								<span id="alg0-pages-read-t1" class="cost uncertain" data-toggle="tooltip"
+								<span id="alg0-pages-read-t1" class="cost uncertain img-left" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
 
 							<div class="col-sm-3 text-left">
-								<span id="alg1-pages-read-t1" class="cost uncertain">0</span>
+								<span id="alg1-pages-read-t1" class="cost uncertain img-left" data-toggle="tooltip"
+									data-placement="right">0</span>
 							</div>
 							<div class="col-sm-3 text-left">
-								<span id="alg2-pages-read-t1" class="cost uncertain">0</span>
+								<span id="alg2-pages-read-t1" class="cost uncertain img-left" data-toggle="tooltip"
+									data-placement="right">0</span>
 							</div>
 							<div class="col-sm-3 text-left">
-								<span id="alg3-pages-read-t1" class="cost uncertain">0</span>
+								<span id="alg3-pages-read-t1" class="cost uncertain img-left" data-toggle="tooltip"
+									data-placement="right">0</span>
 							</div>
 						</div>
 
 						<div class="row flex-nowrap">
 							<div class="col-sm-2 text-left">
 								<span class="metric-title" data-toggle="tooltip" data-placement="left"
-									title="The number of pages read."># Pages Read (Tier 2)</span>
+									title="The number of pages read from Tier 2.">Tier 2 # Reads</span>
 							</div>
 							<div class="col-sm-3 text-left">
-								<span id="alg0-pages-read-t2" class="cost uncertain" data-toggle="tooltip"
+								<span id="alg0-pages-read-t2" class="cost uncertain img-left" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
 
 							<div class="col-sm-3 text-left">
-								<span id="alg1-pages-read-t2" class="cost uncertain">0</span>
+								<span id="alg1-pages-read-t2" class="cost uncertain img-left" data-toggle="tooltip"
+									data-placement="right">0</span>
 							</div>
 							<div class="col-sm-3 text-left">
-								<span id="alg2-pages-read-t2" class="cost uncertain">0</span>
+								<span id="alg2-pages-read-t2" class="cost uncertain img-left" data-toggle="tooltip"
+									data-placement="right">0</span>
 							</div>
 							<div class="col-sm-3 text-left">
-								<span id="alg3-pages-read-t2" class="cost uncertain">0</span>
+								<span id="alg3-pages-read-t2" class="cost uncertain img-left" data-toggle="tooltip"
+									data-placement="right">0</span>
 							</div>
 						</div>
 
 						<div class="row flex-nowrap">
 							<div class="col-sm-2 text-left">
 								<span class="metric-title" data-toggle="tooltip" data-placement="left"
-									title="The number of pages read."># Pages Read (Tier 3)</span>
+									title="The number of pages read from Tier 3.">Tier 3 # Reads</span>
 							</div>
 							<div class="col-sm-3 text-left">
-								<span id="alg0-pages-read-t3" class="cost uncertain" data-toggle="tooltip"
+								<span id="alg0-pages-read-t3" class="cost uncertain img-left" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
 
 							<div class="col-sm-3 text-left">
-								<span id="alg1-pages-read-t3" class="cost uncertain">0</span>
+								<span id="alg1-pages-read-t3" class="cost uncertain img-left" data-toggle="tooltip"
+									data-placement="right">0</span>
 							</div>
 							<div class="col-sm-3 text-left">
-								<span id="alg2-pages-read-t3" class="cost uncertain">0</span>
+								<span id="alg2-pages-read-t3" class="cost uncertain img-left" data-toggle="tooltip"
+									data-placement="right">0</span>
 							</div>
 							<div class="col-sm-3 text-left">
-								<span id="alg3-pages-read-t3" class="cost uncertain">0</span>
+								<span id="alg3-pages-read-t3" class="cost uncertain img-left" data-toggle="tooltip"
+									data-placement="right">0</span>
 							</div>
 						</div>
 
@@ -607,63 +666,51 @@
 						<div class="row flex-nowrap">
 							<div class="col-sm-2 text-left">
 								<span class="metric-title" data-toggle="tooltip" data-placement="left"
-									title="The number of pages migrated."># Pages Migrated (Tier 1 &#8596 2)</span>
+									title="The number of pages migrated between Tier 1 and Tier 2.">Tier 1 &#8596 2 #Migrations</span>
 							</div>
 							<div class="col-sm-3 text-left">
-								<span id="alg0-pages-migrated-t1t2" class="cost uncertain" data-toggle="tooltip"
+								<span id="alg0-pages-migrated-t1t2" class="cost uncertain img-left" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
 
 							<div class="col-sm-3 text-left">
-								<span id="alg1-pages-migrated-t1t2" class="cost uncertain">0</span>
+								<span id="alg1-pages-migrated-t1t2" class="cost uncertain img-left" data-toggle="tooltip"
+									data-placement="right">0</span>
 							</div>
 							<div class="col-sm-3 text-left">
-								<span id="alg2-pages-migrated-t1t2" class="cost uncertain">0</span>
+								<span id="alg2-pages-migrated-t1t2" class="cost uncertain img-left" data-toggle="tooltip"
+									data-placement="right">0</span>
 							</div>
 							<div class="col-sm-3 text-left">
-								<span id="alg3-pages-migrated-t1t2" class="cost uncertain">0</span>
+								<span id="alg3-pages-migrated-t1t2" class="cost uncertain img-left" data-toggle="tooltip"
+									data-placement="right">0</span>
 							</div>
 						</div>
 
 						<div class="row flex-nowrap">
 							<div class="col-sm-2 text-left">
 								<span class="metric-title" data-toggle="tooltip" data-placement="left"
-									title="The number of pages migrated."># Pages Migrated (Tier 2 &#8596 3)</span>
+									title="The number of pages migrated between Tier 2 and Tier 3.">Tier 2 &#8596 3 #Migrations</span>
 							</div>
 							<div class="col-sm-3 text-left">
-								<span id="alg0-pages-migrated-t2t3" class="cost uncertain" data-toggle="tooltip"
+								<span id="alg0-pages-migrated-t2t3" class="cost uncertain img-left" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
 
 							<div class="col-sm-3 text-left">
-								<span id="alg1-pages-migrated-t2t3" class="cost uncertain">0</span>
+								<span id="alg1-pages-migrated-t2t3" class="cost uncertain img-left" data-toggle="tooltip"
+									data-placement="right">0</span>
 							</div>
 							<div class="col-sm-3 text-left">
-								<span id="alg2-pages-migrated-t2t3" class="cost uncertain">0</span>
+								<span id="alg2-pages-migrated-t2t3" class="cost uncertain img-left" data-toggle="tooltip"
+									data-placement="right">0</span>
 							</div>
 							<div class="col-sm-3 text-left">
-								<span id="alg3-pages-migrated-t2t3" class="cost uncertain">0</span>
+								<span id="alg3-pages-migrated-t2t3" class="cost uncertain img-left" data-toggle="tooltip"
+									data-placement="right">0</span>
 							</div>
 						</div>
 					</div>
-
-
-
-					<!-- After the Performance Metrics Panel -->
-					<div class="container">
-						<div class="row">
-							<div class="col-sm-6"> <!-- 1/3-width for latency plot -->
-								<div id="latency-graph"></div> <!-- Placeholder for the latency plot -->
-							</div>
-							<div class="col-sm-6"> <!-- 1/3-width for migration count plot -->
-								<div id="migration_count-graph"></div> <!-- Placeholder for the plot -->
-							</div>
-							<!-- <div class="col-sm-4">
-								<div id="indiv_migration_count-graph"></div>
-							</div> -->
-						</div>
-					</div>
-
 				</div>
 	</section>
 

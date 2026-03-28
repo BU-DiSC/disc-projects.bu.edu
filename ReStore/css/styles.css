@@ -891,8 +891,8 @@ progress::-moz-progress-bar {
 
 
 #individual-analysis {
-    border-bottom: 2px dotted #ccc; /* Add a light gray dotted line */
-    margin-bottom: 20px; /* Adds spacing below the dotted line */
+    border-bottom: 0px dotted #ccc; /* Add a light gray dotted line */
+    margin-bottom: 0px; /* Adds spacing below the dotted line */
 }
 
 #write-batches-graph, #latency-graph {
@@ -903,7 +903,7 @@ progress::-moz-progress-bar {
 
 .section-divider {
     border: none;
-    border-top: 2px dotted #ccc; /* Dotted line separator */
+    /* border-top: 2px dotted #ccc; Dotted line separator */
     margin: 30px 0; /* Space above and below */
     width: 100%; /* Ensure it spans the full width */
     opacity: 0.8; /* Slight transparency */
@@ -1125,19 +1125,23 @@ div.fixed {
 }
 
 .highlight-write {
-    background: orange !important;
+    /* background: orange !important; */
+    border: 3.5px solid black !important;
 }
 
 .highlight-read {
-    background: cornflowerblue !important;
+    /* background: cornflowerblue !important; */
+    border: 3.5px solid blue !important;
 }
 
 .highlight-from {
-    background: lightcoral !important;
+    /* background: lightcoral !important; */
+    border: 3.5px solid cyan !important;
 }
 
 .highlight-to {
-    background: lightgreen !important;
+    /* background: lightgreen !important; */
+    border: 3.5px solid magenta !important;
 }
 
 /* ── Cell base ───────────────────────────────────────────────────────────────

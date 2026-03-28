@@ -1,8 +1,12 @@
-function renderTiers(tier1, tier2, tier3, numAlgo = 3) {
-    for (let algNo = 0; algNo < numAlgo; algNo++) {
-        renderTier(1, `tier1alg${algNo}`, tier1);
-        renderTier(2, `tier2alg${algNo}`, tier2);
-        renderTier(3, `tier3alg${algNo}`, tier3);
+function renderTiers(tier1, tier2, tier3, algorithms, currentRound) {
+    var tooltipText = "Page Property";
+    console.log("Rendering tiers for algorithms: ", algorithms);
+    for (let algNo = 0; algNo < algorithms.length; algNo++) {
+        if (algorithms[algNo] === null) continue; // skip rendering for null
+        renderTier(1, `tier1alg${algNo}`, tier1, algorithms[algNo].name);
+        renderTier(2, `tier2alg${algNo}`, tier2, algorithms[algNo].name);
+        renderTier(3, `tier3alg${algNo}`, tier3, algorithms[algNo].name);
+        renderTemperature(tier1, tier2, tier3, algorithms, algNo, currentRound);
     }
 }
 
@@ -18,8 +22,126 @@ function renderUpdatedTiers(fromTier, toTier, fromPos, toPos, algNo) {
     toEl.textContent = fromText;
 }
 
-function renderTier(tierNo, id, arr) {
-    console.log(id);
+// function renderTemperature(tier1, tier2, tier3, algorithms, algNo, currentRound) {
+//     var backgroundColor = "inherit";
+//     var hotness = 0;
+//     var hotnessDenominator = 100; // Just to scale down the hotness for better visualization, can be adjusted based on actual values
+//     const algorithmName = algorithms[algNo].name;
+//     if (currentRound < 0) {
+//         // backgroundColor = "inherit"; // default color
+//     }
+//     else if (currentRound === 0) {
+//         // backgroundColor = lowest end of gradient
+//     }
+//     else if (currentRound > 100 && algorithmName === "tLRU") {
+//         hotnessDenominator = currentRound
+//     }
+//     else if (currentRound > 100 && algorithmName === "tLFU") {
+//         // get the frequency of the hottest page in all tiers
+//         tier1.forEach((page, i) => {
+//             if (page.frequency > hotnessDenominator) {
+//                 hotnessDenominator = page.frequency;
+//             }
+//         });
+//         tier2.forEach((page, i) => {
+//             if (page.frequency > hotnessDenominator) {
+//                 hotnessDenominator = page.frequency;
+//             }
+//         });
+//         tier3.forEach((page, i) => {
+//             if (page.frequency > hotnessDenominator) {
+//                 hotnessDenominator = page.frequency;
+//             }
+//         });
+//     }
+
+//     tier1.forEach((page, i) => {
+
+//         if (algorithmName === "tLRU") {
+//             hotness = page.lastRequestRound / hotnessDenominator;
+//         }
+//         else if (algorithmName === "tLFU") {
+//             hotness = page.frequency / hotnessDenominator;
+//         }
+//         else if (algorithmName === "tTemp" || algorithmName === "tRL") {
+//             hotness = page.temperature;
+//         }
+//         // set cell background color based on hotness, using a red gradient
+// }
+
+function renderTemperature(tier1, tier2, tier3, algorithms, algNo, currentRound) {
+    var hotness = 0;
+    var hotnessDenominator = 100;
+    const algorithmName = algorithms[algNo].name;
+
+    if (currentRound < 0) {
+        return;
+    }
+    // else if (currentRound === 0) {
+    //     [tier1, tier2, tier3].forEach((tierArr, t) => {
+    //         tierArr.forEach((page, i) => {
+    //             const el = document.getElementById(`tier${t + 1}alg${algNo}-${i}`);
+    //             if (el) el.style.backgroundColor = `rgb(255, 250, 150)`;
+    //         });
+    //     });
+    //     return;
+    // }
+    else if (currentRound > 100 && algorithmName === "tLRU") {
+        hotnessDenominator = currentRound;
+    }
+    else if (currentRound > 100 && algorithmName === "tLFU") {
+        tier1.forEach(page => { if (page.frequency > hotnessDenominator) hotnessDenominator = page.frequency; });
+        tier2.forEach(page => { if (page.frequency > hotnessDenominator) hotnessDenominator = page.frequency; });
+        tier3.forEach(page => { if (page.frequency > hotnessDenominator) hotnessDenominator = page.frequency; });
+    }
+
+    function applyHeatToTier(tierArr, tierNo) {
+        tierArr.forEach((page, i) => {
+            if (algorithmName === "tLRU") {
+                if (currentRound - page.lastRequestRound > hotnessDenominator) {
+                    hotness = 0; // if the page hasn't been accessed for a long time, consider it cold
+                } else {
+                    hotness = page.lastRequestRound / hotnessDenominator;
+                }
+            } else if (algorithmName === "tLFU") {
+                hotness = page.frequency / hotnessDenominator;
+            } else if (algorithmName === "tTemp" || algorithmName === "tRL") {
+                hotness = page.temperature;
+            }
+
+            hotness = Math.max(0, Math.min(1, hotness)); // clamp to [0, 1]
+
+            const r = Math.round(255);
+            const g = Math.round(250 - 180 * hotness);
+            const b = Math.round(150 - 150 * hotness);
+
+            const el = document.getElementById(`tier${tierNo}alg${algNo}-${i}`);
+            if (el) el.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+        });
+    }
+
+    applyHeatToTier(tier1, 1);
+    applyHeatToTier(tier2, 2);
+    applyHeatToTier(tier3, 3);
+}
+
+function renderTier(tierNo, id, arr, algorithmName) {
+    // console.log(id);
+
+    var tooltipPrefix = "Page Property";
+    if (algorithmName === "tLRU") {
+        tooltipPrefix = "Last Request Round: ";
+    }
+    else if (algorithmName === "tLFU") {
+        tooltipPrefix = "Frequency: ";
+    }
+    else if (algorithmName === "tTemp") {
+        tooltipPrefix = "Temperature: ";
+    }
+    else if (algorithmName === "tRL") {
+        tooltipPrefix = "Temperature: ";
+    }
+
     const container = document.getElementById(id);
     container.innerHTML = "";
 
@@ -39,6 +161,9 @@ function renderTier(tierNo, id, arr) {
         div.className = "cell";
         div.textContent = page.id;
         div.id = `${id}-${i}`;
+        div.setAttribute("data-toggle", "tooltip");
+        div.setAttribute("data-placement", "left");
+        div.setAttribute("title", tooltipPrefix);
         container.appendChild(div);
     });
 }

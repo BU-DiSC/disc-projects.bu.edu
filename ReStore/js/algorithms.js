@@ -5,6 +5,7 @@ const state = {
         slow_step_delay: 2000,
         finisher_step_delay: 1,
         plotUpdateInterval: 10, // Update plots every 10 steps
+        perReqEnqueueTime: 0.001, // microseconds, will be updated after workload generation
     },
 
     tiers: {
@@ -27,6 +28,10 @@ const state = {
         tier2Queue: [[],[],[],[],[],[],[]],
         tier3Queue: [[],[],[],[],[],[],[]],
 
+        tier1ElapsedTime: [0,0,0,0,0,0,0],
+        tier2ElapsedTime: [0,0,0,0,0,0,0],
+        tier3ElapsedTime: [0,0,0,0,0,0,0],
+
         // tier1ActiveThreads: [0,0,0,0,0,0,0],
         // tier2ActiveThreads: [0,0,0,0,0,0,0],
         // tier3ActiveThreads: [0,0,0,0,0,0,0],
@@ -43,7 +48,8 @@ const state = {
             lastRequestRound: 0,
             frequency: 0,
             temperature: 0.5,
-            reqRounds: []
+            reqRounds: [],
+            hotness: 0
         },
 
         // Playback Control
@@ -52,6 +58,7 @@ const state = {
         playing: false,
         delay: 2000,
         started: false,
+        finished: false,
 
         // Independent Variables for Tiered Algorithms
         t1AlphaVal: 1,
@@ -136,6 +143,7 @@ function resetTiersState() {
     s.playing = false;
     s.delay = state.config.medium_step_delay;
     s.started = false;
+    s.finished = false;
 
     // Independent tier variables
     s.t1AlphaVal = 1;
@@ -184,6 +192,16 @@ function resetTiersState() {
     s.tier3ActiveThreads = [0,0,0,0,0,0,0];
 }
 
+function resetAll() {
+    resetStats();
+    resetTiersState();
+    resetPlots();
+    emptyTiers();
+    console.log(state.tiers.algorithms);
+    renderTiers(tier1, tier2, tier3, state.tiers.algorithms, -1);
+    updateProgress(0, 100);
+}
+
 function resetStats() {
     const numAlgos = state.tiers.algorithms.length;
     for (let algoIndex = 0; algoIndex < numAlgos; algoIndex++) {
@@ -201,34 +219,43 @@ function resetStats() {
     }
 }
 
-function resetState() {
-    resetTiersState();
-}
-
-
-function initializeEmptyPlots(s) {
-    console.log("📊 Initializing empty plots...");
-
-    const libertineFontStyle = {
-        family: 'Linux Libertine, serif',
-        size: 19,
-        color: '#111',
-        weight: 400
-    };
-
-    updateLatencyPlot(s);
-    updateMigrationCountPlot(s);
-}
-
 function resetPlots() {
-    console.log("🔄 Resetting # Total Migrations and Latency plots...");
+    console.log("🔄 Resetting # Total all plots...");
+    state.tiers.latencyValuesForPlot = [[], [], [], [], [], [], []];
+    state.tiers.migrationCountsForPlot = [[], [], [], [], [], [], []];
+    state.tiers.t2t1MigrationCountsForPlot = [[], [], [], [], [], [], []];
+    state.tiers.t2t3MigrationCountsForPlot = [[], [], [], [], [], [], []];
 
     const migrationCountPlot = document.getElementById('migration_count-graph');
     if (migrationCountPlot) {
         Plotly.react(migrationCountPlot, [], {
-            title: '',
+            font: {
+                family: 'Linux Libertine, serif',
+                size: 17,
+                color: '#111',
+                weight: 400
+            },
+            margin: { t: 20, b: 40, l: 50, r: 10 },
             xaxis: { title: 'Operation steps' },
-            yaxis: { title: '#Total Migrations' },
+            yaxis: { title: '# Total Migrations' },
+            height: 350,
+            showlegend: false
+        });
+    }
+
+    const indivMigrationCountPlot = document.getElementById('indiv_migration_count-graph');
+    if (indivMigrationCountPlot) {
+        Plotly.react(indivMigrationCountPlot, [], {
+            font: {
+                family: 'Linux Libertine, serif',
+                size: 17,
+                color: '#111',
+                weight: 400
+            },
+            margin: { t: 20, b: 40, l: 50, r: 10 },
+            xaxis: { title: 'Operation steps' },
+            // yaxis: { title: '# Migrations' },
+            height: 350,
             showlegend: true
         });
     }
@@ -236,9 +263,16 @@ function resetPlots() {
     const latencyPlot = document.getElementById('latency-graph');
     if (latencyPlot) {
         Plotly.react(latencyPlot, [], {
-            title: '',
+            font: {
+                family: 'Linux Libertine, serif',
+                size: 17,
+                color: '#111',
+                weight: 400
+            },
+            margin: { t: 20, b: 40, l: 50, r: 10 },
             xaxis: { title: 'Operation steps' },
             yaxis: { title: 'Latency (ms)' },
+            height: 350,
             showlegend: true
         });
     }
@@ -258,12 +292,7 @@ function handleInputChange() {
     s.workload = [];
 
     // Reset Buffer States and Metrics via utility
-    resetTiersState();
-
-    // Reset UI Panels
-    resetStats();
-    updateProgress(0, 100);
-    resetPlots();
+    resetAll();
 
     // Re-enable play button
     $("#play-button").prop("disabled", false);
@@ -330,7 +359,7 @@ $(document).on("change", "#device1, #device2, #device3", function() {
 $(document).on("change", "#tierRatios", function() {
     const configIndex = parseInt($(this).val()) - 1;
     tierConfig = tierRatioCapacities[configIndex];
-    initTierConfig(tierConfig)
+    initTierConfig(tierConfig, state.tiers.algorithms);
 });
 
 // ensure in this function that changing top/mid tier capacity reflects in the bottom tier capacity so that sum is 100
@@ -357,11 +386,11 @@ $(document).ready(function(){
     $("#alpha3").val(sataSSD[2]);
 
     tierConfig = tierRatioCapacities[5]; // Default to last (custom) configuration
-    initTierConfig(tierConfig);
+    initTierConfig(tierConfig, state.tiers.algorithms);
     resetPlots();
 
     // Attach event listeners to all relevant inputs
-    $("#workload, #n, #b, #e, #baseAlg, #s, #lat, #alpha, #x, #d").on("change input", handleInputChange);
+    $("#workload, #e, #s, #x, #d").on("change input", handleInputChange);
     $("#asym1, #asym2, #asym3, #lat1, #lat2, #lat3, #alpha1, #alpha2, #alpha3, #device1, #device2, #device3").on("change input", handleInputChange);
     $("#tierRatio, #topTierCapacity, #midTierCapacity, #bottomTierCapacity").on("change input", handleInputChange);
     
@@ -407,6 +436,7 @@ $(document).ready(function(){
                 // Update plot immediately after removal
                 updateLatencyPlot(s);
                 updateMigrationCountPlot(s);
+                updateIndivMigrationCountPlot(s);
             }
 
         } else {
@@ -485,6 +515,7 @@ $(document).ready(function(){
                 s.sampled_steps.push(s.p);
             
                 updateMigrationCountPlot(s);
+                updateIndivMigrationCountPlot(s);
                 updateLatencyPlot(s);
             }
             
@@ -553,6 +584,11 @@ $(document).ready(function(){
 
         const s = state.tiers;
 
+        if (s.finished) {
+            console.log("Simulation already finished. Resetting state for new run.");
+            resetAll();
+            s.finished = false;
+        }
         // Latch parameters once on first start
         if (!s.started) {
             s.started      = true;
@@ -577,22 +613,30 @@ $(document).ready(function(){
         if (!s.playing) {
             if (!capacity()) return;
 
+            initTiers();
+            resetPlots();
             const algorithms = [tLRU, tLFU, tTemp, tRL];
 
             if (s.workload.length === 0) {
                 s.workload   = generateWorkload();
+                if (s.workload.length === 0) {
+                    console.error("Failed to generate workload. Check input parameters.");
+                    return;
+                }
                 s.p          = 0;
                 s.algorithms = algorithms;
+                s.perReqEnqueueTime = getWorkloadEnqueueTimeEstimate(s.workload);
                 console.log("Workload generated, length:", s.workload.length);
+                console.log("Estimated enqueue time per request (microseconds):", s.perReqEnqueueTime);
 
-                initTiers();
+                
                 for (let i = 0; i < algorithms.length; i++) {
                     s.tier1CurPages[i] = tier1.map(p => ({ ...p }));
                     s.tier2CurPages[i] = tier2.map(p => ({ ...p }));
                     s.tier3CurPages[i] = tier3.map(p => ({ ...p }));
                 }
-                renderTiers(tier1, tier2, tier3, algorithms.length);
-                initializeEmptyPlots(s);
+                renderTiers(tier1, tier2, tier3, algorithms, 0);
+                
                 calculate(s, algorithms);
             }
 
@@ -688,75 +732,13 @@ $(document).ready(function(){
         console.log("   Trad cumulative write batches:", tradCumulative);
 
         // updateMigrationCountPlot(s.aceWriteBatches, s.traditionalWriteBatches);
+        // updateIndivMigrationCountPlot(s);
         // updateLatencyPlot(s.aceLatency, s.traditionalLatency);
         updateLatencyPlot(s);
         updateMigrationCountPlot(s);
+        updateIndivMigrationCountPlot(s);
     });
 });
-    
-function resetStepState(stepIndex) {
-    const s = state.indiv;
-    console.log(`🔄 Rolling back to step ${stepIndex}...`);
-
-    if (stepIndex < 0) {
-        console.warn("⚠️ Cannot go below step 0.");
-        return;
-    }
-
-    if (
-        !s.bufferHistory[stepIndex] ||
-        !s.dirtyHistory[stepIndex] ||
-        !s.ACEbufferHistory[stepIndex]
-    ) {
-        console.warn(`⚠️ Missing history for step ${stepIndex}, skipping rollback.`);
-        return;
-    }
-
-    try {
-        // Restore buffer states
-        s.buffer = JSON.parse(JSON.stringify(s.bufferHistory[stepIndex]));
-        s.dirty = JSON.parse(JSON.stringify(s.dirtyHistory[stepIndex]));
-        s.coldflag = JSON.parse(JSON.stringify(s.coldflagHistory[stepIndex]));
-        s.uses = JSON.parse(JSON.stringify(s.usesHistory[stepIndex]));
-
-        s.ACEbuffer = JSON.parse(JSON.stringify(s.ACEbufferHistory[stepIndex]));
-        s.ACEdirty = JSON.parse(JSON.stringify(s.ACEdirtyHistory[stepIndex]));
-        s.ACEcoldflag = JSON.parse(JSON.stringify(s.ACEcoldflagHistory[stepIndex]));
-        s.ACEuses = JSON.parse(JSON.stringify(s.ACEusesHistory[stepIndex]));
-
-        // Restore base metrics
-        s.bufferHit = s.bufferHitHistory[stepIndex] || 0;
-        s.bufferMiss = s.bufferMissHistory[stepIndex] || 0;
-        s.readIO = s.readIOHistory[stepIndex] || 0;
-        s.writeIO = s.writeIOHistory[stepIndex] || 0;
-        s.pagesWritten = s.pagesWrittenHistory[stepIndex] || 0;
-        s.pagesRead = s.pagesReadHistory[stepIndex] || 0;
-        s.pagesEvicted = s.pagesEvictedHistory[stepIndex] || 0;
-        s.pagesPrefetched = s.pagesPrefetchedHistory[stepIndex] || 0;
-
-        // Restore ACE metrics
-        s.ACEbufferHit = s.ACEbufferHitHistory[stepIndex] || 0;
-        s.ACEbufferMiss = s.ACEbufferMissHistory[stepIndex] || 0;
-        s.ACEreadIO = s.ACEreadIOHistory[stepIndex] || 0;
-        s.ACEwriteIO = s.ACEwriteIOHistory[stepIndex] || 0;
-        s.ACEpagesWritten = s.ACEpagesWrittenHistory[stepIndex] || 0;
-        s.ACEpagesRead = s.ACEpagesReadHistory[stepIndex] || 0;
-        s.ACEpagesEvicted = s.ACEpagesEvictedHistory[stepIndex] || 0;
-        s.ACEpagesPrefetched = s.ACEpagesPrefetchedHistory[stepIndex] || 0;
-
-        // Restore latency
-        s.tradLatency = s.traditionalLatency[stepIndex] || 0;
-        s.aceLatencyval = s.aceLatency[stepIndex] || 0;
-
-        updateLatencyPlot(s);
-
-        console.log(`   Successfully restored state at step ${stepIndex}.`);
-    } catch (error) {
-        console.error("Error restoring step state:", error);
-    }
-}
-
-    
 
 function myLoop(s) {
     const remainingSteps = s.workload.length - s.p;
@@ -769,6 +751,7 @@ function myLoop(s) {
     if (remainingSteps <= 0) {
         console.log("myLoop completed all steps.");
         s.playing = false;
+        s.finished = true;
         return;
     }
 
@@ -791,6 +774,7 @@ function myLoop(s) {
             if ((s.p - 1) % state.config.plotUpdateInterval === 0) { // || s.p === s.workload.length - 1) {
                 updateLatencyPlot(s);
                 updateMigrationCountPlot(s);
+                updateIndivMigrationCountPlot(s);
             }
         }
 
@@ -1010,13 +994,15 @@ function updateMigrationCountPlot(s) {
     const layout = {
         font: {
             family: 'Linux Libertine, serif',
-            size: 19,
+            size: 17,
             color: '#111',
             weight: 400
         },
+        margin: { t: 20, b: 40, l: 50, r: 10 },
         xaxis: { title: 'Operation steps' },
         yaxis: { title: '# Total Migrations' },
-        showlegend: true
+        height: 350,
+        showlegend: false
     };
 
     const plotDiv = document.getElementById('migration_count-graph');
@@ -1024,6 +1010,111 @@ function updateMigrationCountPlot(s) {
         Plotly.react(plotDiv, traces, layout);
     } else {
         Plotly.newPlot('migration_count-graph', traces, layout);
+    }
+}
+
+function updateIndivMigrationCountPlot(s) {
+    let algorithmNames = [];
+    for (let i = 0; i < s.algorithms.length; i++) {
+        s.t2t1MigrationCountsForPlot[i].push(s.tier2_1Migration[i]);
+        s.t2t3MigrationCountsForPlot[i].push(s.tier2_3Migration[i]);
+        algorithmNames.push((s.algorithms[i].name==="tRL" ? "ReStore" : s.algorithms[i].name) + " T1&#8596;T2");
+        algorithmNames.push((s.algorithms[i].name==="tRL" ? "ReStore" : s.algorithms[i].name) + " T2&#8596;T3");
+    }
+    const xValues = Array.from({ length: s.p }, (_, i) => i*state.config.plotUpdateInterval);
+
+    console.log("Migration count values for plot:", s.migrationCountsForPlot);
+
+    const traces = [
+        {
+            x: xValues,
+            y: s.t2t1MigrationCountsForPlot[0],
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: algorithmNames[0],
+            line: { color: '#2e8b57', dash: 'dot' }       // dark green
+        },
+        {
+            x: xValues,
+            y: s.t2t3MigrationCountsForPlot[0],
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: algorithmNames[1],
+            line: { color: '#66bb66', dash: 'dash' },      // medium green
+            marker: { symbol: 'x' }
+        },
+        {
+            x: xValues,
+            y: s.t2t1MigrationCountsForPlot[1],
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: algorithmNames[2],
+            line: { color: '#2255cc', dash: 'dot' }        // dark blue
+        },
+        {
+            x: xValues,
+            y: s.t2t3MigrationCountsForPlot[1],
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: algorithmNames[3],
+            line: { color: '#6699ee', dash: 'dash' },      // medium blue
+            marker: { symbol: 'x' }
+        },
+        {
+            x: xValues,
+            y: s.t2t1MigrationCountsForPlot[2],
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: algorithmNames[4],
+            line: { color: '#bb1122', dash: 'dot' }        // dark red
+        },
+        {
+            x: xValues,
+            y: s.t2t3MigrationCountsForPlot[2],
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: algorithmNames[5],
+            line: { color: '#ee6655', dash: 'dash' },      // medium red
+            marker: { symbol: 'x' }
+        },
+        {
+            x: xValues,
+            y: s.t2t1MigrationCountsForPlot[3],
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: algorithmNames[6],
+            line: { color: '#333333', dash: 'dot' }        // dark grey
+        },
+        {
+            x: xValues,
+            y: s.t2t3MigrationCountsForPlot[3],
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: algorithmNames[7],
+            line: { color: '#777777', dash: 'dash' },      // medium grey
+            marker: { symbol: 'x' }
+        }
+    ];
+
+    const layout = {
+        font: {
+            family: 'Linux Libertine, serif',
+            size: 17,
+            color: '#111',
+            weight: 400
+        },
+        margin: { t: 20, b: 40, l: 50, r: 10 },
+        xaxis: { title: 'Operation steps' },
+        // yaxis: { title: '# Migrations' },
+        height: 350,
+        showlegend: true
+    };
+
+    const plotDiv = document.getElementById('indiv_migration_count-graph');
+    if (plotDiv) {
+        Plotly.react(plotDiv, traces, layout);
+    } else {
+        Plotly.newPlot('indiv_migration_count-graph', traces, layout);
     }
 }
 
@@ -1078,11 +1169,14 @@ function updateLatencyPlot(s) {
     const layout = {
         font: {
             family: 'Linux Libertine, serif',
-            size: 19,
-            color: '#111'
+            size: 17,
+            color: '#111',
+            weight: 400
         },
+        margin: { t: 20, b: 40, l: 50, r: 10 },
         xaxis: { title: 'Operation steps' },
         yaxis: { title: 'Latency (ms)' },
+        height: 350,
         showlegend: true
     };
 
@@ -1235,6 +1329,7 @@ function finisher() {
     // ACEDisplay();
     // updateProgress(s.p, s.workload.length);
     // updateMigrationCountPlot(s);
+    // updateIndivMigrationCountPlot(s);
     // updateLatencyPlot(s);
     // $("#play-button").prop('disabled', false);
 }
@@ -1274,7 +1369,7 @@ function algoDisplay(algoIndex, s) {
             cell1ClassCSS = "highlight-write";
             cell1InHTML = `tier${action.tierId}alg${algoIndex}-${action.cellId}`;
         }
-        highlightCells([cell1InHTML], cell1ClassCSS, cellDelay);
+        highlightCells([cell1InHTML], cell1ClassCSS, cellDelay*0.9);
         if (s.simActions[algoIndex].length > 1) {
             action = s.simActions[algoIndex][1];
             if (action.op === "M") {
@@ -1290,8 +1385,12 @@ function algoDisplay(algoIndex, s) {
                     renderUpdatedTiers(action.tierId, action.tierId - 1, action.cellId[0], action.cellId[1], algoIndex);
                     highlightCells([cell1InHTML], cell2ClassCSS, cellDelay/2);
                     highlightCells([cell2InHTML], cell1ClassCSS, cellDelay/2);
-                }, cellDelay/2)
-            }, cellDelay/2)
+                    setTimeout(function () {
+                        renderTemperature(s.tier1CurPages[algoIndex], s.tier2CurPages[algoIndex], s.tier3CurPages[algoIndex], s.algorithms, algoIndex, s.p);
+                    }, cellDelay*0.1);
+                }, cellDelay*0.4)
+            }, cellDelay*0.4)
+                    
         }
     }
 
@@ -1957,9 +2056,10 @@ function decayTemperatures(tier, currentRound, dropThreshold = Math.round(totalP
     }
 }
 
-function updateTemperature(page, currentRound, windowSize = 10, tempAlpha = 0.05) {
+function updateTemperature(page, currentRound, windowSize = totalPages, tempAlpha = 0.05) {
     // as per paper implementation, tempAlpha (temp_incr_alpha) is 0.05
     // in the paper implementation, buffersize = 1e4, #ops = 1M probably, so 1/100
+    // actually no, it is the number of pages
 
     // calculate the new temperature of the page
     page.reqRounds.push(currentRound);
@@ -2088,7 +2188,7 @@ function tTemp(s) {
     // console.log("Running tTemp");
     const currentRound = s.p;
     const minAccessToT1 = 3;
-    const minAccessToT2 = 2;
+    const minAccessToT2 = 1;
     const tempAlpha = 0.05; // as per paper implementation
     const minT1MigrationTemp = 1-0.5/Math.exp(tempAlpha*minAccessToT1);
     const minT2MigrationTemp = 1-0.5/Math.exp(tempAlpha*minAccessToT2);
@@ -2108,7 +2208,9 @@ function tTemp(s) {
     if (foundPageT1Index !== -1) {
         const foundPageT1 = s.tier1CurPages[2][foundPageT1Index];
 
-        updateTemperature(foundPageT1, currentRound, s.workload.length/100);
+        const timeWindow = totalPages;
+        // updateTemperature(foundPageT1, currentRound, s.workload.length/100);
+        updateTemperature(foundPageT1, currentRound, timeWindow);
 
         if (type === "W") {
             s.tier1write[2]++;
@@ -2138,7 +2240,8 @@ function tTemp(s) {
 
         const foundPageT2 = s.tier2CurPages[2][foundPageT2Index];
 
-        updateTemperature(foundPageT2, currentRound, s.workload.length/100);
+        const timeWindow = totalPages;
+        updateTemperature(foundPageT2, currentRound, timeWindow);
 
         if (type === "W") {
             s.tier2write[2]++;
@@ -2200,7 +2303,8 @@ function tTemp(s) {
 
         const foundPageT3 = s.tier3CurPages[2][foundPageT3Index];
 
-        updateTemperature(foundPageT3, currentRound, s.workload.length/100);
+        const timeWindow = totalPages;
+        updateTemperature(foundPageT3, currentRound, timeWindow);
 
         if (type === "W") {
             s.tier3write[2]++;
@@ -2717,6 +2821,51 @@ function rlLearn(s, algoIndex) {
     s.rlAgent3.lastState = getState(s,3,algoIndex);
 }
 
+function updateApproxQueueSizes(s, algoIndex, totalEnqueuedReqCount) {
+    // s.approxT1QueueSizeEstimate = 0;
+    // s.approxT2QueueSizeEstimate = 0;
+    // s.approxT3QueueSizeEstimate = 0;
+    s.approxT1QueueSizeEstimate = -(s.tier1read[algoIndex] + s.tier1write[algoIndex]);
+    s.approxT2QueueSizeEstimate = -(s.tier2read[algoIndex] + s.tier2write[algoIndex]);
+    s.approxT3QueueSizeEstimate = -(s.tier3read[algoIndex] + s.tier3write[algoIndex]);
+
+    // number of requests that would have been enqueued by the time current request is served
+    // for (let i=s.p+1; i<Math.min(s.workload.length, s.p+1+totalEnqueuedReqCount); i++) {
+    for (let i=0; i<Math.min(s.workload.length, totalEnqueuedReqCount); i++) { // totalE
+        if (s.tier1CurPages[algoIndex].findIndex(p => p.id === s.workload[i][1]) !== -1) {
+            s.approxT1QueueSizeEstimate++;
+        } else if (s.tier2CurPages[algoIndex].findIndex(p => p.id === s.workload[i][1]) !== -1) {
+            s.approxT2QueueSizeEstimate++;
+        } else if (s.tier3CurPages[algoIndex].findIndex(p => p.id === s.workload[i][1]) !== -1) {
+            s.approxT3QueueSizeEstimate++;
+        }
+    }
+
+    if (s.approxT1QueueSizeEstimate < 0) {
+        console.warn("Negative queue size estimate for T1, resetting to 0");
+        s.approxT1QueueSizeEstimate = 0;
+    }
+    if (s.approxT2QueueSizeEstimate < 0) {
+        console.warn("Negative queue size estimate for T2, resetting to 0");
+        s.approxT2QueueSizeEstimate = 0;
+    }
+    if (s.approxT3QueueSizeEstimate < 0) {
+        console.warn("Negative queue size estimate for T3, resetting to 0");
+        s.approxT3QueueSizeEstimate = 0;
+    }
+
+    // within this time window, some requests might have been pending
+    // for (let i=0; i<=s.p; i++) {
+    //     if (s.tier1CurPages[algoIndex].findIndex(p => p.id === s.workload[i][1]) !== -1) {
+    //         s.approxT1QueueSizeEstimate++;
+    //     } else if (s.tier2CurPages[algoIndex].findIndex(p => p.id === s.workload[i][1]) !== -1) {
+    //         s.approxT2QueueSizeEstimate++;
+    //     } else if (s.tier3CurPages[algoIndex].findIndex(p => p.id === s.workload[i][1]) !== -1) {
+    //         s.approxT3QueueSizeEstimate++;
+    //     }
+    // }
+}
+
 function tRL(s) {
     // console.log("Running ReStore");
     const algoIndex = 3;
@@ -2739,22 +2888,6 @@ function tRL(s) {
     const entry = s.workload[currentRound];
     if (!entry) return;
 
-    s.approxT1QueueSizeEstimate = 0;
-    s.approxT2QueueSizeEstimate = 0;
-    s.approxT3QueueSizeEstimate = 0;
-    for (let i=currentRound+1; i<s.workload.length; i++) {
-        if (s.tier2CurPages[algoIndex].findIndex(p => p.id === s.workload[i][1]) !== -1) {
-            s.approxT2QueueSizeEstimate++;
-        } else if (s.tier1CurPages[algoIndex].findIndex(p => p.id === s.workload[i][1]) !== -1) {
-            s.approxT1QueueSizeEstimate++;
-        } else if (s.tier3CurPages[algoIndex].findIndex(p => p.id === s.workload[i][1]) !== -1) {
-            s.approxT3QueueSizeEstimate++;
-        }
-    }
-    // s.approxT1QueueSizeEstimate = 5;
-    // s.approxT2QueueSizeEstimate = 5;
-    // s.approxT3QueueSizeEstimate = 5;
-
     const type = entry[0];
     const page = entry[1];
 
@@ -2767,7 +2900,8 @@ function tRL(s) {
     if (foundPageT1Index !== -1) {
         const foundPageT1 = s.tier1CurPages[algoIndex][foundPageT1Index];
 
-        updateTemperature(foundPageT1, currentRound, s.workload.length/100);
+        const timeWindow = totalPages;
+        updateTemperature(foundPageT1, currentRound, timeWindow);
 
         if (type === "W") {
             s.tier1write[algoIndex]++;
@@ -2779,6 +2913,10 @@ function tRL(s) {
             s.simActions[algoIndex].push({ op: 'R', tierId: 1, cellId: foundPageT1Index });
         }
 
+        var timeOfCompletion = ((s.tier1write[algoIndex]+s.tier2_1Migration[algoIndex])*s.t1Alpha + 
+                                (s.tier1read[algoIndex]+s.tier2_1Migration[algoIndex]))*s.t1ReadLatency;
+        var totalEnqueuedReqCount = Math.floor(timeOfCompletion / state.config.perReqEnqueueTime);
+        updateApproxQueueSizes(s, algoIndex, totalEnqueuedReqCount);
         // sleep(3*s.delay);
         // temperature decay of all pages
         decayTemperatures(s.tier1CurPages[algoIndex], currentRound);
@@ -2808,7 +2946,8 @@ function tRL(s) {
 
         const foundPageT2 = s.tier2CurPages[algoIndex][foundPageT2Index];
 
-        updateTemperature(foundPageT2, currentRound, s.workload.length/100);
+        timeWindow = totalPages;
+        updateTemperature(foundPageT2, currentRound, timeWindow);
 
         if (type === "W") {
             s.tier2write[algoIndex]++;
@@ -2821,6 +2960,11 @@ function tRL(s) {
         }
 
         // sleep(s.delay);
+
+        var timeOfCompletion = ((s.tier2write[algoIndex]+s.tier2_1Migration[algoIndex]+s.tier2_3Migration[algoIndex])*s.t2Alpha + 
+                                (s.tier2read[algoIndex]+s.tier2_1Migration[algoIndex]+s.tier2_3Migration[algoIndex]))*s.t2ReadLatency;
+        var totalEnqueuedReqCount = Math.floor(timeOfCompletion / state.config.perReqEnqueueTime);
+        updateApproxQueueSizes(s, algoIndex, totalEnqueuedReqCount);
 
         const tempInfo = getTemperaturePage(s.tier1CurPages[algoIndex]);
 
@@ -2844,19 +2988,6 @@ function tRL(s) {
 
             const s1_t1_af = (state_t1_be[0] * s.tier1CurPages[algoIndex].length + foundPageT2.temperature) /
                             (s.tier1CurPages[algoIndex].length + 1);
-
-            // for (let i=currentRound+1; i<s.workload.length; i++) {
-            //     // console.log("Future access in RL sim:", s.workload[i]);
-            //     // console.log(workload[i][1]);
-            //     // console.log("Current tier1 and tier2:", s.tier1CurPages[algoIndex], s.tier2CurPages[algoIndex]);
-            //     if (s.tier2CurPages[algoIndex].findIndex(p => p.id === s.workload[i][1]) !== -1) {
-            //         approxT2QueueSizeEstimate++;
-            //     } else if (s.tier1CurPages[algoIndex].findIndex(p => p.id === s.workload[i][1]) !== -1) {
-            //         approxT1QueueSizeEstimate++;
-            //     }
-            // }
-            // const s2_t2_af = cal_s2(s.tier2Queue[algoIndex].length + 2, s.t2Concurrency, s.t2ReadLatency, s.t2AlphaVal);
-            // const s2_t1_af = cal_s2(s.tier1Queue[algoIndex].length + 2, s.t1Concurrency, s.t1ReadLatency, s.t1AlphaVal);
 
             const s2_t2_af = cal_s2(s.approxT2QueueSizeEstimate + 2, s.t2Concurrency, s.t2ReadLatency, s.t2AlphaVal);
             const s2_t1_af = cal_s2(s.approxT1QueueSizeEstimate + 2, s.t1Concurrency, s.t1ReadLatency, s.t1AlphaVal);
@@ -2924,7 +3055,8 @@ function tRL(s) {
 
         const foundPageT3 = s.tier3CurPages[algoIndex][foundPageT3Index];
 
-        updateTemperature(foundPageT3, currentRound, s.workload.length/100);
+        timeWindow = totalPages;
+        updateTemperature(foundPageT3, currentRound, timeWindow);
 
         if (type === "W") {
             s.tier3write[algoIndex]++;
@@ -2937,6 +3069,11 @@ function tRL(s) {
         }
 
         // sleep(s.delay);
+
+        var timeOfCompletion = ((s.tier3write[algoIndex]+s.tier2_3Migration[algoIndex])*s.t3Alpha + 
+                                (s.tier3read[algoIndex]+s.tier2_3Migration[algoIndex]))*s.t3ReadLatency;
+        var totalEnqueuedReqCount = Math.floor(timeOfCompletion / state.config.perReqEnqueueTime);
+        updateApproxQueueSizes(s, algoIndex, totalEnqueuedReqCount);
 
         const tempInfo = getTemperaturePage(s.tier2CurPages[algoIndex]);
 
@@ -2960,17 +3097,6 @@ function tRL(s) {
 
             const s1_t2_af = (state_t2_be[0] * s.tier2CurPages[algoIndex].length + foundPageT3.temperature) /
                             (s.tier2CurPages[algoIndex].length + 1);
-            
-            
-            // for (let i=currentRound+1; i<s.workload.length; i++) {
-            //     if (s.tier3CurPages[algoIndex].findIndex(p => p.id === s.workload[i][1]) !== -1) {
-            //         approxT3QueueSizeEstimate++;
-            //     } else if (s.tier2CurPages[algoIndex].findIndex(p => p.id === s.workload[i][1]) !== -1) {
-            //         approxT2QueueSizeEstimate++;
-            //     }
-            // }
-            // const s2_t3_af = cal_s2(s.tier3Queue[algoIndex].length + 2, s.t3Concurrency, s.t3ReadLatency, s.t3AlphaVal);
-            // const s2_t2_af = cal_s2(s.tier2Queue[algoIndex].length + 2, s.t2Concurrency, s.t2ReadLatency, s.t2AlphaVal);
 
             const s2_t3_af = cal_s2(s.approxT3QueueSizeEstimate + 2, s.t3Concurrency, s.t3ReadLatency, s.t3AlphaVal);
             const s2_t2_af = cal_s2(s.approxT2QueueSizeEstimate + 2, s.t2Concurrency, s.t2ReadLatency, s.t2AlphaVal);

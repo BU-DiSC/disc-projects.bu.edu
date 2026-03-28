@@ -68,45 +68,71 @@ function generateWorkload(){
 
     var b_val, n_val, x_val, e_val, s_val, d_val;
 
-    // Individual experiment
-    d_val = 10 // page skew
-    s_val = 80 // access skew
-    e_val = 50 // read percentage
-    x_val = 100 // number of operations, actually 10000, working with smaller number for testing
-    // b_val = parseInt($("#b").val());
-    // n_val = parseInt($("#n").val());
-    // x_val = parseInt($("#x").val());
-    e_val = parseInt($("#e").val());
-    s_val = parseInt($("#s").val());
-    d_val = parseInt($("#d").val());
-    x_val = parseInt($("#x").val());
+    e_val = $("#e").val(); // read percentage
+    s_val = $("#s").val(); // access skew
+    d_val = $("#d").val(); // page skew
+    x_val = $("#x").val(); // number of operations
 
-    // Generate workload
-    var pageId;
-    // var endPageId = n_val * (d_val / 100);
-    var endPageId = highestPageId;
-    var hotMax = Math.floor(endPageId * d_val / 100);
-    if (hotMax < 0) hotMax = 0;
-    console.log(`endPageId=${endPageId}, hotMax=${hotMax}`);
+    e_val = e_val.split(","); // Handle dynamic workload with two values
+    s_val = s_val.split(",");
+    d_val = d_val.split(",");
+    x_val = x_val.split(",");
 
-    var workload = [];
-
-    for (let i = 0; i < x_val; i++) {
-        const typeDecider = Math.random() * 100;
-        const skewed = Math.random() * 100;
-
-        if (skewed < s_val) {
-            // 80% accesses → hot region
-            pageId = Math.floor(Math.random() * (hotMax + 1));
-        } else {
-            // 20% accesses → cold region
-            pageId = Math.floor(Math.random() * (endPageId - hotMax)) + hotMax + 1;
+    // check if each element in x_val, e_val, s_val, d_val is a valid number
+    for (let i = 0; i < x_val.length; i++) {
+        if (isNaN(x_val[i]) || isNaN(e_val[i]) || isNaN(s_val[i]) || isNaN(d_val[i])) {
+            alert("Invalid input values. Please enter comma separated numbers only.");
+            return [];
         }
+        // check if x_val is a positive integer, e_val, s_val, d_val are between 0 and 100
+        if (Number(x_val[i]) <= 0 || Number(x_val[i]) % 1 !== 0) {
+            alert("Number of operations must be a positive integer.");
+            return [];
+        }
+        if (Number(e_val[i]) < 0 || Number(e_val[i]) > 100) {
+            alert("Read percentage must be between 0% and 100%.");
+            return [];
+        }
+        if (Number(s_val[i]) < 0 || Number(s_val[i]) > 100) {
+            alert("Skewness must be between 0% and 100%.");
+            return [];
+        }
+        if (Number(d_val[i]) < 0 || Number(d_val[i]) > 100) {
+            alert("Target data skew must be between 0% and 100%.");
+            return [];
+        }
+    }
+    
+    // Generate workload
+    var workload = [];
+    var pageId;
 
-        if (typeDecider < e_val)
-            workload.push(['R', pageId]);
-        else
-            workload.push(['W', pageId]);
+    const endPageId = highestPageId;
+    for (let j=0; j<x_val.length; j++) {
+        cur_e_val = parseFloat(e_val[j]);
+        cur_s_val = parseFloat(s_val[j]);
+        cur_d_val = parseFloat(d_val[j]);
+        cur_x_val = parseInt(x_val[j]);
+        var hotMax = Math.floor(endPageId * cur_d_val / 100);
+        if (hotMax < 0) hotMax = 0;
+        console.log(`endPageId=${endPageId}, hotMax=${hotMax}`);
+        for (let i = 0; i < cur_x_val; i++) {
+            const typeDecider = Math.random() * 100;
+            const skewed = Math.random() * 100;
+
+            if (skewed < cur_s_val) {
+                // hot region
+                pageId = Math.floor(Math.random() * (hotMax + 1));
+            } else {
+                // cold region
+                pageId = Math.floor(Math.random() * (endPageId - hotMax)) + hotMax + 1;
+            }
+
+            if (typeDecider < cur_e_val)
+                workload.push(['R', pageId]);
+            else
+                workload.push(['W', pageId]);
+        }
     }
     console.log("Generated workload, len = ", workload.length);
     console.log(workload);
@@ -136,38 +162,30 @@ function printWorkloadStats(workload) {
 
 }
 
-function BPWorkload(){
-
-    var b_val, n_val, x_val, e_val, s_val, d_val;
-
-    // Individual experiment
-    b_val = parseInt($("#cmp_buffer_size_bp").val());  // Buffer size
-    n_val = parseInt($("#cmp_disk_size_bp").val());    // Disk size
-    x_val = parseInt($("#cmp_operations_bp").val());   // # Operations
-    e_val = parseInt($("#cmp_read_percentage_bp").val()); // Read percentage
-    s_val = parseInt($("#cmp_skew_d_bp").val());  // Skewness (% of hot data)
-    d_val = parseInt($("#cmp_skew_t_bp").val());  // Target Skewness on % of data
-
-    // Generate workload
-    var pageId;
-    var endPageId = highestPageId;
-    var workload = [];
-
-    for (let i = 0; i < x_val; i++) {
-        const typeDecider = Math.random() * 100;
-        const skewed = Math.random() * 100;
-
-        if (skewed < s_val)
-            pageId = Math.ceil(Math.random() * endPageId);
-        else
-            pageId = Math.ceil(Math.random() * (n_val - endPageId) + endPageId);
-
-        if (typeDecider < e_val)
-            workload.push(['R', pageId]);
-        else
-            workload.push(['W', pageId]);
+function getWorkloadEnqueueTimeEstimate(workload) {
+    // Estimate time to put 100 requests
+    let t1Queue = [];
+    let t2Queue = [];
+    let t3Queue = [];
+    const start = performance.now();
+    for (let i = 0; i < Math.min(workload.length, 100); i++) {
+        const [type, pageId] = workload[i];
+        if (tier1.find(p => p.id === pageId)) {
+            // console.log(`Enqueueing ${type} request for page ${pageId} in tier 1`);
+            t1Queue.push([type, pageId]);
+        }
+        else if (tier2.find(p => p.id === pageId)) {
+            // console.log(`Enqueueing ${type} request for page ${pageId} in tier 2`);
+            t2Queue.push([type, pageId]);
+        }
+        else {
+            // console.log(`Enqueueing ${type} request for page ${pageId} in tier 3`);
+            t3Queue.push([type, pageId]);
+        }
     }
-    return workload;
+    const end = performance.now();
+    return (end - start)*1000/Math.min(workload.length, 100); // in microseconds
+
 }
 
 $(document).ready(function(){
@@ -177,20 +195,20 @@ $(document).ready(function(){
     //input fields
     const $x = $('#x'); //number of operations
     const $e = $('#e'); //read percentage
-    const $alpha = $('#alpha'); //asymmetry
     const $s = $('#s'); //skewness
     const $d = $('#d'); // skewness data
 
-    const smallWorkload1 = [100, 80, 10, 50];
-    const smallWorkload2 = [100, 80, 10, 90];
-    const smallWorkload3 = [100, 80, 10, 20];
-    const smallWorkload4 = [100, 90, 5, 50];
-    const smallWorkload5 = [100, 100, 100, 50];
+    const smallWorkload1 = [1000, 80, 10, 50];
+    const smallWorkload2 = [1000, 80, 10, 90];
+    const smallWorkload3 = [1000, 80, 10, 20];
+    const smallWorkload4 = [1000, 90, 5, 50];
+    const smallWorkload5 = [1000, 100, 100, 50];
     // const smallCustomWorkload = [100, 90, 10, 50]; // Placeholder for custom workload, will be updated with user inputs
-    const smallCustomWorkload = [100, 80, 50, 50]; // Placeholder for custom workload, will be updated with user inputs
+    const smallCustomWorkload = [1000, 80, 15, 50]; // Placeholder for custom workload, will be updated with user inputs
+    const smallDynamicWorkload = [[500, 500], [80, 90], [15, 5], [50, 50]];
 
-    var workloads = [smallWorkload1, smallWorkload2, smallWorkload3, smallWorkload4, smallWorkload5, smallCustomWorkload];
-    var inputs = [$x, $s, $d, $e, $alpha];
+    var workloads = [smallWorkload1, smallWorkload2, smallWorkload3, smallWorkload4, smallWorkload5, smallCustomWorkload, smallDynamicWorkload];
+    const ids = [$x, $s, $d, $e];
 
     $(document).on("change", "#workload", function() {
         var workloadIndex = parseInt($(this).val());
@@ -198,24 +216,25 @@ $(document).ready(function(){
 
         console.log("Workload changed:", id, "Index:", workloadIndex);
 
-        var ids = ["x", "s", "d", "e"];
-
         if (workloadIndex > 0 && workloadIndex <= workloads.length) {
             var workload = workloads[workloadIndex - 1];
 
             console.log("Selected Workload Values:", workload);
 
-            ids.forEach((fieldId, index) => {
-                var element = $("#" + fieldId);
-                if (element.length) {
-                    element.val(workload[index]);
-                    element.prop("disabled", false);
-                    console.log(`Updated ${fieldId} → ${workload[index]}`);
-                } else {
+            for (let i = 0; i < ids.length; i++) {
+                var element = $("#" + ids[i].attr("id"));
+                if (element.length === 0) {
                     console.warn(`Field ${fieldId} not found!`);
+                    continue;
                 }
-            });
-
+                var uiText = workload[i];
+                // special UI handling for #op, #skew, #data-skew to show two values for dynamic workload
+                if (workloadIndex === 7) {
+                    uiText = workload[i].join(",");
+                }
+                // console.log(uiText)
+                element.val(uiText);
+            }
             console.log("Workload updated successfully.");
         } 
         else {

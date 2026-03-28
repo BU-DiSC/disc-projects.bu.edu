@@ -57,23 +57,37 @@ function emptyTiers() {
   );
 }
 
+// 2. Shuffle the array using the Fisher-Yates algorithm
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    // Pick a random index from 0 to i
+    const j = Math.floor(Math.random() * (i + 1));
+    // Swap elements array[i] and array[j]
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
 function initTiers() {
+  const numbers = Array.from({ length: totalPages }, (_, i) => i);
+  shuffle(numbers);
   let currentId = 0;
+
   tier1 = Array.from({ length: tier1Size }, () =>
-      createPage(currentId++)
+      createPage(numbers[currentId++])
   );
   tier2 = Array.from({ length: tier2Size }, () =>
-      createPage(currentId++)
+      createPage(numbers[currentId++])
   );
 
   tier3 = Array.from({ length: tier3Size }, () =>
-      createPage(currentId++)
+      createPage(numbers[currentId++])
   );
 }
 
 // won't work if we do with tier config because user can change tier %
 // change this function later
-function initTierConfig(tierConfig) {
+function initTierConfig(tierConfig, algorithms) {
     totalPages = tierConfig[0]; // Total number of unique pages in the system
     highestPageId = totalPages - 1; // Assuming page IDs start from 0 and go up to totalPages-1
 
@@ -98,7 +112,7 @@ function initTierConfig(tierConfig) {
     $("#midTierCapacity").prop("disabled", false);
 
     emptyTiers();
-    renderTiers(tier1, tier2, tier3, 4);
+    renderTiers(tier1, tier2, tier3, algorithms, -1);
     // Assuming 4 algorithms for now, can be dynamic based on state.tiers.algorithms.length
     // But has some bug so hardcoded it for now
 }
