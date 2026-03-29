@@ -18,53 +18,56 @@ function capacity() {
         alert("Buffer pool size must be a integer greater than 0.");
         return false;
     }
-    
+
     if (isNaN(n_val) || !Number.isInteger(n_val) || n_val < b_val || b_val <= 0) {
         alert("Disk size must be an integer at least equal to the buffer size and greater than 0.");
         return false;
     }
-    
+
     if (isNaN(x_val) || !Number.isInteger(x_val) || x_val <= 1) {
         alert("Number of operations must be an integer greater than 1.");
         return false;
     }
-    
+
     if (isNaN(e_val) || e_val < 0 || e_val > 100) {
         alert("Read percentage must be between 0% and 100%.");
         return false;
     }
-    
+
     if (isNaN(alpha_val) || alpha_val <= 0) {
         alert("Concurrency must be a greater than 0.");
         return false;
     }
-    
+
     if (isNaN(s_val) || s_val < 0 || s_val > 100) {
         alert("Skewness must be between 0% and 100%.");
         return false;
     }
-    
+
     if (isNaN(d_val) || d_val < 0 || d_val > 100) {
         alert("Target data skew must be between 0% and 100%.");
         return false;
     }
-    
+
     if (isNaN(asym_val) || asym_val < 1) {
         alert("Asymmetry (write/read latency ratio) must be a number greater than or equal to 1");
         return false;
     }
-    
+
     if (isNaN(lat_val) || lat_val <= 0) {
         alert("Base latency must be greater than 0 μs");
         return false;
     }
-    
+
 
     return true;
 }
 
+function generateWorkload() {
+    return savedWorkloadChatGPT;
+}
 
-function generateWorkload(){
+function generateWorkloadOriginal() {
 
     var b_val, n_val, x_val, e_val, s_val, d_val;
 
@@ -102,30 +105,42 @@ function generateWorkload(){
             return [];
         }
     }
-    
+
     // Generate workload
     var workload = [];
     var pageId;
 
     const endPageId = highestPageId;
-    for (let j=0; j<x_val.length; j++) {
+    for (let j = 0; j < x_val.length; j++) {
         cur_e_val = parseFloat(e_val[j]);
         cur_s_val = parseFloat(s_val[j]);
         cur_d_val = parseFloat(d_val[j]);
         cur_x_val = parseInt(x_val[j]);
-        var hotMax = Math.floor(endPageId * cur_d_val / 100);
+
+        // Generate a shuffled array of all page IDs for random hot page selection
+        const allPageIds = Array.from({ length: endPageId + 1 }, (_, i) => i);
+        for (let i = allPageIds.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [allPageIds[i], allPageIds[j]] = [allPageIds[j], allPageIds[i]];
+        }
+
+        var hotMax = Math.floor((endPageId + 1) * cur_d_val / 100);
         if (hotMax < 0) hotMax = 0;
         console.log(`endPageId=${endPageId}, hotMax=${hotMax}`);
+
+        const hotPages = allPageIds.slice(0, hotMax);
+        const coldPages = allPageIds.slice(hotMax);
+
         for (let i = 0; i < cur_x_val; i++) {
             const typeDecider = Math.random() * 100;
             const skewed = Math.random() * 100;
 
-            if (skewed < cur_s_val) {
-                // hot region
-                pageId = Math.floor(Math.random() * (hotMax + 1));
+            if (skewed < cur_s_val && hotPages.length > 0) {
+                // hot region — random page from the shuffled hot pool
+                pageId = hotPages[Math.floor(Math.random() * hotPages.length)];
             } else {
-                // cold region
-                pageId = Math.floor(Math.random() * (endPageId - hotMax)) + hotMax + 1;
+                // cold region — random page from the shuffled cold pool
+                pageId = coldPages[Math.floor(Math.random() * coldPages.length)];
             }
 
             if (typeDecider < cur_e_val)
@@ -133,6 +148,27 @@ function generateWorkload(){
             else
                 workload.push(['W', pageId]);
         }
+
+        // var hotMax = Math.floor(endPageId * cur_d_val / 100);
+        // if (hotMax < 0) hotMax = 0;
+        // console.log(`endPageId=${endPageId}, hotMax=${hotMax}`);
+        // for (let i = 0; i < cur_x_val; i++) {
+        //     const typeDecider = Math.random() * 100;
+        //     const skewed = Math.random() * 100;
+
+        //     if (skewed < cur_s_val) {
+        //         // hot region
+        //         pageId = Math.floor(Math.random() * (hotMax + 1));
+        //     } else {
+        //         // cold region
+        //         pageId = Math.floor(Math.random() * (endPageId - hotMax)) + hotMax + 1;
+        //     }
+
+        //     if (typeDecider < cur_e_val)
+        //         workload.push(['R', pageId]);
+        //     else
+        //         workload.push(['W', pageId]);
+        // }
     }
     console.log("Generated workload, len = ", workload.length);
     console.log(workload);
@@ -163,6 +199,10 @@ function printWorkloadStats(workload) {
 }
 
 function getWorkloadEnqueueTimeEstimate(workload) {
+    return perReqEnqueueTimeChatGPT; // in microseconds, using the estimate from ChatGPT for now
+}
+
+function getWorkloadEnqueueTimeEstimateOriginal(workload) {
     // Estimate time to put 100 requests
     let t1Queue = [];
     let t2Queue = [];
@@ -184,11 +224,12 @@ function getWorkloadEnqueueTimeEstimate(workload) {
         }
     }
     const end = performance.now();
-    return (end - start)*1000/Math.min(workload.length, 100); // in microseconds
+    console.log(`Average time to enqueue 100 requests: ${(end - start)*1000 / Math.min(workload.length, 100)} microseconds`);
+    return (end - start) * 1000 / Math.min(workload.length, 100); // in microseconds
 
 }
 
-$(document).ready(function(){
+$(document).ready(function () {
     $("#x, #s, #d, #e, #alpha").prop("disabled", false);
     var playing = false;
 
@@ -210,7 +251,7 @@ $(document).ready(function(){
     var workloads = [smallWorkload1, smallWorkload2, smallWorkload3, smallWorkload4, smallWorkload5, smallCustomWorkload, smallDynamicWorkload];
     const ids = [$x, $s, $d, $e];
 
-    $(document).on("change", "#workload", function() {
+    $(document).on("change", "#workload", function () {
         var workloadIndex = parseInt($(this).val());
         var id = $(this).attr("id");
 
@@ -236,7 +277,7 @@ $(document).ready(function(){
                 element.val(uiText);
             }
             console.log("Workload updated successfully.");
-        } 
+        }
         else {
             console.log("Invalid workload selected.");
         }
