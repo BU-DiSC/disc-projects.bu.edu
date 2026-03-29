@@ -1,10 +1,10 @@
-const tier1ChatGPT = [26, 25, 7, 30];
+const tier1Fixed1 = [26, 25, 7, 30];
 
-const tier2ChatGPT = [9, 44, 35, 16, 37, 10, 31, 14, 33, 15, 6, 20];
+const tier2Fixed1 = [9, 44, 35, 16, 37, 10, 31, 14, 33, 15, 6, 20];
 
-const tier3ChatGPT = [0, 38, 12, 2, 39, 23, 21, 36, 8, 32, 11, 19, 45, 17, 24, 5, 28, 1, 41, 22, 40, 3, 43, 4, 42, 29, 27, 13, 34, 18];
+const tier3Fixed1 = [0, 38, 12, 2, 39, 23, 21, 36, 8, 32, 11, 19, 45, 17, 24, 5, 28, 1, 41, 22, 40, 3, 43, 4, 42, 29, 27, 13, 34, 18];
 
-const savedWorkloadChatGPT = [
+const savedWorkloadFixed1 = [
   ['R', 21], ['R', 15], ['W', 25], ['R', 15], ['R', 21], ['W', 21], ['W', 21], ['R', 21], ['R', 15], ['W', 15],
   ['R', 21], ['W', 21], ['W', 21], ['R', 21], ['R', 21], ['R', 15], ['W', 21], ['W', 21], ['R', 15], ['R', 17],
   ['R', 21], ['W', 21], ['R', 15], ['W', 15], ['R', 21], ['W', 21], ['R', 24], ['W', 21], ['R', 15], ['W', 15],
@@ -116,7 +116,7 @@ const savedWorkloadChatGPT = [
   ['W', 21], ['W', 21], ['R', 21], ['W', 15], ['W', 15], ['W', 21], ['W', 21], ['W', 21], ['R', 15], ['W', 15]
 ];
 
-perReqEnqueueTimeChatGPT = 0.9999999403953552;
+perReqEnqueueTimeFixed1 = 0.9999999403953552;
 
 
 
@@ -192,14 +192,14 @@ function shuffle(array) {
 }
 
 function initTiers() {
-    tier1 = Array.from({ length: tier1ChatGPT.length }, (_, i) =>
-        createPage(tier1ChatGPT[i])
+    tier1 = Array.from({ length: tier1Fixed1.length }, (_, i) =>
+        createPage(tier1Fixed1[i])
     );
-    tier2 = Array.from({ length: tier2ChatGPT.length }, (_, i) =>
-        createPage(tier2ChatGPT[i])
+    tier2 = Array.from({ length: tier2Fixed1.length }, (_, i) =>
+        createPage(tier2Fixed1[i])
     );
-    tier3 = Array.from({ length: tier3ChatGPT.length }, (_, i) =>
-        createPage(tier3ChatGPT[i])
+    tier3 = Array.from({ length: tier3Fixed1.length }, (_, i) =>
+        createPage(tier3Fixed1[i])
     );
 }
 
