@@ -229,6 +229,8 @@ function resetAll() {
     console.log(state.tiers.algorithms);
     renderTiers(tier1, tier2, tier3, state.tiers.algorithms, -1);
     updateProgress(0, 100);
+    document.getElementById("curOp").textContent = "Read/Write from/to Page ??";
+    document.getElementById("curRound").textContent = "0";
 }
 
 function resetStats() {
@@ -796,6 +798,9 @@ function myLoop(s) {
             }
 
             if (s.p < s.workload.length) {
+                document.getElementById("curRound").textContent = s.p+1;
+                document.getElementById("curOp").textContent = s.workload[s.p][0] === 'R' ?
+                    `Read from Page ${s.workload[s.p][1]}` : `Write to Page ${s.workload[s.p][1]}`;
                 s.p++;
                 updateProgress(s.p, s.workload.length);
             }

@@ -165,7 +165,7 @@
 									<option value=3 selected>Optane SSD</option>
 									<option value=1>PCI SSD</option>
 									<option value=2>SATA SSD</option>
-									<option value=4>Virtual SSD</option>
+									<!-- <option value=4>Virtual SSD</option> -->
 								</select>
 							</div>
 						</div>
@@ -206,7 +206,7 @@
 									<option value=3>Optane SSD</option>
 									<option value=1 selected>PCI SSD</option>
 									<option value=2>SATA SSD</option>
-									<option value=4>Virtual SSD</option>
+									<!-- <option value=4>Virtual SSD</option> -->
 								</select>
 							</div>
 						</div>
@@ -249,7 +249,7 @@
 									<option value=3>Optane SSD</option>
 									<option value=1>PCI SSD</option>
 									<option value=2 selected>SATA SSD</option>
-									<option value=4>Virtual SSD</option>
+									<!-- <option value=4>Virtual SSD</option> -->
 								</select>
 							</div>
 						</div>
@@ -322,7 +322,8 @@
 								<div class="input-group-prepend">
 									<span class="input-group-text">Bottom Tier (%)</span>
 								</div>
-								<input type="number" class="form-control" min=0 id="bottomTierCapacity" value=72 disabled style="background-color: #f7f7f7;">
+								<input type="number" class="form-control" min=0 id="bottomTierCapacity" value=72
+									disabled style="background-color: #f7f7f7;">
 							</div>
 						</div>
 					</div>
@@ -338,16 +339,16 @@
 							<label><input type="checkbox" value="tLFU" checked> tLFU</label>
 						</div>
 						<div class="col-sm-2">
-							<label><input type="checkbox" value="tTemp" checked> tTemp</label>
-						</div>
-						<div class="col-sm-2">
-							<label><input type="checkbox" value="tRL" checked> ReStore</label>
-						</div>
-						<div class="col-sm-2">
 							<label><input type="checkbox" value="LRFU"> LRFU</label>
 						</div>
 						<div class="col-sm-2">
 							<label><input type="checkbox" value="exd"> EXD</label>
+						</div>
+						<div class="col-sm-2">
+							<label><input type="checkbox" value="tTemp" checked> tTemp</label>
+						</div>
+						<div class="col-sm-2">
+							<label><input type="checkbox" value="tRL" checked> ReStore</label>
 						</div>
 					</div>
 				</div>
@@ -358,7 +359,7 @@
 
 						<!-- Control Buttons -->
 						<div id="lsm-button-group" class="btn-group" role="group" aria-label="progress-control">
-							<button id="backward-button" type="button" class="btn btn-primary"><<</button>
+							<button id="backward-button" type="button" class="btn btn-primary"> << </button>
 							<button id="play-button" type="button" class="btn btn-info">
 								<img src="img/play_pause.png" width="40" height="40">
 							</button>
@@ -393,13 +394,51 @@
 
 				<!-- Simulation Panel -->
 				<div id="sim-panel-horizontal-scroll" style="margin-left: -20px !important">
-					<div id="indiv-bush-row" class="row flex-nowrap">
-						<div class="col-sm-2 text-right">
+					<div id="legends" class="row justify-content-center align-items-center g-3" style="margin: 10px 0;">
+						<div class="col-sm-4 d-flex align-items-left gap-2">
+							<span>Op. #</span>
+							<span id="curRound">0</span>
+							<span>:&nbsp;</span>
+							<u><span id="curOp">Read/Write from/to Page ??</span></u>
+						</div>
+						<div class="col-auto d-flex align-items-center gap-2">
+							<div class="cell highlight-read"></div>
+							<span>&nbsp;Read</span>
+						</div>
+
+						<div class="col-auto d-flex align-items-center gap-2">
+							<div class="cell highlight-write"></div>
+							<span>&nbsp;Write</span>
+						</div>
+
+						<div class="col-auto d-flex align-items-center gap-2">
+							<div class="cell highlight-from"></div>
+							&nbsp;
+							<div class="cell highlight-to"></div>
+							<span>&nbsp;Swap due to Migration</span>
+						</div>
+
+						<!-- <div class="col-auto d-flex align-items-center gap-2">
+							<div class="cell highlight-to"></div>
+							<span>Migration (to)</span>
+						</div> -->
+
+						<div class="col-auto d-flex align-items-center gap-2">
+							<span>Cold &nbsp;</span>
+							<div
+								style="width: 120px; height: 20px; border: 1px solid #ccc; background: linear-gradient(to right, rgb(255, 250, 150), rgb(255, 160, 75), rgb(255, 70, 0));">
+							</div>
+							<span>&nbsp;Hot</span>
+						</div>
+					</div>
+					<br />
+					<div id="indiv-bush-row" class="row flex-nowrap" style="margin-left: -65px !important">
+						<div class="col-sm-1 text-right">
 							<div class="lsm-title cmp-indiv-mp">
 								&nbsp;
 							</div>
 						</div>
-						<div class="col-sm-3">
+						<div class="col-sm-3" style="margin-left: -30px !important">
 							<div id="cmp-lsm-cmpct-pp-0-mp" class="row cmp-indiv-mp">
 								<div class="lsm-title">
 									<span id="alg0-table-title" class="row cmp-indiv-mp">tLRU</span>
@@ -435,13 +474,13 @@
 						</div>
 					</div>
 
-					<div class="row flex-nowrap">
-						<div class="col-sm-2 text-right">
-							<div class="lsm-title cmp-indiv-mp">
+					<div class="row flex-nowrap" style="margin-left: -65px">
+						<div class="col-sm-1 text-right">
+							<div class="cmp-indiv-mp">
 								Tier 1
 							</div>
 						</div>
-						<div class="col-sm-3">
+						<div class="col-sm-3" style="margin-left: -30px !important">
 							<div id="tier1alg0" class="tier justify-content-center"></div>
 						</div>
 						<div class="col-sm-3">
@@ -456,13 +495,13 @@
 					</div>
 					<br>
 
-					<div class="row flex-nowrap">
-						<div class="col-sm-2 text-right">
-							<div class="lsm-title cmp-indiv-mp">
+					<div class="row flex-nowrap" style="margin-left: -65px">
+						<div class="col-sm-1 text-right">
+							<div class="cmp-indiv-mp">
 								Tier 2
 							</div>
 						</div>
-						<div class="col-sm-3">
+						<div class="col-sm-3" style="margin-left: -30px !important">
 							<div id="tier2alg0" class="tier justify-content-center"></div>
 						</div>
 						<div class="col-sm-3">
@@ -478,13 +517,13 @@
 					</div>
 					<br>
 
-					<div class="row flex-nowrap">
-						<div class="col-sm-2 text-right">
-							<div class="lsm-title cmp-indiv-mp">
+					<div class="row flex-nowrap" style="margin-left: -65px">
+						<div class="col-sm-1 text-right">
+							<div class="cmp-indiv-mp">
 								Tier 3
 							</div>
 						</div>
-						<div class="col-sm-3">
+						<div class="col-sm-3" style="margin-left: -30px !important">
 							<div id="tier3alg0" class="tier justify-content-center"></div>
 						</div>
 						<div class="col-sm-3">
@@ -499,9 +538,9 @@
 					</div>
 					<br>
 
-					
+
 					<!-- Putting charts before the Performance Metrics Panel -->
-					<div class="container" style="margin-left: -50px !important">
+					<div class="container" style="margin-left: -100px !important">
 						<div class="row flex-nowrap">
 							<div class="col-sm-5"> <!-- 1/3-width for latency plot -->
 								<div id="latency-graph"></div> <!-- Placeholder for the latency plot -->
@@ -517,196 +556,221 @@
 
 					<!-- Performance Metrics Panel -->
 					<div id="cost-result" class="container" style="margin-left: -15px !important">
+						<div class="row flex-nowrap">
+							<div class="col-sm-4 text-left">
+								<span class="cmp-indiv-mp lsm-title" data-toggle="tooltip" data-placement="left"
+									title="Stats">Performance Metrics</span>
+							</div>
+							<div class="col-sm-2 text-left">
+								<span id="alg0-perf-table-title" class="cmp-indiv-mp lsm-title" data-toggle="tooltip"
+									data-placement="right">tLRU</span>
+							</div>
+
+							<div class="col-sm-2 text-left">
+								<span id="alg1-perf-table-title" class="cmp-indiv-mp lsm-title" data-toggle="tooltip"
+									data-placement="right">tLFU</span>
+							</div>
+							<div class="col-sm-2 text-left">
+								<span id="alg2-perf-table-title" class="cmp-indiv-mp lsm-title" data-toggle="tooltip"
+									data-placement="right">tTemp</span>
+							</div>
+							<div class="col-sm-2 text-left">
+								<span id="alg3-perf-table-title" class="cmp-indiv-mp lsm-title" data-toggle="tooltip"
+									data-placement="right">ReStore</span>
+							</div>
+						</div>
 						<!-- #Disk Pages Written-->
 						<div class="row flex-nowrap">
-							<div class="col-sm-2 text-left">
-								<span class="metric-title" data-toggle="tooltip" data-placement="left"
+							<div class="col-sm-4 text-left">
+								<span class="cmp-indiv-mp" data-toggle="tooltip" data-placement="left"
 									title="The number of pages written to Tier 1.">Tier 1 # Writes</span>
 							</div>
-							<div class="col-sm-3 text-left">
-								<span id="alg0-pages-written-t1" class="cost uncertain img-left" data-toggle="tooltip"
+							<div class="col-sm-2 text-left">
+								<span id="alg0-pages-written-t1" class="cmp-indiv-mp" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
 
-							<div class="col-sm-3 text-left">
-								<span id="alg1-pages-written-t1" class="cost uncertain img-left" data-toggle="tooltip"
+							<div class="col-sm-2 text-left">
+								<span id="alg1-pages-written-t1" class="cmp-indiv-mp" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
-							<div class="col-sm-3 text-left">
-								<span id="alg2-pages-written-t1" class="cost uncertain img-left" data-toggle="tooltip"
+							<div class="col-sm-2 text-left">
+								<span id="alg2-pages-written-t1" class="cmp-indiv-mp" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
-							<div class="col-sm-3 text-left">
-								<span id="alg3-pages-written-t1" class="cost uncertain img-left" data-toggle="tooltip"
+							<div class="col-sm-2 text-left">
+								<span id="alg3-pages-written-t1" class="cmp-indiv-mp" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
 						</div>
 
 						<div class="row flex-nowrap">
-							<div class="col-sm-2 text-left">
-								<span class="metric-title" data-toggle="tooltip" data-placement="left"
+							<div class="col-sm-4 text-left">
+								<span class="cmp-indiv-mp" data-toggle="tooltip" data-placement="left"
 									title="The number of pages written to Tier 2.">Tier 2 # Writes</span>
 							</div>
-							<div class="col-sm-3 text-left">
-								<span id="alg0-pages-written-t2" class="cost uncertain img-left" data-toggle="tooltip"
+							<div class="col-sm-2 text-left">
+								<span id="alg0-pages-written-t2" class="cmp-indiv-mp" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
 
-							<div class="col-sm-3 text-left">
-								<span id="alg1-pages-written-t2" class="cost uncertain img-left" data-toggle="tooltip"
+							<div class="col-sm-2 text-left">
+								<span id="alg1-pages-written-t2" class="cmp-indiv-mp" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
-							<div class="col-sm-3 text-left">
-								<span id="alg2-pages-written-t2" class="cost uncertain img-left" data-toggle="tooltip"
+							<div class="col-sm-2 text-left">
+								<span id="alg2-pages-written-t2" class="cmp-indiv-mp" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
-							<div class="col-sm-3 text-left">
-								<span id="alg3-pages-written-t2" class="cost uncertain img-left" data-toggle="tooltip"
+							<div class="col-sm-2 text-left">
+								<span id="alg3-pages-written-t2" class="cmp-indiv-mp" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
 						</div>
 
 						<div class="row flex-nowrap">
-							<div class="col-sm-2 text-left">
-								<span class="metric-title" data-toggle="tooltip" data-placement="left"
+							<div class="col-sm-4 text-left">
+								<span class="cmp-indiv-mp" data-toggle="tooltip" data-placement="left"
 									title="The number of pages written to Tier 3.">Tier 3 # Writes</span>
 							</div>
-							<div class="col-sm-3 text-left">
-								<span id="alg0-pages-written-t3" class="cost uncertain img-left" data-toggle="tooltip"
+							<div class="col-sm-2 text-left">
+								<span id="alg0-pages-written-t3" class="cmp-indiv-mp" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
-							<div class="col-sm-3 text-left">
-								<span id="alg1-pages-written-t3" class="cost uncertain img-left" data-toggle="tooltip"
+							<div class="col-sm-2 text-left">
+								<span id="alg1-pages-written-t3" class="cmp-indiv-mp" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
-							<div class="col-sm-3 text-left">
-								<span id="alg2-pages-written-t3" class="cost uncertain img-left" data-toggle="tooltip"
+							<div class="col-sm-2 text-left">
+								<span id="alg2-pages-written-t3" class="cmp-indiv-mp" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
-							<div class="col-sm-3 text-left">
-								<span id="alg3-pages-written-t3" class="cost uncertain img-left" data-toggle="tooltip"
+							<div class="col-sm-2 text-left">
+								<span id="alg3-pages-written-t3" class="cmp-indiv-mp" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
 						</div>
 
 						<!-- #Disk Pages Read-->
 						<div class="row flex-nowrap">
-							<div class="col-sm-2 text-left">
-								<span class="metric-title" data-toggle="tooltip" data-placement="left"
+							<div class="col-sm-4 text-left">
+								<span class="cmp-indiv-mp" data-toggle="tooltip" data-placement="left"
 									title="The number of pages read from Tier 1.">Tier 1 # Reads</span>
 							</div>
-							<div class="col-sm-3 text-left">
-								<span id="alg0-pages-read-t1" class="cost uncertain img-left" data-toggle="tooltip"
+							<div class="col-sm-2 text-left">
+								<span id="alg0-pages-read-t1" class="cmp-indiv-mp" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
 
-							<div class="col-sm-3 text-left">
-								<span id="alg1-pages-read-t1" class="cost uncertain img-left" data-toggle="tooltip"
+							<div class="col-sm-2 text-left">
+								<span id="alg1-pages-read-t1" class="cmp-indiv-mp" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
-							<div class="col-sm-3 text-left">
-								<span id="alg2-pages-read-t1" class="cost uncertain img-left" data-toggle="tooltip"
+							<div class="col-sm-2 text-left">
+								<span id="alg2-pages-read-t1" class="cmp-indiv-mp" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
-							<div class="col-sm-3 text-left">
-								<span id="alg3-pages-read-t1" class="cost uncertain img-left" data-toggle="tooltip"
+							<div class="col-sm-2 text-left">
+								<span id="alg3-pages-read-t1" class="cmp-indiv-mp" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
 						</div>
 
 						<div class="row flex-nowrap">
-							<div class="col-sm-2 text-left">
-								<span class="metric-title" data-toggle="tooltip" data-placement="left"
+							<div class="col-sm-4 text-left">
+								<span class="cmp-indiv-mp" data-toggle="tooltip" data-placement="left"
 									title="The number of pages read from Tier 2.">Tier 2 # Reads</span>
 							</div>
-							<div class="col-sm-3 text-left">
-								<span id="alg0-pages-read-t2" class="cost uncertain img-left" data-toggle="tooltip"
+							<div class="col-sm-2 text-left">
+								<span id="alg0-pages-read-t2" class="cmp-indiv-mp" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
 
-							<div class="col-sm-3 text-left">
-								<span id="alg1-pages-read-t2" class="cost uncertain img-left" data-toggle="tooltip"
+							<div class="col-sm-2 text-left">
+								<span id="alg1-pages-read-t2" class="cmp-indiv-mp" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
-							<div class="col-sm-3 text-left">
-								<span id="alg2-pages-read-t2" class="cost uncertain img-left" data-toggle="tooltip"
+							<div class="col-sm-2 text-left">
+								<span id="alg2-pages-read-t2" class="cmp-indiv-mp" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
-							<div class="col-sm-3 text-left">
-								<span id="alg3-pages-read-t2" class="cost uncertain img-left" data-toggle="tooltip"
+							<div class="col-sm-2 text-left">
+								<span id="alg3-pages-read-t2" class="cmp-indiv-mp" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
 						</div>
 
 						<div class="row flex-nowrap">
-							<div class="col-sm-2 text-left">
-								<span class="metric-title" data-toggle="tooltip" data-placement="left"
+							<div class="col-sm-4 text-left">
+								<span class="cmp-indiv-mp" data-toggle="tooltip" data-placement="left"
 									title="The number of pages read from Tier 3.">Tier 3 # Reads</span>
 							</div>
-							<div class="col-sm-3 text-left">
-								<span id="alg0-pages-read-t3" class="cost uncertain img-left" data-toggle="tooltip"
+							<div class="col-sm-2 text-left">
+								<span id="alg0-pages-read-t3" class="cmp-indiv-mp" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
 
-							<div class="col-sm-3 text-left">
-								<span id="alg1-pages-read-t3" class="cost uncertain img-left" data-toggle="tooltip"
+							<div class="col-sm-2 text-left">
+								<span id="alg1-pages-read-t3" class="cmp-indiv-mp" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
-							<div class="col-sm-3 text-left">
-								<span id="alg2-pages-read-t3" class="cost uncertain img-left" data-toggle="tooltip"
+							<div class="col-sm-2 text-left">
+								<span id="alg2-pages-read-t3" class="cmp-indiv-mp" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
-							<div class="col-sm-3 text-left">
-								<span id="alg3-pages-read-t3" class="cost uncertain img-left" data-toggle="tooltip"
+							<div class="col-sm-2 text-left">
+								<span id="alg3-pages-read-t3" class="cmp-indiv-mp" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
 						</div>
 
 						<!-- #Disk Pages Migrated-->
 						<div class="row flex-nowrap">
-							<div class="col-sm-2 text-left">
-								<span class="metric-title" data-toggle="tooltip" data-placement="left"
-									title="The number of pages migrated between Tier 1 and Tier 2.">Tier 1 &#8596 2 #Migrations</span>
+							<div class="col-sm-4 text-left">
+								<span class="cmp-indiv-mp" data-toggle="tooltip" data-placement="left"
+									title="The number of pages migrated between Tier 1 and Tier 2.">Tier 1 &#8596 2
+									#Migrations</span>
 							</div>
-							<div class="col-sm-3 text-left">
-								<span id="alg0-pages-migrated-t1t2" class="cost uncertain img-left" data-toggle="tooltip"
+							<div class="col-sm-2 text-left">
+								<span id="alg0-pages-migrated-t1t2" class="cmp-indiv-mp" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
 
-							<div class="col-sm-3 text-left">
-								<span id="alg1-pages-migrated-t1t2" class="cost uncertain img-left" data-toggle="tooltip"
+							<div class="col-sm-2 text-left">
+								<span id="alg1-pages-migrated-t1t2" class="cmp-indiv-mp" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
-							<div class="col-sm-3 text-left">
-								<span id="alg2-pages-migrated-t1t2" class="cost uncertain img-left" data-toggle="tooltip"
+							<div class="col-sm-2 text-left">
+								<span id="alg2-pages-migrated-t1t2" class="cmp-indiv-mp" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
-							<div class="col-sm-3 text-left">
-								<span id="alg3-pages-migrated-t1t2" class="cost uncertain img-left" data-toggle="tooltip"
+							<div class="col-sm-2 text-left">
+								<span id="alg3-pages-migrated-t1t2" class="cmp-indiv-mp" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
 						</div>
 
 						<div class="row flex-nowrap">
-							<div class="col-sm-2 text-left">
-								<span class="metric-title" data-toggle="tooltip" data-placement="left"
-									title="The number of pages migrated between Tier 2 and Tier 3.">Tier 2 &#8596 3 #Migrations</span>
+							<div class="col-sm-4 text-left">
+								<span class="cmp-indiv-mp" data-toggle="tooltip" data-placement="left"
+									title="The number of pages migrated between Tier 2 and Tier 3.">Tier 2 &#8596 3
+									#Migrations</span>
 							</div>
-							<div class="col-sm-3 text-left">
-								<span id="alg0-pages-migrated-t2t3" class="cost uncertain img-left" data-toggle="tooltip"
+							<div class="col-sm-2 text-left">
+								<span id="alg0-pages-migrated-t2t3" class="cmp-indiv-mp" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
 
-							<div class="col-sm-3 text-left">
-								<span id="alg1-pages-migrated-t2t3" class="cost uncertain img-left" data-toggle="tooltip"
+							<div class="col-sm-2 text-left">
+								<span id="alg1-pages-migrated-t2t3" class="cmp-indiv-mp" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
-							<div class="col-sm-3 text-left">
-								<span id="alg2-pages-migrated-t2t3" class="cost uncertain img-left" data-toggle="tooltip"
+							<div class="col-sm-2 text-left">
+								<span id="alg2-pages-migrated-t2t3" class="cmp-indiv-mp" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
-							<div class="col-sm-3 text-left">
-								<span id="alg3-pages-migrated-t2t3" class="cost uncertain img-left" data-toggle="tooltip"
+							<div class="col-sm-2 text-left">
+								<span id="alg3-pages-migrated-t2t3" class="cmp-indiv-mp" data-toggle="tooltip"
 									data-placement="right">0</span>
 							</div>
 						</div>

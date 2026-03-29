@@ -73,6 +73,7 @@ function renderTemperature(tier1, tier2, tier3, algorithms, algNo, currentRound)
     var hotness = 0;
     var hotnessDenominator = 100;
     const algorithmName = algorithms[algNo].name;
+    var tooltipSuffix = "";
 
     if (currentRound < 0) {
         return;
@@ -95,40 +96,7 @@ function renderTemperature(tier1, tier2, tier3, algorithms, algNo, currentRound)
         tier3.forEach(page => { if (page.frequency > hotnessDenominator) hotnessDenominator = page.frequency; });
     }
 
-    function applyHeatToTier(tierArr, tierNo) {
-        tierArr.forEach((page, i) => {
-            if (algorithmName === "tLRU") {
-                if (currentRound - page.lastRequestRound > hotnessDenominator) {
-                    hotness = 0; // if the page hasn't been accessed for a long time, consider it cold
-                } else {
-                    hotness = page.lastRequestRound / hotnessDenominator;
-                }
-            } else if (algorithmName === "tLFU") {
-                hotness = page.frequency / hotnessDenominator;
-            } else if (algorithmName === "tTemp" || algorithmName === "tRL") {
-                hotness = page.temperature;
-            }
-
-            hotness = Math.max(0, Math.min(1, hotness)); // clamp to [0, 1]
-
-            const r = Math.round(255);
-            const g = Math.round(250 - 180 * hotness);
-            const b = Math.round(150 - 150 * hotness);
-
-            const el = document.getElementById(`tier${tierNo}alg${algNo}-${i}`);
-            if (el) el.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
-        });
-    }
-
-    applyHeatToTier(tier1, 1);
-    applyHeatToTier(tier2, 2);
-    applyHeatToTier(tier3, 3);
-}
-
-function renderTier(tierNo, id, arr, algorithmName) {
-    // console.log(id);
-
-    var tooltipPrefix = "Page Property";
+    var tooltipPrefix = "Page Property: ";
     if (algorithmName === "tLRU") {
         tooltipPrefix = "Last Request Round: ";
     }
@@ -142,6 +110,45 @@ function renderTier(tierNo, id, arr, algorithmName) {
         tooltipPrefix = "Temperature: ";
     }
 
+    function applyHeatToTier(tierArr, tierNo) {
+        tierArr.forEach((page, i) => {
+            if (algorithmName === "tLRU") {
+                tooltipSuffix = `${page.lastRequestRound}`;
+                if (currentRound - page.lastRequestRound > hotnessDenominator) {
+                    hotness = 0; // if the page hasn't been accessed for a long time, consider it cold
+                } else {
+                    hotness = page.lastRequestRound / hotnessDenominator;
+                }
+            } else if (algorithmName === "tLFU") {
+                tooltipSuffix = `${page.frequency}`;
+                hotness = page.frequency / hotnessDenominator;
+            } else if (algorithmName === "tTemp" || algorithmName === "tRL") {
+                tooltipSuffix = `${page.temperature.toFixed(2)}`;
+                hotness = page.temperature;
+            }
+
+            hotness = Math.max(0, Math.min(1, hotness)); // clamp to [0, 1]
+
+            const r = Math.round(255);
+            const g = Math.round(250 - 180 * hotness);
+            const b = Math.round(150 - 150 * hotness);
+
+            const el = document.getElementById(`tier${tierNo}alg${algNo}-${i}`);
+            if (el){
+                el.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+                // update tooltip
+                el.setAttribute("title", `${tooltipPrefix}${tooltipSuffix}`);
+            }
+        });
+    }
+
+    applyHeatToTier(tier1, 1);
+    applyHeatToTier(tier2, 2);
+    applyHeatToTier(tier3, 3);
+}
+
+function renderTier(tierNo, id, arr, algorithmName) {
+    // console.log(id);
     const container = document.getElementById(id);
     container.innerHTML = "";
 
@@ -163,7 +170,6 @@ function renderTier(tierNo, id, arr, algorithmName) {
         div.id = `${id}-${i}`;
         div.setAttribute("data-toggle", "tooltip");
         div.setAttribute("data-placement", "left");
-        div.setAttribute("title", tooltipPrefix);
         container.appendChild(div);
     });
 }
