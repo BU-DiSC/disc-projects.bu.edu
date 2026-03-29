@@ -1430,13 +1430,12 @@ function algoDisplay(algoIndex, s) {
                     renderUpdatedTiers(action.tierId, action.tierId - 1, action.cellId[0], action.cellId[1], algoIndex);
                     highlightCells([cell1InHTML], cell2ClassCSS, cellDelay / 2);
                     highlightCells([cell2InHTML], cell1ClassCSS, cellDelay / 2);
-                    setTimeout(function () {
-                        renderTemperature(s.tier1CurPages[algoIndex], s.tier2CurPages[algoIndex], s.tier3CurPages[algoIndex], s.algorithms, algoIndex, s.p);
-                    }, cellDelay * 0.1);
                 }, cellDelay * 0.4)
             }, cellDelay * 0.4)
-
         }
+        setTimeout(function () {
+            renderTemperature(s.tier1CurPages[algoIndex], s.tier2CurPages[algoIndex], s.tier3CurPages[algoIndex], s.algorithms, algoIndex, s.p);
+        }, cellDelay * 0.9);
     }
 
     s.simActions[algoIndex] = []; // Clear existing actions for this algorithm

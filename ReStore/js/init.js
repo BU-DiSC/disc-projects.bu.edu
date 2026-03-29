@@ -118,7 +118,7 @@ const savedWorkloadFixed1 = [
   ['W', 21], ['W', 21], ['R', 21], ['W', 15], ['W', 15], ['W', 21], ['W', 21], ['W', 21], ['R', 15], ['W', 15]
 ];
 
-perReqEnqueueTimeFixed1 = 0.9999999403953552;
+const perReqEnqueueTimeFixed1 = 0.9999999403953552;
 
 
 

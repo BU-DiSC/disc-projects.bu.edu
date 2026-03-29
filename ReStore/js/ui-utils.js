@@ -71,7 +71,7 @@ function renderUpdatedTiers(fromTier, toTier, fromPos, toPos, algNo) {
 
 function renderTemperature(tier1, tier2, tier3, algorithms, algNo, currentRound) {
     var hotness = 0;
-    var hotnessDenominator = 100;
+    var hotnessDenominator = 100;   // hardcoded for now, can be dynamically adjusted based on workload size or page count?
     const algorithmName = algorithms[algNo].name;
     var tooltipSuffix = "";
 
@@ -87,10 +87,11 @@ function renderTemperature(tier1, tier2, tier3, algorithms, algNo, currentRound)
     //     });
     //     return;
     // }
-    else if (currentRound > 100 && algorithmName === "tLRU") {
-        hotnessDenominator = currentRound;
-    }
-    else if (currentRound > 100 && algorithmName === "tLFU") {
+    // else if (currentRound > totalPages/2 && algorithmName === "tLRU") {
+    //     hotnessDenominator = currentRound;
+    // }
+    else if (currentRound > totalPages/2 && algorithmName === "tLFU") {
+        // hotnessDenominator = 100;
         tier1.forEach(page => { if (page.frequency > hotnessDenominator) hotnessDenominator = page.frequency; });
         tier2.forEach(page => { if (page.frequency > hotnessDenominator) hotnessDenominator = page.frequency; });
         tier3.forEach(page => { if (page.frequency > hotnessDenominator) hotnessDenominator = page.frequency; });
@@ -116,8 +117,12 @@ function renderTemperature(tier1, tier2, tier3, algorithms, algNo, currentRound)
                 tooltipSuffix = `${page.lastRequestRound}`;
                 if (currentRound - page.lastRequestRound > hotnessDenominator) {
                     hotness = 0; // if the page hasn't been accessed for a long time, consider it cold
-                } else {
-                    hotness = page.lastRequestRound / hotnessDenominator;
+                }
+                else if (currentRound < hotnessDenominator) {
+                    hotness = 1 - (hotnessDenominator - page.lastRequestRound) / hotnessDenominator;
+                }
+                else {
+                    hotness = 1 - (currentRound - page.lastRequestRound) / hotnessDenominator;
                 }
             } else if (algorithmName === "tLFU") {
                 tooltipSuffix = `${page.frequency}`;
