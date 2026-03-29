@@ -402,6 +402,15 @@ $(document).on("change", "#topTierCapacity, #midTierCapacity", function () {
     }
 });
 
+function clonePage(p) {
+    return {
+        id: p.id,
+        lastRequestRound: p.lastRequestRound,
+        frequency: p.frequency,
+        temperature: p.temperature,
+        reqRounds: [...p.reqRounds]
+    };
+}
 
 $(document).ready(function () {
     $("#lat1").val(optaneSSD[0]);
@@ -585,17 +594,17 @@ $(document).ready(function () {
         console.log("Play button clicked.");
         // need to fix ui naming
         // curently alphaX means concurreny, asymX means alpha, latX means read latency
-        console.log("Raw UI values:",
-            $("#lat1").val(),
-            $("#lat2").val(),
-            $("#lat3").val(),
-            $("#asym1").val(),
-            $("#asym2").val(),
-            $("#asym3").val(),
-            $("#alpha1").val(),
-            $("#alpha2").val(),
-            $("#alpha3").val()
-        );
+        // console.log("Raw UI values:",
+        //     $("#lat1").val(),
+        //     $("#lat2").val(),
+        //     $("#lat3").val(),
+        //     $("#asym1").val(),
+        //     $("#asym2").val(),
+        //     $("#asym3").val(),
+        //     $("#alpha1").val(),
+        //     $("#alpha2").val(),
+        //     $("#alpha3").val()
+        // );
 
         const t1AlphaVal = parseFloat($("#asym1").val());
         const t2AlphaVal = parseFloat($("#asym2").val());
@@ -607,11 +616,11 @@ $(document).ready(function () {
         const t2ConcurrencyVal = parseInt($("#alpha2").val());
         const t3ConcurrencyVal = parseInt($("#alpha3").val());
 
-        console.log("Parsed parameter values:",
-            t1ReadLatencyVal, t2ReadLatencyVal, t3ReadLatencyVal,
-            t1ConcurrencyVal, t2ConcurrencyVal, t3ConcurrencyVal,
-            t1AlphaVal, t2AlphaVal, t3AlphaVal
-        );
+        // console.log("Parsed parameter values:",
+        //     t1ReadLatencyVal, t2ReadLatencyVal, t3ReadLatencyVal,
+        //     t1ConcurrencyVal, t2ConcurrencyVal, t3ConcurrencyVal,
+        //     t1AlphaVal, t2AlphaVal, t3AlphaVal
+        // );
 
         const s = state.tiers;
 
@@ -657,15 +666,16 @@ $(document).ready(function () {
                 s.p = 0;
                 s.algorithms = algorithms;
                 state.config.perReqEnqueueTime = getWorkloadEnqueueTimeEstimate(s.workload);
-                console.log("Workload generated, length:", s.workload.length);
-                console.log("Estimated enqueue time per request (microseconds):", state.config.perReqEnqueueTime);
+                // console.log("Workload generated, length:", s.workload.length);
+                // console.log("Estimated enqueue time per request (microseconds):", state.config.perReqEnqueueTime);
 
 
                 for (let i = 0; i < algorithms.length; i++) {
-                    s.tier1CurPages[i] = tier1.map(p => ({ ...p }));
-                    s.tier2CurPages[i] = tier2.map(p => ({ ...p }));
-                    s.tier3CurPages[i] = tier3.map(p => ({ ...p }));
+                    s.tier1CurPages[i] = tier1.map(clonePage);
+                    s.tier2CurPages[i] = tier2.map(clonePage);
+                    s.tier3CurPages[i] = tier3.map(clonePage);
                 }
+                // console.log(s.tier2CurPages[2].find(p => p.id === 15).reqRounds === s.tier2CurPages[3].find(p => p.id === 15).reqRounds);
                 renderTiers(tier1, tier2, tier3, algorithms, 0);
 
                 calculate(s, algorithms);
@@ -790,6 +800,7 @@ function myLoop(s) {
         if (s.reloader === 1) return;
 
         if (!s.pauser) {
+            console.log(s.p, s.workload[s.p])
             for (let i = 0; i < s.algorithms.length; i++) {
                 s.algorithms[i](s);
             }
@@ -984,11 +995,11 @@ function updateMigrationCountPlot(s) {
     let algorithmNames = [];
     for (let i = 0; i < s.algorithms.length; i++) {
         s.migrationCountsForPlot[i].push(calculateTotalMigrationCountFromTiers(i));
-        algorithmNames.push(s.algorithms[i].name === "tRL" ? "ReStore" : s.algorithms[i].name);
+        algorithmNames.push(s.algorithms[i].name === "tRL" ? "ReStore" : (s.algorithms[i].name === "tTemp" ? "TEMP" : s.algorithms[i].name));
     }
     const xValues = Array.from({ length: s.p }, (_, i) => i * state.config.plotUpdateInterval);
 
-    console.log("Migration count values for plot:", s.migrationCountsForPlot);
+    // console.log("Migration count values for plot:", s.migrationCountsForPlot);
 
     const traces = [
         {
@@ -1052,8 +1063,8 @@ function updateIndivMigrationCountPlot(s) {
     for (let i = 0; i < s.algorithms.length; i++) {
         s.t2t1MigrationCountsForPlot[i].push(s.tier2_1Migration[i]);
         s.t2t3MigrationCountsForPlot[i].push(s.tier2_3Migration[i]);
-        algorithmNames.push((s.algorithms[i].name === "tRL" ? "ReStore" : s.algorithms[i].name) + " T1&#8596;T2");
-        algorithmNames.push((s.algorithms[i].name === "tRL" ? "ReStore" : s.algorithms[i].name) + " T2&#8596;T3");
+        algorithmNames.push((s.algorithms[i].name === "tRL" ? "ReStore" : (s.algorithms[i].name === "tTemp" ? "TEMP" : s.algorithms[i].name)) + " T1&#8596;T2");
+        algorithmNames.push((s.algorithms[i].name === "tRL" ? "ReStore" : (s.algorithms[i].name === "tTemp" ? "TEMP" : s.algorithms[i].name)) + " T2&#8596;T3");
     }
     const xValues = Array.from({ length: s.p }, (_, i) => i * state.config.plotUpdateInterval);
 
@@ -1157,7 +1168,7 @@ function updateLatencyPlot(s) {
 
     for (let i = 0; i < s.algorithms.length; i++) {
         s.latencyValuesForPlot[i].push(calculateLatencyFromTiers(i) / 1000);
-        algorithmNames.push(s.algorithms[i].name === "tRL" ? "ReStore" : s.algorithms[i].name);
+        algorithmNames.push(s.algorithms[i].name === "tRL" ? "ReStore" : (s.algorithms[i].name === "tTemp" ? "TEMP" : s.algorithms[i].name));
     }
 
     // console.log("Latency values for plot:", latencyValues);
@@ -2770,7 +2781,7 @@ function reward_from_avgtemp(
     wr_ww,
     total_num_pages
 ) {
-    console.log("Checking sizes: ", Tier1.size, Tier2.size, Tier3.size);
+    // console.log("Checking sizes: ", Tier1.size, Tier2.size, Tier3.size);
     const sumExpT1 = Math.exp((1 + avg_temp_T1) / 2) * Tier1.size;
     const sumExpT2 = Math.exp((1 + avg_temp_T2) / 2) * Tier2.size;
     const sumExpT3 = Math.exp((1 + avg_temp_T3) / 2) * Tier3.size;
@@ -2999,7 +3010,7 @@ function updateApproxQueueSizes(s, algoIndex, totalEnqueuedReqCount, timeOfCompl
         }
     }
 
-    console.log(`Initial approx queue sizes - T1: ${s.approxT1QueueSizeEstimate}, T2: ${s.approxT2QueueSizeEstimate}, T3: ${s.approxT3QueueSizeEstimate}`);
+    // console.log(`Initial approx queue sizes - T1: ${s.approxT1QueueSizeEstimate}, T2: ${s.approxT2QueueSizeEstimate}, T3: ${s.approxT3QueueSizeEstimate}`);
 
     timeTier1 = timeTier2 = timeTier3 = 0;
     for (let i = 0; i < Math.min(s.workload.length, totalEnqueuedReqCount); i++) {
@@ -3017,7 +3028,7 @@ function updateApproxQueueSizes(s, algoIndex, totalEnqueuedReqCount, timeOfCompl
         }
     }
 
-    console.log(`Approx queue size after T1 processing: ${s.approxT1QueueSizeEstimate}, T2: ${s.approxT2QueueSizeEstimate}, T3: ${s.approxT3QueueSizeEstimate}`);
+    // console.log(`Approx queue size after T1 processing: ${s.approxT1QueueSizeEstimate}, T2: ${s.approxT2QueueSizeEstimate}, T3: ${s.approxT3QueueSizeEstimate}`);
 
     for (let i = 0; i < Math.min(s.workload.length, totalEnqueuedReqCount); i++) {
         operation = s.workload[i][0];
@@ -3034,7 +3045,7 @@ function updateApproxQueueSizes(s, algoIndex, totalEnqueuedReqCount, timeOfCompl
         }
     }
 
-    console.log(`Approx queue size after T2 processing: ${s.approxT2QueueSizeEstimate}, T1: ${s.approxT1QueueSizeEstimate}, T3: ${s.approxT3QueueSizeEstimate}`);
+    // console.log(`Approx queue size after T2 processing: ${s.approxT2QueueSizeEstimate}, T1: ${s.approxT1QueueSizeEstimate}, T3: ${s.approxT3QueueSizeEstimate}`);
 
     for (let i = 0; i < Math.min(s.workload.length, totalEnqueuedReqCount); i++) {
         operation = s.workload[i][0];
@@ -3051,21 +3062,21 @@ function updateApproxQueueSizes(s, algoIndex, totalEnqueuedReqCount, timeOfCompl
         }
     }
 
-    console.log(`Approx queue size after T3 processing: ${s.approxT3QueueSizeEstimate}, T1: ${s.approxT1QueueSizeEstimate}, T2: ${s.approxT2QueueSizeEstimate}`);
+    // console.log(`Approx queue size after T3 processing: ${s.approxT3QueueSizeEstimate}, T1: ${s.approxT1QueueSizeEstimate}, T2: ${s.approxT2QueueSizeEstimate}`);
 
-    console.log(`Total enqueued req count: ${totalEnqueuedReqCount}`);
-    console.log(`Time of completion: ${timeOfCompletion}, TimeTier1: ${timeTier1}, TimeTier2: ${timeTier2}, TimeTier3: ${timeTier3}`);
-    console.log(`Approx queue sizes - T1: ${s.approxT1QueueSizeEstimate}, T2: ${s.approxT2QueueSizeEstimate}, T3: ${s.approxT3QueueSizeEstimate}`);
+    // console.log(`Total enqueued req count: ${totalEnqueuedReqCount}`);
+    // console.log(`Time of completion: ${timeOfCompletion}, TimeTier1: ${timeTier1}, TimeTier2: ${timeTier2}, TimeTier3: ${timeTier3}`);
+    // console.log(`Approx queue sizes - T1: ${s.approxT1QueueSizeEstimate}, T2: ${s.approxT2QueueSizeEstimate}, T3: ${s.approxT3QueueSizeEstimate}`);
     if (s.approxT1QueueSizeEstimate < 0) {
-        console.warn("Negative queue size estimate for T1, resetting to 0");
+        // console.warn("Negative queue size estimate for T1, resetting to 0");
         s.approxT1QueueSizeEstimate = 0;
     }
     if (s.approxT2QueueSizeEstimate < 0) {
-        console.warn("Negative queue size estimate for T2, resetting to 0");
+        // console.warn("Negative queue size estimate for T2, resetting to 0");
         s.approxT2QueueSizeEstimate = 0;
     }
     if (s.approxT3QueueSizeEstimate < 0) {
-        console.warn("Negative queue size estimate for T3, resetting to 0");
+        // console.warn("Negative queue size estimate for T3, resetting to 0");
         s.approxT3QueueSizeEstimate = 0;
     }
 
@@ -3093,12 +3104,12 @@ function tRL(s) {
     const minT2MigrationTemp = 1 - 0.5 / Math.exp(tempAlpha * minAccessToT2);
 
     if (s.rlAgent1 == null) {
-        console.log("initRL inputs:", s.t1ReadLatency, s.t2ReadLatency, s.t3ReadLatency,
-            s.t1Concurrency, s.t2Concurrency, s.t3Concurrency,
-            s.t1AlphaVal, s.t2AlphaVal, s.t3AlphaVal);
+        // console.log("initRL inputs:", s.t1ReadLatency, s.t2ReadLatency, s.t3ReadLatency,
+            // s.t1Concurrency, s.t2Concurrency, s.t3Concurrency,
+            // s.t1AlphaVal, s.t2AlphaVal, s.t3AlphaVal);
         initRL(s, totalPages);
-        console.log("a_i_1:", s.rlAgent1.a_i, "b_i_1:", s.rlAgent1.b_i);
-        console.log("a_i_2:", s.rlAgent2.a_i, "b_i_2:", s.rlAgent2.b_i);
+        // console.log("a_i_1:", s.rlAgent1.a_i, "b_i_1:", s.rlAgent1.b_i);
+        // console.log("a_i_2:", s.rlAgent2.a_i, "b_i_2:", s.rlAgent2.b_i);
     }
 
     const entry = s.workload[currentRound];
@@ -3177,7 +3188,7 @@ function tRL(s) {
         var timeOfCompletion = ((s.tier1write[algoIndex] + s.tier2_1Migration[algoIndex]) * s.t1Alpha +
             (s.tier1read[algoIndex] + s.tier2_1Migration[algoIndex])) * s.t1ReadLatency;    // in microseconds
         var totalEnqueuedReqCount = Math.floor(timeOfCompletion / state.config.perReqEnqueueTime);
-        console.log(`Page ${page} in Tier 1, Time of completion: ${timeOfCompletion} microseconds, Total enqueued req count: ${totalEnqueuedReqCount}`);
+        // console.log(`Page ${page} in Tier 1, Time of completion: ${timeOfCompletion} microseconds, Total enqueued req count: ${totalEnqueuedReqCount}`);
         updateApproxQueueSizes(s, algoIndex, totalEnqueuedReqCount, timeOfCompletion);
         // sleep(3*s.delay);
         // temperature decay of all pages
@@ -3212,7 +3223,7 @@ function tRL(s) {
 
         const foundPageT2 = s.tier2CurPages[algoIndex][foundPageT2Index];
 
-        timeWindow = totalPages;
+        const timeWindow = totalPages;
         updateTemperature(foundPageT2, currentRound, timeWindow);
 
         if (type === "W") {
@@ -3301,7 +3312,7 @@ function tRL(s) {
             s.sumPhiT3 = s.sumPhiT3.map((v, i) => v + phi_t3_snap[i]);
             // RL Based Decision
 
-            console.log("left:", left, "right:", right, "cost_t1_be:", cost_t1_be, "cost_t2_be:", cost_t2_be, "cost_t1_af:", cost_t1_af, "cost_t2_af:", cost_t2_af);
+            // console.log("left:", left, "right:", right, "cost_t1_be:", cost_t1_be, "cost_t2_be:", cost_t2_be, "cost_t1_af:", cost_t1_af, "cost_t2_af:", cost_t2_af);
             if (left <= right) {
                 const temp = s.tier1CurPages[algoIndex][tempT1Index];
                 s.tier1CurPages[algoIndex][tempT1Index] = foundPageT2;
@@ -3341,7 +3352,7 @@ function tRL(s) {
 
         const foundPageT3 = s.tier3CurPages[algoIndex][foundPageT3Index];
 
-        timeWindow = totalPages;
+        const timeWindow = totalPages;
         updateTemperature(foundPageT3, currentRound, timeWindow);
 
         if (type === "W") {
@@ -3429,7 +3440,7 @@ function tRL(s) {
             // [FIX 3] Accumulate sumPhi for T1
             s.sumPhiT1 = s.sumPhiT1.map((v, i) => v + phi_t1_snap[i]);
             // RL Based Decision
-            console.log("left:", left, "right:", right, "cost_t1_be:", cost_t1_snap, "cost_t2_be:", cost_t2_be, "cost_t2_af:", cost_t2_af, "cost_t3_af:", cost_t3_af);
+            // console.log("left:", left, "right:", right, "cost_t1_be:", cost_t1_snap, "cost_t2_be:", cost_t2_be, "cost_t2_af:", cost_t2_af, "cost_t3_af:", cost_t3_af);
             if (left <= right) {
                 const temp = s.tier2CurPages[algoIndex][tempT2Index];
                 s.tier2CurPages[algoIndex][tempT2Index] = foundPageT3;
