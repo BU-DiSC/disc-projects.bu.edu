@@ -1,3 +1,5 @@
+const fixedId = 1;  // this is for running the general simulation, non zeros indicate specific traces
+
 const tier1Fixed1 = [26, 25, 7, 30];
 
 const tier2Fixed1 = [9, 44, 35, 16, 37, 10, 31, 14, 33, 15, 6, 20];
@@ -192,15 +194,22 @@ function shuffle(array) {
 }
 
 function initTiers() {
-    tier1 = Array.from({ length: tier1Fixed1.length }, (_, i) =>
-        createPage(tier1Fixed1[i])
-    );
-    tier2 = Array.from({ length: tier2Fixed1.length }, (_, i) =>
-        createPage(tier2Fixed1[i])
-    );
-    tier3 = Array.from({ length: tier3Fixed1.length }, (_, i) =>
-        createPage(tier3Fixed1[i])
-    );
+    if (fixedId === 0) {
+        initTiersOriginal();
+        return;
+    }
+    if (fixedId === 1) {
+        tier1 = Array.from({ length: tier1Fixed1.length }, (_, i) =>
+            createPage(tier1Fixed1[i])
+        );
+        tier2 = Array.from({ length: tier2Fixed1.length }, (_, i) =>
+            createPage(tier2Fixed1[i])
+        );
+        tier3 = Array.from({ length: tier3Fixed1.length }, (_, i) =>
+            createPage(tier3Fixed1[i])
+        );
+        return;
+    }
 }
 
 function initTiersOriginal() {

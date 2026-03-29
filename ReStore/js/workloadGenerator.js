@@ -64,7 +64,12 @@ function capacity() {
 }
 
 function generateWorkload() {
-    return savedWorkloadChatGPT;
+    if (fixedId === 0) {
+        return generateWorkloadOriginal();
+    }
+    else if (fixedId === 1) {
+        return savedWorkloadFixed1;
+    }
 }
 
 function generateWorkloadOriginal() {
@@ -199,7 +204,12 @@ function printWorkloadStats(workload) {
 }
 
 function getWorkloadEnqueueTimeEstimate(workload) {
-    return perReqEnqueueTimeChatGPT; // in microseconds, using the estimate from ChatGPT for now
+    if (fixedId === 0) {
+        getWorkloadEnqueueTimeEstimateOriginal(workload);
+    }
+    else if (fixedId === 1) {
+        return perReqEnqueueTimeFixed1; // in microseconds, using the estimate from the fixed trace for now
+    }
 }
 
 function getWorkloadEnqueueTimeEstimateOriginal(workload) {
