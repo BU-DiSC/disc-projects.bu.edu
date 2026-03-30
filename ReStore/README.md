@@ -1,3 +1,5 @@
 # ReStore-Demo-website
 
-ReStore demo
+ReStore Codebase: https://github.com/BU-DiSC/ReStore
+
+Demo Website: https://disc-projects.bu.edu/ReStore/research.html
