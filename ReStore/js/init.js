@@ -1,4 +1,4 @@
-const fixedId = 1;  // this is for running the general simulation, non zeros indicate specific traces
+const fixedId = 0;  // this is for running the general simulation, non zeros indicate specific traces
 
 const tier1Fixed1 = [26, 25, 7, 30];
 
