@@ -2672,6 +2672,7 @@ class TDAgent {
 
 // ===== FIX: MATCH C++ =====
 function cal_s2(queue, threads, read, asym) {
+    // return 0;
     if (threads <= 0) return 0;
 
     // C++ logic approximation:
@@ -2700,7 +2701,7 @@ function initRL(s, total_num_pages) {
     s.sumPhiT2 = [0.5, 0.5, 0.5, 0.5];
     s.sumPhiT3 = [0.5, 0.5, 0.5, 0.5];
 
-    const p_init = [0, 0, 0, 0];
+    const p_init = [0, 0, 0, 0]; // all 1
     const beta = 0.10;
     const lam = 0.8;
 
