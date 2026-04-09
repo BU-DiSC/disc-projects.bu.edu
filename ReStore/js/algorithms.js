@@ -102,8 +102,8 @@ const state = {
         // [FIX 5] RL learning schedule control (match C++ gating)
         rlStartUpdate: false,
         rlStartUpdateI: -1,
-        rlUpdateFreqs: 100,
-        rlInitRounds: 20,
+        rlUpdateFreqs: 1,//100,
+        rlInitRounds: 0,//20,
 
         // [FIX 4] Sliding window for dynamic a_i, b_i updates
         s1T1List: [0.5], s1T2List: [0.5], s1T3List: [0.5],
@@ -665,7 +665,9 @@ $(document).ready(function () {
                 }
                 s.p = 0;
                 s.algorithms = algorithms;
-                state.config.perReqEnqueueTime = getWorkloadEnqueueTimeEstimate(s.workload);
+                let workloadEnqueueTimeEstimatePerReq = getWorkloadEnqueueTimeEstimate(s.workload);
+                state.config.perReqEnqueueTime = workloadEnqueueTimeEstimatePerReq;
+                printSimulationInputs(workloadEnqueueTimeEstimatePerReq, tier1, tier2, tier3, s.workload)
                 // console.log("Workload generated, length:", s.workload.length);
                 // console.log("Estimated enqueue time per request (microseconds):", state.config.perReqEnqueueTime);
 
@@ -800,7 +802,7 @@ function myLoop(s) {
         if (s.reloader === 1) return;
 
         if (!s.pauser) {
-            console.log(s.p, s.workload[s.p])
+            // console.log(s.p, s.workload[s.p])
             for (let i = 0; i < s.algorithms.length; i++) {
                 s.algorithms[i](s);
             }
@@ -1068,7 +1070,7 @@ function updateIndivMigrationCountPlot(s) {
     }
     const xValues = Array.from({ length: s.p }, (_, i) => i * state.config.plotUpdateInterval);
 
-    console.log("Migration count values for plot:", s.migrationCountsForPlot);
+    // console.log("Migration count values for plot:", s.migrationCountsForPlot);
 
     const traces = [
         {
@@ -2672,7 +2674,8 @@ class TDAgent {
 
 // ===== FIX: MATCH C++ =====
 function cal_s2(queue, threads, read, asym) {
-    // return 0;
+    // return queue/2000;
+    const denominator = 2000;
     if (threads <= 0) return 0;
 
     // C++ logic approximation:
@@ -2682,7 +2685,7 @@ function cal_s2(queue, threads, read, asym) {
     // return batches * read * (1 + asym);
 
     // double s2 = queued_tasks * (read_time_tier + asym_tier * read_time_tier) / 2000 / k_thrd;
-    s2 = queue * read * (1 + asym) / 2000 / threads;
+    s2 = queue * read * (1 + asym) / denominator / threads;
     return s2;
 }
 
@@ -2702,8 +2705,8 @@ function initRL(s, total_num_pages) {
     s.sumPhiT3 = [0.5, 0.5, 0.5, 0.5];
 
     const p_init = [0, 0, 0, 0]; // all 1
-    const beta = 0.10;
-    const lam = 0.8;
+    const beta = 0.1;
+    const lam = 1.5;// 0.8;
 
     // ===== NEW: scaling from C++ =====
     const exponent = Math.floor(Math.log10(1.0 / total_num_pages));
@@ -2766,6 +2769,8 @@ function initRL(s, total_num_pages) {
     // ===== NEW: correct scaling factor =====
     const inv_scale = 1 / a_scale;
 
+    console.log("DEBUG initRL: p_init", p_init, "beta ", beta, "lambda ", lam, "inv_scale ", inv_scale);
+    console.log("a_i_1", a_i_1, "b_i_1", b_i_1, "a_i_2", a_i_2, "b_i_2", b_i_2, "a_i_3", a_i_3, "b_i_3", b_i_3);
     s.rlAgent1 = new TDAgent(2, p_init, beta, lam, inv_scale, a_i_1, b_i_1);
     s.rlAgent2 = new TDAgent(2, p_init, beta, lam, inv_scale, a_i_2, b_i_2);
     s.rlAgent3 = new TDAgent(2, p_init, beta, lam, inv_scale, a_i_3, b_i_3);
@@ -2887,7 +2892,7 @@ function rlLearn(s, algoIndex) {
     // [FIX 5] Gate learning: only learn during warmup or every RL_update_freqs rounds
     if (!s.rlStartUpdate) return;
     const roundsSinceStart = s.p - s.rlStartUpdateI;
-    if (roundsSinceStart >= s.rlInitRounds && roundsSinceStart % s.rlUpdateFreqs !== 1) return;
+    // if (roundsSinceStart >= s.rlInitRounds && roundsSinceStart % s.rlUpdateFreqs !== 0) return;
 
     const reward = reward_from_avgtemp(
         new Map(s.tier1CurPages[algoIndex].map(p => [p.id, p])),
@@ -2909,9 +2914,9 @@ function rlLearn(s, algoIndex) {
         const state2_next = getState(s, 2, algoIndex);
         const state3_next = getState(s, 3, algoIndex);
 
-        const [cost1_next] = s.rlAgent1.cost_phi(state1_next);
-        const [cost2_next] = s.rlAgent2.cost_phi(state2_next);
-        const [cost3_next] = s.rlAgent3.cost_phi(state3_next);
+        const [cost1_next, phi1_next] = s.rlAgent1.cost_phi(state1_next);
+        const [cost2_next, phi2_next] = s.rlAgent2.cost_phi(state2_next);
+        const [cost3_next, phi3_next] = s.rlAgent3.cost_phi(state3_next);
 
         // [FIX 1] Pass lastPhi (actual phi from before-state), NOT sumPhi
         s.rlAgent1.learn(s.lastStateT1, state1_next, [], s.lastCostT1, cost1_next, reward, s.lastPhiT1, 1);
@@ -2991,12 +2996,12 @@ function updateAB(s, algoIndex) {
 }
 
 function updateApproxQueueSizes(s, algoIndex, totalEnqueuedReqCount, timeOfCompletion) {
-    s.approxT1QueueSizeEstimate = 0;
-    s.approxT2QueueSizeEstimate = 0;
-    s.approxT3QueueSizeEstimate = 0;
-    // s.approxT1QueueSizeEstimate = -(s.tier1read[algoIndex] + s.tier1write[algoIndex]);
-    // s.approxT2QueueSizeEstimate = -(s.tier2read[algoIndex] + s.tier2write[algoIndex]);
-    // s.approxT3QueueSizeEstimate = -(s.tier3read[algoIndex] + s.tier3write[algoIndex]);
+    // s.approxT1QueueSizeEstimate = 0;
+    // s.approxT2QueueSizeEstimate = 0;
+    // s.approxT3QueueSizeEstimate = 0;
+    s.approxT1QueueSizeEstimate = -(s.tier1read[algoIndex] + s.tier1write[algoIndex]);
+    s.approxT2QueueSizeEstimate = -(s.tier2read[algoIndex] + s.tier2write[algoIndex]);
+    s.approxT3QueueSizeEstimate = -(s.tier3read[algoIndex] + s.tier3write[algoIndex]);
 
     // number of requests that would have been enqueued by the time current request is served
     // for (let i=s.p+1; i<Math.min(s.workload.length, s.p+1+totalEnqueuedReqCount); i++) {
@@ -3122,11 +3127,14 @@ function tRL(s) {
     if (!s.rlStartUpdate && s.tier1CurPages[algoIndex].findIndex(p => p.id === page) === -1) {
         s.rlStartUpdate = true;  // Enable updates
         s.rlStartUpdate_i = currentRound;    // Record the iteration where update starts
+        console.log(`RL updates enabled starting from round ${currentRound} (page ${page})`);
     }
 
     s1_t1_be = getAvgTemp(s.tier1CurPages[algoIndex]);
     s2_t1_be = cal_s2(s.approxT1QueueSizeEstimate, s.t1Concurrency, s.t1ReadLatency, s.t1AlphaVal);
     state_t1_be = [s1_t1_be, s2_t1_be];
+    // cost is a number, phi is the weights
+    // cost = sum (phi_i * p_i)
     [cost_tier1_be, phi_t1] = s.rlAgent1.cost_phi(state_t1_be);
 
     s.lastPhiT1 = phi_t1; // Store actual phi for eligibility trace
@@ -3154,7 +3162,7 @@ function tRL(s) {
         s.sumPhiT3[i] += phi_t3[i];
     }
 
-    if (s.rlStartUpdate && (currentRound - s.rlStartUpdate_i < s.rlInitRounds || (currentRound - s.rlStartUpdate_i) % s.rlUpdateFreqs == 1)) {
+    if (s.rlStartUpdate && (currentRound - s.rlStartUpdate_i < s.rlInitRounds || (currentRound - s.rlStartUpdate_i) % s.rlUpdateFreqs == 0)) {
         s.lastStateT1 = state_t1_be;
         s.lastStateT2 = state_t2_be;
         s.lastStateT3 = state_t3_be;
@@ -3241,7 +3249,7 @@ function tRL(s) {
         var timeOfCompletion = ((s.tier2write[algoIndex] + s.tier2_1Migration[algoIndex] + s.tier2_3Migration[algoIndex]) * s.t2Alpha +
             (s.tier2read[algoIndex] + s.tier2_1Migration[algoIndex] + s.tier2_3Migration[algoIndex])) * s.t2ReadLatency;
         var totalEnqueuedReqCount = Math.floor(timeOfCompletion / state.config.perReqEnqueueTime);
-        console.log(`Page ${page} in Tier 2, Time of completion: ${timeOfCompletion} microseconds, Total enqueued req count: ${totalEnqueuedReqCount}`);
+        // console.log(`Page ${page} in Tier 2, Time of completion: ${timeOfCompletion} microseconds, Total enqueued req count: ${totalEnqueuedReqCount}`);
         updateApproxQueueSizes(s, algoIndex, totalEnqueuedReqCount, timeOfCompletion);
 
         const tempInfo = getTemperaturePage(s.tier1CurPages[algoIndex]);
@@ -3261,17 +3269,19 @@ function tRL(s) {
             const [cost_t1_be, phi_t1] = s.rlAgent1.cost_phi(state_t1_be);
 
             // simulate AFTER state (same as C++)
+            // s1_t2_af, s1_t1_af are just average temperatures of tier2 and tier1 after the potential migration
             const s1_t2_af = (state_t2_be[0] * s.tier2CurPages[algoIndex].length - foundPageT2.temperature) /
                 (s.tier2CurPages[algoIndex].length - 1);
 
             const s1_t1_af = (state_t1_be[0] * s.tier1CurPages[algoIndex].length + foundPageT2.temperature) /
                 (s.tier1CurPages[algoIndex].length + 1);
 
+            // s2_t2_af, s2_t1_af are the s2 values after the potential migration (due to queue size changes)
             const s2_t2_af = cal_s2(s.approxT2QueueSizeEstimate + 2, s.t2Concurrency, s.t2ReadLatency, s.t2AlphaVal);
             const s2_t1_af = cal_s2(s.approxT1QueueSizeEstimate + 2, s.t1Concurrency, s.t1ReadLatency, s.t1AlphaVal);
 
-            const [cost_t2_af] = s.rlAgent2.cost_phi([s1_t2_af, s2_t2_af]);
-            const [cost_t1_af] = s.rlAgent1.cost_phi([s1_t1_af, s2_t1_af]);
+            const [cost_t2_af, phi_t2_af] = s.rlAgent2.cost_phi([s1_t2_af, s2_t2_af]);
+            const [cost_t1_af, phi_t1_af] = s.rlAgent1.cost_phi([s1_t1_af, s2_t1_af]);
 
             // [FIX 2] Zero-cost guard: match C++ to prevent spurious migrations
             let cost_t1_be_g = cost_t1_be, cost_t2_be_g = cost_t2_be;
@@ -3370,7 +3380,7 @@ function tRL(s) {
         var timeOfCompletion = ((s.tier3write[algoIndex] + s.tier2_3Migration[algoIndex]) * s.t3Alpha +
             (s.tier3read[algoIndex] + s.tier2_3Migration[algoIndex])) * s.t3ReadLatency;
         var totalEnqueuedReqCount = Math.floor(timeOfCompletion / state.config.perReqEnqueueTime);
-        console.log(`Page ${page} in Tier 3, Time of completion: ${timeOfCompletion} microseconds, Total enqueued req count: ${totalEnqueuedReqCount}`);
+        // console.log(`Page ${page} in Tier 3, Time of completion: ${timeOfCompletion} microseconds, Total enqueued req count: ${totalEnqueuedReqCount}`);
         updateApproxQueueSizes(s, algoIndex, totalEnqueuedReqCount, timeOfCompletion);
 
         const tempInfo = getTemperaturePage(s.tier2CurPages[algoIndex]);
@@ -3399,8 +3409,8 @@ function tRL(s) {
             const s2_t3_af = cal_s2(s.approxT3QueueSizeEstimate + 2, s.t3Concurrency, s.t3ReadLatency, s.t3AlphaVal);
             const s2_t2_af = cal_s2(s.approxT2QueueSizeEstimate + 2, s.t2Concurrency, s.t2ReadLatency, s.t2AlphaVal);
 
-            const [cost_t3_af] = s.rlAgent3.cost_phi([s1_t3_af, s2_t3_af]);
-            const [cost_t2_af] = s.rlAgent2.cost_phi([s1_t2_af, s2_t2_af]);
+            const [cost_t3_af, phi_t3_af] = s.rlAgent3.cost_phi([s1_t3_af, s2_t3_af]);
+            const [cost_t2_af, phi_t2_af] = s.rlAgent2.cost_phi([s1_t2_af, s2_t2_af]);
 
             // [FIX 2] Zero-cost guard: match C++
             let cost_t3_be_g = cost_t3_be, cost_t2_be_g2 = cost_t2_be;
@@ -3440,7 +3450,16 @@ function tRL(s) {
             // [FIX 3] Accumulate sumPhi for T1
             s.sumPhiT1 = s.sumPhiT1.map((v, i) => v + phi_t1_snap[i]);
             // RL Based Decision
-            // console.log("left:", left, "right:", right, "cost_t1_be:", cost_t1_snap, "cost_t2_be:", cost_t2_be, "cost_t2_af:", cost_t2_af, "cost_t3_af:", cost_t3_af);
+            console.log("RL Decision for Tier 3 to Tier 2 migration:");
+            console.log("left:", left, "right:", right, "cost_t1_be:", cost_t1_snap, "cost_t2_be:", cost_t2_be, "cost_t2_af:", cost_t2_af, "cost_t3_af:", cost_t3_af);
+            if (left <= right) {
+                console.log(`Migrating page ${foundPageT3.id} from Tier 3 to Tier 2, swapping with page ${tempT2page.id} in Tier 2`);
+                console.log(`Page ${foundPageT3.id} temp: ${foundPageT3.temperature}, Page ${tempT2page.id} temp: ${tempT2page.temperature}`);
+            }
+            else {
+                console.log(`Not migrating page ${foundPageT3.id} from Tier 3 to Tier 2`);
+                console.log(`Page ${foundPageT3.id} temp: ${foundPageT3.temperature}, Page ${tempT2page.id} temp: ${tempT2page.temperature}`);
+            }
             if (left <= right) {
                 const temp = s.tier2CurPages[algoIndex][tempT2Index];
                 s.tier2CurPages[algoIndex][tempT2Index] = foundPageT3;

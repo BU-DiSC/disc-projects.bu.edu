@@ -70,6 +70,9 @@ function generateWorkload() {
     else if (fixedId === 1) {
         return savedWorkloadFixed1;
     }
+    else if (fixedId === 2) {
+        return savedWorkloadFixed2;
+    }
 }
 
 function generateWorkloadOriginal() {
@@ -205,10 +208,13 @@ function printWorkloadStats(workload) {
 
 function getWorkloadEnqueueTimeEstimate(workload) {
     if (fixedId === 0) {
-        getWorkloadEnqueueTimeEstimateOriginal(workload);
+        return getWorkloadEnqueueTimeEstimateOriginal(workload);
     }
     else if (fixedId === 1) {
         return perReqEnqueueTimeFixed1; // in microseconds, using the estimate from the fixed trace for now
+    }
+    else if (fixedId === 2) {
+        return perReqEnqueueTimeFixed2; // in microseconds, using the estimate from the fixed trace for now
     }
 }
 

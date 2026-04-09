@@ -130,9 +130,9 @@ function renderTemperature(tier1, tier2, tier3, algorithms, algNo, currentRound)
             } else if (algorithmName === "tTemp" || algorithmName === "tRL") {
                 tooltipSuffix = `${page.temperature.toFixed(2)}`;
                 hotness = page.temperature;
-                if (page.id === 42 || page.id === 26 || page.id === 15 || page.id === 21) {
-                    console.log(`Page ${page.id} temperature ${page.temperature} in algorithm ${algorithmName} at round ${currentRound}`);
-                }
+                // if (page.id === 42 || page.id === 26 || page.id === 15 || page.id === 21) {
+                //     console.log(`Page ${page.id} temperature ${page.temperature} in algorithm ${algorithmName} at round ${currentRound}`);
+                // }
             }
 
             hotness = Math.max(0, Math.min(1, hotness)); // clamp to [0, 1]
