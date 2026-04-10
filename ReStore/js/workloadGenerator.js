@@ -180,7 +180,7 @@ function generateWorkloadOriginal() {
     }
     console.log("Generated workload, len = ", workload.length);
     console.log(workload);
-    printWorkloadStats(workload);
+    // printWorkloadStats(workload);
     return workload;
 }
 
@@ -240,9 +240,10 @@ function getWorkloadEnqueueTimeEstimateOriginal(workload) {
         }
     }
     const end = performance.now();
-    console.log(`Average time to enqueue 100 requests: ${(end - start)*1000 / Math.min(workload.length, 100)} microseconds`);
-    return (end - start) * 1000 / Math.min(workload.length, 100); // in microseconds
-
+    const actualTime = (end - start) * 1000 / Math.min(workload.length, 100); // in microseconds
+    const safetyMarginMultiplier = 5; // Add a safety margin to account for variability
+    // console.log(`Average time to enqueue 100 requests: ${(end - start)*1000 / Math.min(workload.length, 100)} microseconds`);
+    return actualTime * safetyMarginMultiplier; // in microseconds
 }
 
 $(document).ready(function () {

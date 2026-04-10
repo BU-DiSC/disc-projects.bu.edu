@@ -1,5 +1,3 @@
-const threadPoolEnabled = false;
-
 // tierRatioCapacities[[totalPage, [tier1%, tier2%, tier3%], [totalPage, [tier1%, tier2%, tier3%]], ...]
 const tierRatioCapacities = [[44, [3, 8, 89]], [48, [3, 16, 81]], [46, [6, 9, 85]], [50, [12, 16, 72]], [51, [10, 20, 70]], [46, [9, 26, 65]]];
 var tierConfig = tierRatioCapacities[5]; // Default to last (custom) configuration
