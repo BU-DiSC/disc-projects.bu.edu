@@ -42,19 +42,25 @@
 		<div class="container">
       <!-- SSE: change ACE to ReStore, update texts in the following part -->
 			<div class="row section-title text-center">
-        <h2> What is ACE and why do we need it? </h2>
+        <h2> What is Restore and why do we need it? </h2>
 			</div>
       <div class="row">
         <p>
-          <img class="img-responsive img-centered" src="./img/modern_devices.png" alt="" align="left" width=20% style="margin-left:10%;margin-right:10%" />
-          <b>ACE</b> is a new bufferpool manager that addresses two challenges of the state-of-the-art bufferpool managers. 
-          First, existing bufferpool managers often assume that the underlying devices have no concurrency. As a result,
-          they write (evict) one page at a time, missing the opportunity to exploit the device's ability to handle parallel writes.
-          Second, page replacement policies generally do not consider the device asymmetry, instead, they treat read and write requests equally.
+          <img class="img-responsive img-centered" src="./img/restore_intro.png" alt="" align="left" width=40% style="margin-left:2%;margin-right:2%" />
+          With the development of storage technologies, a wide variety of storage devices with different performance
+          characteristics and cost profiles have emerged. Consequently, modern data systems are increasingly adopting
+          multi-tiered storage solutions, where faster (but typically smaller) devices are placed in higher tiers, while
+          lower tiers comprise slower, higher-capacity devices. A primary challenge in such systems is fine-grained data
+          placement, i.e., determining how data blocks should be dynamically stored and migrated across different storage
+          tiers to optimize overall performance. Effective data migration policies should be lightweight and adaptive to
+          workload variations while considering storage device characteristics, notably the read/write asymmetry and
+          parallelism of modern SSDs. In this paper, we introduce ReStore, a lightweight page-level reinforcement
+          learning (RL) approach for data migration in multi-tiered storage systems, addressing both the performance
+          and fine-grained access challenges common in database systems.
           </p>
     		</div>
       <hr >
-      <div class="row">
+      <!-- <div class="row">
         <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 mt-3"  >
           <div class="row section-title text-center" style="border-width:5px;border-radius: 20px;
     border-style:dotted;">
@@ -67,20 +73,19 @@
     				<h3> ACE buffer pool design space </h3>
     			</div>
         </div>
-      </div>
+      </div> -->
       <div class="row text-center" style="margin-top:-30px">
-        <img class="img-responsive img-centered" src="./img/defualt-design1024_1.png" alt="" width=50% />
-        <img class="img-responsive img-centered" src="./img/new-design1024_1.png" alt = "" width="50%" />
+        <img class="img-responsive img-centered" src="./img/restore_motivation.png" alt="" width="100%">
       </div>
 			<div class="row">
 				<div>
           <br>
           <p>
-            To address these issues, we propose ACE, a bufferpool manager that utilizes the underlying device concurrency and assymetry. 
-            Our approach uses asymmetry/concurrency-aware write-back and eviction policies. 
-            The write-back policy always writes multiple pages concurrently, hence amortizing the write cost. 
-            The eviction policy evicts one or multiple pages at the same time from the bufferpool to enable prefetching.
-            When multiple pages are evicted at once, <i>ACE</i> can concurrently prefetch pages to exploit the device's read concurrency.
+            Popular policies like EXD and LRFU capture workload features via utility function but ignore
+            device properties and struggle with workload drift. tLRU and tLFU capture access statistics, but are slow to
+            adapt to drift and do not consider device properties. ReStore captures workload features and device
+            properties and can adapt to dynamic workloads. Among the three workloads, A is more skewed, and YCSB
+            shows higher drift. Our approach outperforms the state of the art by up to 2.2×.
           </p>
 				</div>
 			</div>
@@ -91,55 +96,26 @@
 	<section class="bg-light">
 		<div class="container">
 			<div class="row section-title text-center">
-				<h2> Abstract Overview of ACE Components </h2>
+				<h2> Abstract Overview of ReStore Components </h2>
 			</div>
 
       <div class="row">
         <p>
-          When a request for reading or writing page P is received, we first search through the bufferpool.
-          If P is not found and the bufferpool is full, then at least one page has to be evicted.
-          The page replacement algorithm determines the page to be evicted.
-          If the top page is clean, it is evicted and paage P is fetched. Until this part,
-          Ace is identical to any state-of-the-art bufferpool manager. However, if the top page is dirty, ACE proceeds as follows: <br>
-          • ACE without prefetching: concurrently write nw dirty pages and evict a single page. <br>
-          • ACE with prefetching: concurrently write nw dirty pages, evict ne pages, and concurrently prefetch ne - 1 pages. <br>
-          The values nw and ne depend on the underlying device concurrency and the potential benefits of prefetching. 
-          When prefetching is enabled, ACE evicts ne pages in order to prefetch ne - 1 pages exploiting the read concurrency of the device.
+          In ReStore, RL agents manage page migrations in a multi-tiered storage system. Upon
+          an I/O request, the page is served from its current tier, while ReStore decides in the background whether
+          migration is needed based on RL agents and state values.
+          Here we illustrate the workflow of ReStore framework, in which data migration between neighboring tiers is coordinated by
+          their respective agents toward a unified goal – minimizing overall system response time. This
+          multi-agent design provides scalability, flexibility, and efficiency, with scalability arising from the
+          ability to adapt to varying numbers of tiers by simply adding or removing RL agents, and efficiency
+          stemming from the fact that only one agent needs to be updated when the status of a tier changes.
         </p>
         <br>
-        <img class="img-responsive img-centered" src="./img/design-space1024_1.png" alt="" width="1000px">
+        <img class="img-responsive img-centered" src="./img/ReStore_architecture.png" alt="" width="100%">
         <br>
       </div>
 
 		</div>
-	</section>
-
-  <section id="research" style="margin:0 10px">
-    <div class="container">
-      <div class="row text-center">
-        <h2> ACE: Case Example </h2>
-      </div>
-      <div class="row">
-        <div class="col-lg-12">
-            <p> Below is an example of ACE processing through one read request with a full bufferpool using LRU.
-            </p>
-            <br>
-        </div>
-      </div>
-      <div class="col-lg-12 text-center">
-        <img class="img-responsive img-centered" src="./img/ace_example.png" alt="" width="650px">
-        <!-- SSE: Change this with restore_example.png -->
-      </div>
-      <div class="row">
-        <div class="col-lg-12">
-          <br>
-          <p> ACE page selection policies for nw = 3 and ne = 3. ACE writes three dirty pages (p6, p4, p2) following the
-          LRU order; if prefetching is enabled three pages (p6, p5, p4) are evicted, otherwise one page (p6) is evicted.
-          </p>
-        </div>
-      </div>
-    </div>
-
 	</section>
 
   <footer id="page-bottom"></footer>
