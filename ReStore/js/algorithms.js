@@ -108,7 +108,7 @@ const state = {
         // Sliding window for dynamic a_i, b_i updates
         s1T1List: [0.5], s1T2List: [0.5], s1T3List: [0.5],
         s2T1List: [0], s2T2List: [0], s2T3List: [0],
-        numElementsToConsider: 2,//300,
+        numElementsToConsider: 300,
 
         approxTimeElapsed: 0,
         approxT1QueueSizeEstimate: 0,
@@ -2253,6 +2253,44 @@ function rlLearn(s, algoIndex) {
 }
 
 // revisit this function
+
+function computeAB(s1List, s2List, tierType, concurrency, readLat, alpha, a_scale) {
+    const min_s1 = Math.min(...s1List);
+    const max_s1 = Math.max(...s1List);
+    const min_s2 = Math.min(...s2List);
+    const max_s2 = Math.max(...s2List);
+
+    const s1_last = s1List.length > 1 ? s1List[s1List.length - 2] : s1List[s1List.length - 1];
+
+    let average_s1;
+
+    if (tierType === 1) {
+        // Match C++ Tier1
+        average_s1 = (max_s1 + s1_last) / 2;
+    } else {
+        // Match C++ Tier2 & Tier3
+        average_s1 = (max_s1 + min_s1) / 2;
+        if (tierType === 3) {
+            average_s1 = Math.max(average_s1, 1e-4); // Revisit
+        }
+    }
+
+    let range_s1 = max_s1 - min_s1;
+    range_s1 = Math.max(range_s1, 0.1 / totalPages);
+
+    const avg_s2 = (max_s2 + min_s2) / 2;
+    let rng_s2 = max_s2 - min_s2;
+    rng_s2 = Math.max(rng_s2, cal_s2(2, concurrency, readLat, alpha));
+
+    const b_i = [5 / range_s1, 5 / rng_s2];
+    const a_i = [
+        Math.exp(a_scale * average_s1 * 5 / range_s1),
+        Math.exp(a_scale * avg_s2 * 5 / rng_s2)
+    ];
+
+    return { a_i, b_i };
+}
+
 function updateAB(s, algoIndex) {
     const avgT1 = getAvgTemp(s.tier1CurPages[algoIndex]);
     const avgT2 = getAvgTemp(s.tier2CurPages[algoIndex]);
@@ -2285,33 +2323,9 @@ function updateAB(s, algoIndex) {
     const exponent = Math.floor(Math.log10(1.0 / totalPages));
     const a_scale = Math.pow(10, exponent);
 
-    // Helper: compute a_i, b_i from sliding window
-    function computeAB(s1List, s2List, concurrency, readLat, alpha) {
-        const min_s1 = Math.min(...s1List);
-        const max_s1 = Math.max(...s1List);
-        const min_s2 = Math.min(...s2List);
-        const max_s2 = Math.max(...s2List);
-
-        const s1_last = s1List[s1List.length - 2] || s1List[s1List.length - 1]; // previous value
-        const average_s1 = (max_s1 + s1_last) / 2;  // match C++ agent1 formula
-        let range_s1 = max_s1 - min_s1;
-        range_s1 = Math.max(range_s1, 0.1 / totalPages);
-
-        const avg_s2 = (max_s2 + min_s2) / 2;
-        let rng_s2 = max_s2 - min_s2;
-        rng_s2 = Math.max(rng_s2, cal_s2(2, concurrency, readLat, alpha));
-
-        const b_i = [5 / range_s1, 5 / rng_s2];
-        const a_i = [
-            Math.exp(a_scale * average_s1 * 5 / range_s1),
-            Math.exp(a_scale * avg_s2 * 5 / rng_s2)
-        ];
-        return { a_i, b_i };
-    }
-
-    const ab1 = computeAB(s.s1T1List, s.s2T1List, s.t1Concurrency, s.t1ReadLatency, s.t1AlphaVal);
-    const ab2 = computeAB(s.s1T2List, s.s2T2List, s.t2Concurrency, s.t2ReadLatency, s.t2AlphaVal);
-    const ab3 = computeAB(s.s1T3List, s.s2T3List, s.t3Concurrency, s.t3ReadLatency, s.t3AlphaVal);
+    const ab1 = computeAB(s.s1T1List, s.s2T1List, 1, s.t1Concurrency, s.t1ReadLatency, s.t1AlphaVal, a_scale);
+    const ab2 = computeAB(s.s1T2List, s.s2T2List, 2, s.t2Concurrency, s.t2ReadLatency, s.t2AlphaVal, a_scale);
+    const ab3 = computeAB(s.s1T3List, s.s2T3List, 3, s.t3Concurrency, s.t3ReadLatency, s.t3AlphaVal, a_scale);
 
     s.rlAgent1.a_i = ab1.a_i; s.rlAgent1.b_i = ab1.b_i;
     s.rlAgent2.a_i = ab2.a_i; s.rlAgent2.b_i = ab2.b_i;
@@ -2508,26 +2522,11 @@ function tRL(s) {
             s.simActions[algoIndex].push({ op: 'R', tierId: 1, cellId: foundPageT1Index });
         }
 
-        var timeOfCompletion = ((s.tier1write[algoIndex] + s.tier2_1Migration[algoIndex]) * s.t1Alpha +
-            (s.tier1read[algoIndex] + s.tier2_1Migration[algoIndex])) * s.t1ReadLatency;    // in microseconds
-        var totalEnqueuedReqCount = Math.floor(timeOfCompletion / state.config.perReqEnqueueTime);
-        // console.log(`Page ${page} in Tier 1, Time of completion: ${timeOfCompletion} microseconds, Total enqueued req count: ${totalEnqueuedReqCount}`);
         updateApproxQueueSizes(s, algoIndex, currentRound);
-        // sleep(3*s.delay);
         // temperature decay of all pages
         decayTemperatures(s.tier1CurPages[algoIndex], currentRound);
         decayTemperatures(s.tier2CurPages[algoIndex], currentRound);
         decayTemperatures(s.tier3CurPages[algoIndex], currentRound);
-
-        // ===== FIX: RL STATE STORE FOR T1 HIT ===== ???
-        // const state_t1 = getState(s, 1, algoIndex);
-        // const [cost_t1, phi_t1] = s.rlAgent1.cost_phi(state_t1);
-
-        // s.lastStateT1 = state_t1;
-        // s.lastCostT1 = cost_t1;
-        //s.sumPhiT1 = phi_t1;
-        // s.lastPhiT1 = phi_t1;
-        // s.sumPhiT1 = s.sumPhiT1.map((v, i) => v + phi_t1[i]);
 
         // learn
         rlLearn(s, algoIndex);
@@ -2538,7 +2537,6 @@ function tRL(s) {
     // CASE 2: Page in Tier 2
     // ----------------------------------
     const foundPageT2Index = s.tier2CurPages[algoIndex].findIndex(p => p.id === page);
-    // console.log(s.tier2CurPages[algoIndex], foundPageT2Index);
 
     if (foundPageT2Index !== -1) {
         s.tier2Queue[algoIndex].push(type);
@@ -2557,12 +2555,6 @@ function tRL(s) {
             s.simActions[algoIndex].push({ op: 'R', tierId: 2, cellId: foundPageT2Index });
         }
 
-        // sleep(s.delay);
-
-        var timeOfCompletion = ((s.tier2write[algoIndex] + s.tier2_1Migration[algoIndex] + s.tier2_3Migration[algoIndex]) * s.t2Alpha +
-            (s.tier2read[algoIndex] + s.tier2_1Migration[algoIndex] + s.tier2_3Migration[algoIndex])) * s.t2ReadLatency;
-        var totalEnqueuedReqCount = Math.floor(timeOfCompletion / state.config.perReqEnqueueTime);
-        // console.log(`Page ${page} in Tier 2, Time of completion: ${timeOfCompletion} microseconds, Total enqueued req count: ${totalEnqueuedReqCount}`);
         updateApproxQueueSizes(s, algoIndex, currentRound);
 
         const tempInfo = getTemperaturePage(s.tier1CurPages[algoIndex]);
@@ -2652,6 +2644,7 @@ function tRL(s) {
                 console.log(`Page ${foundPageT2.id} temp: ${foundPageT2.temperature}, Page ${tempT1page.id} temp: ${tempT1page.temperature}`);
             }
 
+            // if (left <= right && foundPageT2.temperature > Math.max(victimTemp, minT1MigrationTemp)) {
             if (left <= right) {
                 s.tier1Queue[algoIndex].push("R");
                 s.tier2Queue[algoIndex].push("W");
@@ -2665,16 +2658,6 @@ function tRL(s) {
                 s.tier2_1Migration[algoIndex]++;
                 s.simActions[algoIndex].push({ op: 'M', tierId: 2, cellId: [foundPageT2Index, tempT1Index] });
 
-                // highlightCells([`tier2alg2-${foundPageT2Index}`], "highlight-from", s.delay);
-                // highlightCells([`tier1alg2-${tempT1Index}`], "highlight-to", s.delay);
-
-                // sleep(s.delay);
-
-                // renderUpdatedTiers(2, 1, foundPageT2Index, tempT1Index, 2);
-
-                // highlightCells([`tier2alg2-${foundPageT2Index}`], "highlight-from", s.delay);
-                // highlightCells([`tier1alg2-${tempT1Index}`], "highlight-to", s.delay);
-                // sleep(s.delay);
             }
         }
         // temperature decay of all pages
@@ -2794,6 +2777,7 @@ function tRL(s) {
             console.log(`Tier 3 after state - s1: ${s1_t3_af}, s2: ${s2_t3_af}, cost: ${cost_t3_af}`);
             console.log(`Tier 2 after state - s1: ${s1_t2_af}, s2: ${s2_t2_af}, cost: ${cost_t2_af}`);
             console.log(`Left (cost_t2_be + cost_t3_be): ${left}, Right (cost_t2_af + cost_t3_af): ${right}`);
+            // if (left <= right && foundPageT3.temperature > Math.max(victimTemp, minT2MigrationTemp)) {
             if (left <= right) {
                 console.log(`Migrating page ${foundPageT3.id} from Tier 3 to Tier 2, swapping with page ${tempT2page.id} in Tier 2`);
                 console.log(`Page ${foundPageT3.id} temp: ${foundPageT3.temperature}, Page ${tempT2page.id} temp: ${tempT2page.temperature}`);
