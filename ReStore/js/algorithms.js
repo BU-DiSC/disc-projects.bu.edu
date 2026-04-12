@@ -108,7 +108,7 @@ const state = {
         // Sliding window for dynamic a_i, b_i updates
         s1T1List: [0.5], s1T2List: [0.5], s1T3List: [0.5],
         s2T1List: [0], s2T2List: [0], s2T3List: [0],
-        numElementsToConsider: 300,
+        numElementsToConsider: 30,//300,
 
         approxTimeElapsed: 0,
         approxT1QueueSizeEstimate: 0,
@@ -158,28 +158,15 @@ function resetTiersState() {
     s.pauser = false;
     s.reloader = 0;
     s.playing = false;
-    s.delay = state.config.medium_step_delay;
+    s.delay = state.config.slow_step_delay;
     s.started = false;
-    s.finished = false;
-
-    // Independent tier variables
-    s.t1AlphaVal = 1;
-    s.t2AlphaVal = 1;
-    s.t3AlphaVal = 1;
-
-    s.t1ReadLatency = 0;
-    s.t2ReadLatency = 0;
-    s.t3ReadLatency = 0;
-
-    s.t1Concurrency = 1;
-    s.t2Concurrency = 1;
-    s.t3Concurrency = 1;
+    s.finished = true;
 
     s.workload = [];
     s.p = 0;
 
     s.algorithms = [tLRU, tLFU, tTemp, tRL, null, null, null];
-
+    
     // Reset rl specific things
     s.lastCostT1 = 0;
     s.lastCostT2 = 0;
@@ -213,7 +200,7 @@ function resetTiersState() {
     // Reset sliding windows
     s.s1T1List = [0.5]; s.s1T2List = [0.5]; s.s1T3List = [0.5];
     s.s2T1List = [0]; s.s2T2List = [0]; s.s2T3List = [0];
-
+    
     s.approxTimeElapsed = 0;
 
     s.simActions = [[], [], [], [], [], [], []];
@@ -651,7 +638,8 @@ $(document).ready(function () {
         if (!s.playing) {
             if (!capacity()) return;
 
-            initTiers();
+            // initTiers();
+            initializeWithRandomPages(s);
             resetPlots();
             const algorithms = [tLRU, tLFU, tTemp, tRL];
 
@@ -668,7 +656,7 @@ $(document).ready(function () {
                 // state.config.perReqEnqueueTime = workloadEnqueueTimeEstimatePerReq;
                 // let's hardcode this to 5, uncomment the above two lines to avoid hardcoding
                 // but then it will be device specific and run specific, not consistent
-                state.config.perReqEnqueueTime = 5;
+                state.config.perReqEnqueueTime = 2//15;
 
                 printSimulationInputs(state.config.perReqEnqueueTime, tier1, tier2, tier3, s.workload)
                 // console.log("Workload generated, length:", s.workload.length);
@@ -1766,6 +1754,7 @@ function getAvgTemp(tier) {
 
 function tTemp(s) {
     // console.log("Running tTemp");
+    const algoIndex = 2;
     const currentRound = s.p;
     const minAccessToT1 = 3;
     const minAccessToT2 = 1;
@@ -1804,9 +1793,12 @@ function tTemp(s) {
 
         // sleep(3*s.delay);
         // temperature decay of all pages
-        decayTemperatures(s.tier1CurPages[2], currentRound);
-        decayTemperatures(s.tier2CurPages[2], currentRound);
-        decayTemperatures(s.tier3CurPages[2], currentRound);
+        decayTemperatures(s.tier1CurPages[2], currentRound, 1, 0.002);
+        decayTemperatures(s.tier2CurPages[2], currentRound, 1, 0.002);
+        decayTemperatures(s.tier3CurPages[2], currentRound, 1, 0.002);
+        // decayTemperatures(s.tier1CurPages[algoIndex], currentRound, 10, 0.02);
+        // decayTemperatures(s.tier1CurPages[algoIndex], currentRound, 10, 0.02);
+        // decayTemperatures(s.tier1CurPages[algoIndex], currentRound, 10, 0.02);
         return;
     }
 
@@ -1867,9 +1859,12 @@ function tTemp(s) {
             }
         }
         // temperature decay of all pages
-        decayTemperatures(s.tier1CurPages[2], currentRound);
-        decayTemperatures(s.tier2CurPages[2], currentRound);
-        decayTemperatures(s.tier3CurPages[2], currentRound);
+        decayTemperatures(s.tier1CurPages[2], currentRound, 1, 0.002);
+        decayTemperatures(s.tier2CurPages[2], currentRound, 1, 0.002);
+        decayTemperatures(s.tier3CurPages[2], currentRound, 1, 0.002);
+        // decayTemperatures(s.tier1CurPages[algoIndex], currentRound, 10, 0.02);
+        // decayTemperatures(s.tier1CurPages[algoIndex], currentRound, 10, 0.02);
+        // decayTemperatures(s.tier1CurPages[algoIndex], currentRound, 10, 0.02);
         return;
     }
 
@@ -1933,9 +1928,12 @@ function tTemp(s) {
             }
         }
         // temperature decay of all pages
-        decayTemperatures(s.tier1CurPages[2], currentRound);
-        decayTemperatures(s.tier2CurPages[2], currentRound);
-        decayTemperatures(s.tier3CurPages[2], currentRound);
+        decayTemperatures(s.tier1CurPages[2], currentRound, 1, 0.002);
+        decayTemperatures(s.tier2CurPages[2], currentRound, 1, 0.002);
+        decayTemperatures(s.tier3CurPages[2], currentRound, 1, 0.002);
+        // decayTemperatures(s.tier1CurPages[algoIndex], currentRound, 10, 0.02);
+        // decayTemperatures(s.tier1CurPages[algoIndex], currentRound, 10, 0.02);
+        // decayTemperatures(s.tier1CurPages[algoIndex], currentRound, 10, 0.02);
         return;
     }
     // coming here means did not find page in any tier, which is impossible if implementation is correct
@@ -1994,7 +1992,7 @@ class TDAgent {
     }
 }
 
-// ===== FIX: MATCH C++ =====
+// ---- FIX: MATCH C++ ----
 function cal_s2(queue, threads, read, asym) {
     // return queue/2000;
     const denominator = 2000;
@@ -2011,7 +2009,7 @@ function cal_s2(queue, threads, read, asym) {
     return s2;
 }
 
-// ===== INIT RL =====
+// ---- INIT RL ----
 function initRL(s, total_num_pages) {
 
     s.lastStateT1 = null;
@@ -2030,14 +2028,16 @@ function initRL(s, total_num_pages) {
     const beta = 0.1;
     const lam = 0.8; //1.5;// 0.8;
 
-    // ===== NEW: scaling from C++ =====
+    // ---- NEW: scaling from C++ ----
     const exponent = Math.floor(Math.log10(1.0 / total_num_pages));
     const a_scale = Math.pow(10, exponent);
 
-    // ===== NEW: Tier 1 =====
+    // ---- NEW: Tier 1 ----
     const init_rng_s2_t1 =
         cal_s2(2, s.t1Concurrency, s.t1ReadLatency, s.t1AlphaVal) -
         cal_s2(0, s.t1Concurrency, s.t1ReadLatency, s.t1AlphaVal);
+    console.warn("init_rng_s2_t1", init_rng_s2_t1);
+    console.warn(cal_s2(2, s.t1Concurrency, s.t1ReadLatency, s.t1AlphaVal), cal_s2(0, s.t1Concurrency, s.t1ReadLatency, s.t1AlphaVal));
 
     const init_avg_s2_t1 =
         cal_s2(1, s.t1Concurrency, s.t1ReadLatency, s.t1AlphaVal);
@@ -2052,7 +2052,7 @@ function initRL(s, total_num_pages) {
         Math.exp(a_scale * init_avg_s2_t1 * 5 / init_rng_s2_t1)
     ];
 
-    // ===== NEW: Tier 2 =====
+    // ---- NEW: Tier 2 ----
     const init_rng_s2_t2 =
         cal_s2(2, s.t2Concurrency, s.t2ReadLatency, s.t2AlphaVal) -
         cal_s2(0, s.t2Concurrency, s.t2ReadLatency, s.t2AlphaVal);
@@ -2070,7 +2070,7 @@ function initRL(s, total_num_pages) {
         Math.exp(a_scale * init_avg_s2_t2 * 5 / init_rng_s2_t2)
     ];
 
-    // ===== NEW: Tier 3 =====
+    // ---- NEW: Tier 3 ----
     const init_rng_s2_t3 =
         cal_s2(2, s.t3Concurrency, s.t3ReadLatency, s.t3AlphaVal) -
         cal_s2(0, s.t3Concurrency, s.t3ReadLatency, s.t3AlphaVal);
@@ -2088,7 +2088,7 @@ function initRL(s, total_num_pages) {
         Math.exp(a_scale * init_avg_s2_t3 * 5 / init_rng_s2_t3)
     ];
 
-    // ===== NEW: correct scaling factor =====
+    // ---- NEW: correct scaling factor ----
     const inv_scale = 1 / a_scale;
 
     console.log("DEBUG initRL: p_init", p_init, "beta ", beta, "lambda ", lam, "inv_scale ", inv_scale);
@@ -2124,9 +2124,7 @@ function reward_from_avgtemp(
     return reward;
 }
 
-// ================================
 // 3. STATE FUNCTION (MATCH C++)
-// ================================
 function getState(s, tierId, algoIndex = 3) {
     const avgTemp =
         tierId === 1 ? getAvgTemp(s.tier1CurPages[algoIndex]) :
@@ -2261,28 +2259,36 @@ function computeAB(s1List, s2List, tierType, concurrency, readLat, alpha, a_scal
     const max_s2 = Math.max(...s2List);
 
     const s1_last = s1List.length > 1 ? s1List[s1List.length - 2] : s1List[s1List.length - 1];
+    const s2_last = s2List.length > 1 ? s2List[s2List.length - 2] : s2List[s2List.length - 1];
 
     let average_s1;
 
-    if (tierType === 1) {
-        // Match C++ Tier1
-        average_s1 = (max_s1 + s1_last) / 2;
-    } else {
-        // Match C++ Tier2 & Tier3
-        average_s1 = (max_s1 + min_s1) / 2;
-        if (tierType === 3) {
-            average_s1 = Math.max(average_s1, 1e-4); // Revisit
-        }
-    }
+    average_s1 = (max_s1 + min_s1) / 2; // default to match C++ Tier1
+    // if (tierType === 1) {
+    //     // Match C++ Tier1
+    //     average_s1 = (max_s1 + s1_last) / 2;
+    // } else if (tierType === 2) {
+    //     average_s1 = (max_s1 + min_s1) / 2;
+    // } else {
+    //     // Match C++ Tier2 & Tier3
+    //     average_s1 = (max_s1 + min_s1) / 2.2;
+    //     if (tierType === 3) {
+    //         average_s1 = Math.max(average_s1, 1e-4); // Revisit
+    //     }
+    // }
 
     let range_s1 = max_s1 - min_s1;
     range_s1 = Math.max(range_s1, 0.1 / totalPages);
 
-    const avg_s2 = (max_s2 + min_s2) / 2;
+    let avg_s2 = (max_s2 + min_s2) / 2;
     let rng_s2 = max_s2 - min_s2;
     rng_s2 = Math.max(rng_s2, cal_s2(2, concurrency, readLat, alpha));
 
-    const b_i = [5 / range_s1, 5 / rng_s2];
+    let b_i = [5 / range_s1, 5 / rng_s2];
+    if (tierType === 3) {
+        //avg_s2 = s2_last;
+        b_i = [5 / range_s1, 5 / rng_s2];
+    }
     const a_i = [
         Math.exp(a_scale * average_s1 * 5 / range_s1),
         Math.exp(a_scale * avg_s2 * 5 / rng_s2)
@@ -2436,7 +2442,7 @@ function tRL(s) {
     const minT1MigrationTemp = 1 - 0.5 / Math.exp(tempAlpha * minAccessToT1);
     const minT2MigrationTemp = 1 - 0.5 / Math.exp(tempAlpha * minAccessToT2);
 
-    if (s.rlAgent1 == null) {
+    if (s.rlAgent1 === null) {
         // console.log("initRL inputs:", s.t1ReadLatency, s.t2ReadLatency, s.t3ReadLatency,
             // s.t1Concurrency, s.t2Concurrency, s.t3Concurrency,
             // s.t1AlphaVal, s.t2AlphaVal, s.t3AlphaVal);
@@ -2490,7 +2496,7 @@ function tRL(s) {
         s.sumPhiT3[i] += phi_t3[i];
     }
 
-    if (s.rlStartUpdate && (currentRound - s.rlStartUpdate_i < s.rlInitRounds || (currentRound - s.rlStartUpdate_i) % s.rlUpdateFreqs == 0)) {
+    if (s.rlStartUpdate && (currentRound - s.rlStartUpdate_i < s.rlInitRounds || (currentRound - s.rlStartUpdate_i) % s.rlUpdateFreqs === 0)) {
         s.lastStateT1 = state_t1_be;
         s.lastStateT2 = state_t2_be;
         s.lastStateT3 = state_t3_be;
@@ -2524,9 +2530,9 @@ function tRL(s) {
 
         updateApproxQueueSizes(s, algoIndex, currentRound);
         // temperature decay of all pages
-        decayTemperatures(s.tier1CurPages[algoIndex], currentRound);
-        decayTemperatures(s.tier2CurPages[algoIndex], currentRound);
-        decayTemperatures(s.tier3CurPages[algoIndex], currentRound);
+        decayTemperatures(s.tier1CurPages[algoIndex], currentRound, 1, 0.002);
+        decayTemperatures(s.tier2CurPages[algoIndex], currentRound, 1, 0.002);
+        decayTemperatures(s.tier3CurPages[algoIndex], currentRound, 1, 0.002);
 
         // learn
         rlLearn(s, algoIndex);
@@ -2566,7 +2572,7 @@ function tRL(s) {
             const victimTemp = getAvgTemp(s.tier1CurPages[algoIndex]);
 
             // if (foundPageT2.temperature > Math.max(victimTemp, minT1MigrationTemp)) {
-            //===== RL DECISION (Tier2 to Tier1) =====
+            //---- RL DECISION (Tier2 to Tier1) ----
             const state_t2_be = getState(s, 2, algoIndex);
             const state_t1_be = getState(s, 1, algoIndex);
 
@@ -2600,7 +2606,7 @@ function tRL(s) {
             const left = cost_t1_be + cost_t2_be;
             const right = cost_t1_af + cost_t2_af;
 
-            // ===== STORE FOR LEARNING =====
+            // ---- STORE FOR LEARNING ----
             s.lastStateT1 = state_t1_be;
             s.lastStateT2 = state_t2_be;
 
@@ -2630,10 +2636,10 @@ function tRL(s) {
             console.log(`Page ${foundPageT2.id} temp: ${foundPageT2.temperature}, Page ${tempT1page.id} temp: ${tempT1page.temperature}`);
             console.log(`Approx queue size before - Tier 2: ${s.approxT2QueueSizeEstimate}, Tier 1: ${s.approxT1QueueSizeEstimate}`);
             console.log(`Approx queue size after - +2 to both previous queue sizes`);
-            console.log(`Tier 2 before state - s1: ${state_t2_be[0]}, s2: ${state_t2_be[1]}, cost: ${cost_t2_be}`);
-            console.log(`Tier 1 before state - s1: ${state_t1_be[0]}, s2: ${state_t1_be[1]}, cost: ${cost_t1_be}`);
-            console.log(`Tier 2 after state - s1: ${s1_t2_af}, s2: ${s2_t2_af}, cost: ${cost_t2_af}`);
-            console.log(`Tier 1 after state - s1: ${s1_t1_af}, s2: ${s2_t1_af}, cost: ${cost_t1_af}`);
+            console.log(`Tier 2 before state - s1: ${state_t2_be[0]}, s2: ${state_t2_be[1]}, cost: ${cost_t2_be}, phi: ${phi_t2}`);
+            console.log(`Tier 1 before state - s1: ${state_t1_be[0]}, s2: ${state_t1_be[1]}, cost: ${cost_t1_be}, phi: ${phi_t1}`);
+            console.log(`Tier 2 after state - s1: ${s1_t2_af}, s2: ${s2_t2_af}, cost: ${cost_t2_af}, phi: ${phi_t2_af}`);
+            console.log(`Tier 1 after state - s1: ${s1_t1_af}, s2: ${s2_t1_af}, cost: ${cost_t1_af}, phi: ${phi_t1_af}`);
             console.log(`Left (cost_t1_be + cost_t2_be): ${left}, Right (cost_t1_af + cost_t2_af): ${right}`);
             if (left <= right) {
                 console.log(`Migrating page ${foundPageT2.id} from Tier 2 to Tier 1, swapping with page ${tempT1page.id} in Tier 1`);
@@ -2658,13 +2664,15 @@ function tRL(s) {
                 s.tier2_1Migration[algoIndex]++;
                 s.simActions[algoIndex].push({ op: 'M', tierId: 2, cellId: [foundPageT2Index, tempT1Index] });
 
+                s
+
             }
         }
         // temperature decay of all pages
-        decayTemperatures(s.tier1CurPages[algoIndex], currentRound);
-        decayTemperatures(s.tier2CurPages[algoIndex], currentRound);
-        decayTemperatures(s.tier3CurPages[algoIndex], currentRound);
-        // ===== RL LEARNING =====
+        decayTemperatures(s.tier1CurPages[algoIndex], currentRound, 1, 0.002);
+        decayTemperatures(s.tier2CurPages[algoIndex], currentRound, 1, 0.002);
+        decayTemperatures(s.tier3CurPages[algoIndex], currentRound, 1, 0.002);
+        // ---- RL LEARNING ----
         rlLearn(s, algoIndex);
         return;
     }
@@ -2710,7 +2718,7 @@ function tRL(s) {
             const victimTemp = getAvgTemp(s.tier2CurPages[algoIndex]);
 
             // if (foundPageT3.temperature > Math.max(victimTemp, minT2MigrationTemp)) {
-            // ===== RL DECISION (Tier3 to Tier2) =====
+            // ---- RL DECISION (Tier3 to Tier2) ----
             const state_t3_be = getState(s, 3, algoIndex);
             const state_t2_be = getState(s, 2, algoIndex);
 
@@ -2741,7 +2749,7 @@ function tRL(s) {
             const left = cost_t2_be + cost_t3_be;
             const right = cost_t2_af + cost_t3_af;
 
-            // ===== STORE FOR LEARNING =====
+            // ---- STORE FOR LEARNING ----
             s.lastStateT3 = state_t3_be;
             s.lastStateT2 = state_t2_be;
 
@@ -2772,10 +2780,10 @@ function tRL(s) {
             console.log(`Page ${foundPageT3.id} temp: ${foundPageT3.temperature}, Page ${tempT2page.id} temp: ${tempT2page.temperature}`);
             console.log(`Approx queue size before - Tier 3: ${s.approxT3QueueSizeEstimate}, Tier 2: ${s.approxT2QueueSizeEstimate}`);
             console.log(`Approx queue size after - +2 to both previous queue sizes`);
-            console.log(`Tier 3 before state - s1: ${state_t3_be[0]}, s2: ${state_t3_be[1]}, cost: ${cost_t3_be}`);
-            console.log(`Tier 2 before state - s1: ${state_t2_be[0]}, s2: ${state_t2_be[1]}, cost: ${cost_t2_be}`);
-            console.log(`Tier 3 after state - s1: ${s1_t3_af}, s2: ${s2_t3_af}, cost: ${cost_t3_af}`);
-            console.log(`Tier 2 after state - s1: ${s1_t2_af}, s2: ${s2_t2_af}, cost: ${cost_t2_af}`);
+            console.log(`Tier 3 before state - s1: ${state_t3_be[0]}, s2: ${state_t3_be[1]}, cost: ${cost_t3_be}, phi: ${phi_t3}`);
+            console.log(`Tier 2 before state - s1: ${state_t2_be[0]}, s2: ${state_t2_be[1]}, cost: ${cost_t2_be}, phi: ${phi_t2}`);
+            console.log(`Tier 3 after state - s1: ${s1_t3_af}, s2: ${s2_t3_af}, cost: ${cost_t3_af}, phi: ${phi_t3_af}`);
+            console.log(`Tier 2 after state - s1: ${s1_t2_af}, s2: ${s2_t2_af}, cost: ${cost_t2_af}, phi: ${phi_t2_af}`);
             console.log(`Left (cost_t2_be + cost_t3_be): ${left}, Right (cost_t2_af + cost_t3_af): ${right}`);
             // if (left <= right && foundPageT3.temperature > Math.max(victimTemp, minT2MigrationTemp)) {
             if (left <= right) {
@@ -2798,6 +2806,7 @@ function tRL(s) {
 
                 s.tier2_3Migration[algoIndex]++;
                 s.simActions[algoIndex].push({ op: 'M', tierId: 3, cellId: [foundPageT3Index, tempT2Index] });
+                
                 // highlightCells([`tier3alg2-${foundPageT3Index}`], "highlight-from", s.delay);
                 // highlightCells([`tier2alg2-${tempT2Index}`], "highlight-to", s.delay);
                 // s.simActions[2].push({ cell: `tier2alg2-${tempT2Index}`, class: "highlight-to" });
@@ -2812,11 +2821,11 @@ function tRL(s) {
             }
         }
         // temperature decay of all pages
-        decayTemperatures(s.tier1CurPages[algoIndex], currentRound);
-        decayTemperatures(s.tier2CurPages[algoIndex], currentRound);
-        decayTemperatures(s.tier3CurPages[algoIndex], currentRound);
+        decayTemperatures(s.tier1CurPages[algoIndex], currentRound, 1, 0.002);
+        decayTemperatures(s.tier2CurPages[algoIndex], currentRound, 1, 0.002);
+        decayTemperatures(s.tier3CurPages[algoIndex], currentRound, 1, 0.002);
 
-        // ===== RL LEARNING =====
+        // ---- RL LEARNING ----
         rlLearn(s, algoIndex);
         return;
     }

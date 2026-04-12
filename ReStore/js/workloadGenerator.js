@@ -256,16 +256,17 @@ $(document).ready(function () {
     const $s = $('#s'); //skewness
     const $d = $('#d'); // skewness data
 
-    const smallWorkload1 = [1000, 80, 10, 50];
-    const smallWorkload2 = [1000, 80, 10, 90];
-    const smallWorkload3 = [1000, 80, 10, 20];
-    const smallWorkload4 = [1000, 90, 5, 50];
-    const smallWorkload5 = [1000, 100, 100, 50];
+    const smallWorkload1 = [2500, 80, 10, 50];
+    const smallWorkload2 = [2500, 80, 10, 90];
+    const smallWorkload3 = [2500, 80, 10, 20];
+    const smallWorkload4 = [2500, 90, 5, 50];
+    const smallWorkload5 = [2500, 100, 100, 50];
     // const smallCustomWorkload = [100, 90, 10, 50]; // Placeholder for custom workload, will be updated with user inputs
-    const smallCustomWorkload = [1000, 80, 15, 50]; // Placeholder for custom workload, will be updated with user inputs
-    const smallDynamicWorkload = [[500, 500], [80, 90], [15, 5], [50, 50]];
+    const smallCustomWorkload = [2500, 80, 15, 50]; // Placeholder for custom workload, will be updated with user inputs
+    const smallDynamicWorkload1 = [[1000, 4000], [90, 100], [5, 100], [50, 50]];
+    const smallDynamicWorkload2 = [[2000, 3000], [80, 80], [10, 10], [20, 90]];
 
-    var workloads = [smallWorkload1, smallWorkload2, smallWorkload3, smallWorkload4, smallWorkload5, smallCustomWorkload, smallDynamicWorkload];
+    var workloads = [smallWorkload1, smallWorkload2, smallWorkload3, smallWorkload4, smallWorkload5, smallCustomWorkload, smallDynamicWorkload1, smallDynamicWorkload2];
     const ids = [$x, $s, $d, $e];
 
     $(document).on("change", "#workload", function () {
@@ -287,7 +288,7 @@ $(document).ready(function () {
                 }
                 var uiText = workload[i];
                 // special UI handling for #op, #skew, #data-skew to show two values for dynamic workload
-                if (workloadIndex === 7) {
+                if (workloadIndex === 7 || workloadIndex === 8) {
                     uiText = workload[i].join(",");
                 }
                 // console.log(uiText)
