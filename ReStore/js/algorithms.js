@@ -32,10 +32,6 @@ const state = {
         tier2ElapsedTime: [0, 0, 0, 0, 0, 0, 0],
         tier3ElapsedTime: [0, 0, 0, 0, 0, 0, 0],
 
-        // tier1ActiveThreads: [0,0,0,0,0,0,0],
-        // tier2ActiveThreads: [0,0,0,0,0,0,0],
-        // tier3ActiveThreads: [0,0,0,0,0,0,0],
-
         // algorithms
         algorithms: [tLRU, tLFU, tTemp, tRL, null, null, null],
 
@@ -73,9 +69,6 @@ const state = {
 
         workload: [],
         p: 0,
-        wFinishedIdx: [],
-        firstPendingIndex: 0,
-
 
         // rl specific things
         rlAgent1: null,
@@ -211,7 +204,6 @@ function resetAll() {
     resetTiersState();
     resetPlots();
     emptyTiers();
-    console.log(state.tiers.algorithms);
     renderTiers(tier1, tier2, tier3, state.tiers.algorithms, -1);
     updateProgress(0, 100);
     document.getElementById("curOp").textContent = "Read/Write from/to Page ??";
@@ -236,7 +228,6 @@ function resetStats() {
 }
 
 function resetPlots() {
-    console.log("🔄 Resetting # Total all plots...");
     state.tiers.latencyValuesForPlot = [[], [], [], [], [], [], []];
     state.tiers.migrationCountsForPlot = [[], [], [], [], [], [], []];
     state.tiers.t2t1MigrationCountsForPlot = [[], [], [], [], [], [], []];
@@ -296,7 +287,6 @@ function resetPlots() {
 
 function handleInputChange() {
     const s = state.tiers;
-    console.log("Input changed, resetting stats, stopping simulation, and clearing plots...");
 
     // Stop the Simulation
     s.playing = false;
@@ -316,13 +306,6 @@ function handleInputChange() {
     console.log("Simulation reset. Waiting for Play button.");
 }
 
-// Log user edits to individual input fields
-$(document).on("input", "input[type='number']", function () {
-    const id = $(this).attr("id");
-    const newValue = $(this).val();
-    console.log(`User manually changed ${id} → ${newValue}`);
-});
-
 $(document).on("change", "#device1, #device2, #device3", function () {
     const deviceIndex = parseInt($(this).val()) - 1;
     const id = $(this).attr("id");
@@ -333,8 +316,6 @@ $(document).on("change", "#device1, #device2, #device3", function () {
         console.warn("Invalid device index selected:", deviceIndex);
         return;
     }
-
-    console.log("Device changed:", id, "Index:", deviceIndex, "Values:", device);
 
     // Assign target input field IDs based on which dropdown was used
     let latencyId, asymId, alphaId;
@@ -379,12 +360,22 @@ $(document).on("change", "#tierRatios", function () {
 });
 
 // ensure in this function that changing top/mid tier capacity reflects in the bottom tier capacity so that sum is 100
-$(document).on("change", "#topTierCapacity, #midTierCapacity", function () {
-    const id = $(this).attr("id");
-    if (id === "topTierCapacity") {
+$(document).on("input", "#topTierCapacity, #midTierCapacity", function () {
+    const topTierCapacityValue = Number($("#topTierCapacity").val());
+    const midTierCapacityValue = Number($("#midTierCapacity").val());
+    if (isNaN(topTierCapacityValue) || isNaN(midTierCapacityValue) || topTierCapacityValue <= 0 || midTierCapacityValue <= 0 ||
+        topTierCapacityValue > midTierCapacityValue || midTierCapacityValue > (100 - topTierCapacityValue)/2 ||
+        topTierCapacityValue + midTierCapacityValue >= 66) {
+        alert("Please enter valid numbers for tier capacities (smallest to largest from top tier to bottom tier).");
+        const configIndex = parseInt($(tierRatios).val()) - 1;
+        tierConfig = tierRatioCapacities[configIndex];
+        initTierConfig(tierConfig, state.tiers.algorithms);
+        return;
     }
-    else if (id === "midTierCapacity") {
-    }
+    const bottomTierCapacityValue = 100 - topTierCapacityValue - midTierCapacityValue;
+    $("#bottomTierCapacity").val(bottomTierCapacityValue);
+    tierConfig = [totalPages, [topTierCapacityValue, midTierCapacityValue, bottomTierCapacityValue]];
+    initTierConfig(tierConfig, state.tiers.algorithms);
 });
 
 function clonePage(p) {
@@ -417,143 +408,7 @@ $(document).ready(function () {
     // Attach event listeners to all relevant inputs
     $("#workload, #e, #s, #x, #d").on("change input", handleInputChange);
     $("#asym1, #asym2, #asym3, #lat1, #lat2, #lat3, #alpha1, #alpha2, #alpha3, #device1, #device2, #device3").on("change input", handleInputChange);
-    $("#tierRatio, #topTierCapacity, #midTierCapacity, #bottomTierCapacity").on("change input", handleInputChange);
-
-    $("#backward-button").click(function () {
-        const s = state.tiers;
-        // need to fix the following later (if needed)
-        if (!s.workload || s.workload.length === 0) {
-            console.warn("No workload loaded. Cannot step backward.");
-            return;
-        }
-        // Pause simulation
-        s.playing = false;
-        s.pauser = true;
-        s.reloader = 1;
-
-        if (s.p > 0) {
-            s.p--;  // Step back BEFORE restoring state
-            console.log(`⏪ Backward: Step ${s.p}`);
-            // Restore state
-            resetStepState(s.p);
-
-            // Recalculate latency values
-            s.tradLatency = calculateLatency(s.writeIO, s.readIO, false) / 1000;
-            s.aceLatencyval = calculateLatency(s.ACEwriteIO, s.ACEreadIO, true) / 1000;
-
-            $("#base-alg-latency").text(s.tradLatency.toFixed(2));
-            $("#ace-alg-latency").text(s.aceLatencyval.toFixed(2));
-
-            // Update visuals
-            baseDisplay();
-            ACEDisplay();
-            updateProgress(s.p, s.workload.length);
-
-            // Remove sample *if* this step is just before a sample
-            const lastSample = s.sampled_steps[s.sampled_steps.length - 1];
-            if (lastSample !== undefined && s.p < lastSample) {
-                s.aceLatency.pop();
-                s.traditionalLatency.pop();
-                s.aceWriteBatches.pop();
-                s.traditionalWriteBatches.pop();
-                s.sampled_steps.pop();
-
-                // Update plot immediately after removal
-                updateLatencyPlot(s);
-                updateMigrationCountPlot(s);
-                updateIndivMigrationCountPlot(s);
-            }
-
-        } else {
-            console.warn("Already at the first step.");
-        }
-    });
-
-    $("#forward-button").click(function () {
-        const s = state.tiers;
-        // need to fix the following later (if needed)
-        if (!s.workload || s.workload.length === 0) {
-            console.warn("⚠️ No workload loaded. Cannot step forward.");
-            return;
-        }
-
-        // Pause simulation
-        s.playing = false;
-        s.pauser = true;
-        s.reloader = 0;
-
-        if (s.p < s.workload.length - 1) {
-            // Backup current state for rollback
-            s.bufferHistory[s.p] = JSON.parse(JSON.stringify(s.buffer));
-            s.dirtyHistory[s.p] = JSON.parse(JSON.stringify(s.dirty));
-            s.coldflagHistory[s.p] = JSON.parse(JSON.stringify(s.coldflag));
-            s.usesHistory[s.p] = JSON.parse(JSON.stringify(s.uses));
-
-            s.ACEbufferHistory[s.p] = JSON.parse(JSON.stringify(s.ACEbuffer));
-            s.ACEdirtyHistory[s.p] = JSON.parse(JSON.stringify(s.ACEdirty));
-            s.ACEcoldflagHistory[s.p] = JSON.parse(JSON.stringify(s.ACEcoldflag));
-            s.ACEusesHistory[s.p] = JSON.parse(JSON.stringify(s.ACEuses));
-
-            s.bufferHitHistory[s.p] = s.bufferHit;
-            s.bufferMissHistory[s.p] = s.bufferMiss;
-            s.readIOHistory[s.p] = s.readIO;
-            s.writeIOHistory[s.p] = s.writeIO;
-            s.pagesWrittenHistory[s.p] = s.pagesWritten;
-            s.pagesReadHistory[s.p] = s.pagesRead;
-            s.pagesEvictedHistory[s.p] = s.pagesEvicted;
-            s.pagesPrefetchedHistory[s.p] = s.pagesPrefetched;
-
-            s.ACEbufferHitHistory[s.p] = s.ACEbufferHit;
-            s.ACEbufferMissHistory[s.p] = s.ACEbufferMiss;
-            s.ACEreadIOHistory[s.p] = s.ACEreadIO;
-            s.ACEwriteIOHistory[s.p] = s.ACEwriteIO;
-            s.ACEpagesWrittenHistory[s.p] = s.ACEpagesWritten;
-            s.ACEpagesReadHistory[s.p] = s.ACEpagesRead;
-            s.ACEpagesEvictedHistory[s.p] = s.ACEpagesEvicted;
-            s.ACEpagesPrefetchedHistory[s.p] = s.ACEpagesPrefetched;
-
-            // Step forward
-            s.p++;
-            console.log(`▶️ Forward: Step ${s.p}`);
-
-            // Execute simulation step
-            s.baseAlgorithm(s.p, s);
-            s.ACEAlgorithm(s.p, s);
-
-            // Calculate latency in milliseconds
-            s.tradLatency = calculateLatency(s.writeIO, s.readIO, false) / 1000;
-            s.aceLatencyval = calculateLatency(s.ACEwriteIO, s.ACEreadIO, true) / 1000;
-
-            // Update on-screen latency values
-            $("#base-alg-latency").text(s.tradLatency.toFixed(2));
-            $("#ace-alg-latency").text(s.aceLatencyval.toFixed(2));
-
-            // ✅ Sample every 10 steps or final step
-            if (s.p % 10 === 0 || s.p === s.workload.length - 1) {
-                // Record sample
-                s.aceLatency.push(s.aceLatencyval);
-                s.traditionalLatency.push(s.tradLatency);
-                s.aceWriteBatches.push(s.ACEwriteIO);
-                s.traditionalWriteBatches.push(s.writeIO);
-
-                // Track sample point
-                s.sampled_steps.push(s.p);
-
-                updateMigrationCountPlot(s);
-                updateIndivMigrationCountPlot(s);
-                updateLatencyPlot(s);
-            }
-
-
-            // Update visual state
-            baseDisplay();
-            ACEDisplay();
-            updateProgress(s.p, s.workload.length);
-
-        } else {
-            console.warn("⚠️ Already at the last step.");
-        }
-    });
+    $("#tierRatios, #topTierCapacity, #midTierCapacity, #bottomTierCapacity").on("change input", handleInputChange);
 
     $("#fast-button").click(function () {
         const s = state;
@@ -572,11 +427,17 @@ $(document).ready(function () {
 
     $("#finish-button").click(function () {
         const s = state.tiers;
-        finisher();
+        finisher(s);
     });
 
     $("#play-button").click(function () {
-        console.log("Play button clicked.");
+        var playButtonText = $("#play-button-text");
+        if (playButtonText.text() === "PLAY") {
+            playButtonText.text("PAUSE");
+        }
+        else if (playButtonText.text() === "PAUSE") {
+            playButtonText.text("PLAY");
+        }
         // need to fix ui naming
         // curently alphaX means concurreny, asymX means alpha, latX means read latency
         // console.log("Raw UI values:",
@@ -601,12 +462,6 @@ $(document).ready(function () {
         const t2ConcurrencyVal = parseInt($("#alpha2").val());
         const t3ConcurrencyVal = parseInt($("#alpha3").val());
 
-        // console.log("Parsed parameter values:",
-        //     t1ReadLatencyVal, t2ReadLatencyVal, t3ReadLatencyVal,
-        //     t1ConcurrencyVal, t2ConcurrencyVal, t3ConcurrencyVal,
-        //     t1AlphaVal, t2AlphaVal, t3AlphaVal
-        // );
-
         const s = state.tiers;
 
         if (s.finished) {
@@ -628,16 +483,8 @@ $(document).ready(function () {
             s.t3Concurrency = t3ConcurrencyVal;
         }
 
-        console.log("State input parameter values:",
-            s.t1ReadLatency, s.t2ReadLatency, s.t3ReadLatency,
-            s.t1Concurrency, s.t2Concurrency, s.t3Concurrency,
-            s.t1Alpha, s.t2Alpha, s.t3Alpha
-        );
-
         // ── State 1: Fresh start ─────────────────────────────────────────────────
         if (!s.playing) {
-            if (!capacity()) return;
-
             // initTiers();
             initializeWithRandomPages(s);
             resetPlots();
@@ -659,16 +506,12 @@ $(document).ready(function () {
                 state.config.perReqEnqueueTime = 2//15;
 
                 printSimulationInputs(state.config.perReqEnqueueTime, tier1, tier2, tier3, s.workload)
-                // console.log("Workload generated, length:", s.workload.length);
-                // console.log("Estimated enqueue time per request (microseconds):", state.config.perReqEnqueueTime);
-
 
                 for (let i = 0; i < algorithms.length; i++) {
                     s.tier1CurPages[i] = tier1.map(clonePage);
                     s.tier2CurPages[i] = tier2.map(clonePage);
                     s.tier3CurPages[i] = tier3.map(clonePage);
                 }
-                // console.log(s.tier2CurPages[2].find(p => p.id === 15).reqRounds === s.tier2CurPages[3].find(p => p.id === 15).reqRounds);
                 renderTiers(tier1, tier2, tier3, algorithms, 0);
 
                 calculate(s, algorithms);
@@ -696,84 +539,18 @@ $(document).ready(function () {
         console.log("▶️ Simulation resumed.");
         myLoop(s);
     });
-
-    $("#progress-bar").on("input", function () {
-        const s = state.tiers;
-        // need to fix this later (if needed)
-        if (!s.workload || s.workload.length === 0) {
-            console.warn("⚠️ No workload loaded. Cannot update progress.");
-            return;
-        }
-
-        let newProgress = parseInt($(this).val());
-        let newStep = Math.round((newProgress / 100) * (s.workload.length - 1));
-        newStep = Math.max(0, Math.min(newStep, s.workload.length - 1)); // clamp
-
-        console.log(`⏩ Manual Progress Change: ${newProgress}% → Step ${newStep}`);
-
-        // Reset UI and internal state
-        resetStats();        // If this clears DOM visuals
-        resetTiersState();   // Clear metrics, buffer, flags, etc.
-
-        const samplingRate = 10;
-
-        for (let i = 0; i <= newStep; i++) {
-            if (s.workload[i] !== undefined) {
-                s.baseAlgorithm(i, s);
-                s.ACEAlgorithm(i, s);
-
-                if (i % samplingRate === 0 || i === newStep) {
-                    s.aceWriteBatches.push(s.ACEwriteIO);
-                    s.traditionalWriteBatches.push(s.writeIO);
-
-                    s.aceLatency.push(
-                        calculateLatency(s.ACEwriteIO, s.ACEreadIO, true) / 1000
-                    );
-                    s.traditionalLatency.push(
-                        calculateLatency(s.writeIO, s.readIO, false) / 1000
-                    );
-                }
-            }
-        }
-
-        s.p = newStep;
-
-        let baseReadLatency = parseFloat($('#lat').val()) || 1;
-        let asymmetry = parseFloat($('#asym').val()) || 1;
-
-        s.tradLatency = calculateLatency(s.writeIO, s.readIO, false, baseReadLatency, asymmetry) / 1000;
-        s.aceLatencyval = calculateLatency(s.ACEwriteIO, s.ACEreadIO, true, baseReadLatency, asymmetry) / 1000;
-
-        cleanACEBufferDisplay();
-        baseDisplay();
-        ACEDisplay();
-        updateProgress(s.p, s.workload.length);
-
-        const aceCumulative = cumulative(s.aceWriteBatches);
-        const tradCumulative = cumulative(s.traditionalWriteBatches);
-
-        console.log("   ACE cumulative write batches:", aceCumulative);
-        console.log("   Trad cumulative write batches:", tradCumulative);
-
-        // updateMigrationCountPlot(s.aceWriteBatches, s.traditionalWriteBatches);
-        // updateIndivMigrationCountPlot(s);
-        // updateLatencyPlot(s.aceLatency, s.traditionalLatency);
-        updateLatencyPlot(s);
-        updateMigrationCountPlot(s);
-        updateIndivMigrationCountPlot(s);
-    });
 });
 
 function myLoop(s) {
     const remainingSteps = s.workload.length - s.p;
 
     if (s.reloader === 1) {
-        console.warn("myLoop stopped.");
+        console.warn("Simulation stopped.");
         return;
     }
 
     if (remainingSteps <= 0) {
-        console.log("myLoop completed all steps.");
+        console.log("Completed all steps.");
         s.playing = false;
         s.finished = true;
         return;
@@ -783,7 +560,6 @@ function myLoop(s) {
         if (s.reloader === 1) return;
 
         if (!s.pauser) {
-            // console.log(s.p, s.workload[s.p])
             for (let i = 0; i < s.algorithms.length; i++) {
                 s.algorithms[i](s);
             }
@@ -808,8 +584,6 @@ function myLoop(s) {
 
         if (s.playing) {
             myLoop(s);
-        } else {
-            console.log("Simulation paused or stopped.");
         }
     }, s.delay);
 }
@@ -817,7 +591,6 @@ function myLoop(s) {
 /* Progress Bar Update Function */
 function updateProgress(currentStep, totalSteps) {
     let progressPercent = Math.round((currentStep / totalSteps) * 100);
-    // console.log(`   Step ${currentStep}/${totalSteps} → Progress: ${progressPercent}%`);
 
     $("#progress-bar").val(progressPercent);  // Update slider value
     $("#progress-label").text(progressPercent + "%");  // Update label
@@ -868,8 +641,6 @@ function updateMigrationCountPlot(s) {
         algorithmNames.push(s.algorithms[i].name === "tRL" ? "ReStore" : (s.algorithms[i].name === "tTemp" ? "TEMP" : s.algorithms[i].name));
     }
     const xValues = Array.from({ length: s.p }, (_, i) => i * state.config.plotUpdateInterval);
-
-    // console.log("Migration count values for plot:", s.migrationCountsForPlot);
 
     const traces = [
         {
@@ -937,8 +708,6 @@ function updateIndivMigrationCountPlot(s) {
         algorithmNames.push((s.algorithms[i].name === "tRL" ? "ReStore" : (s.algorithms[i].name === "tTemp" ? "TEMP" : s.algorithms[i].name)) + " T2&#8596;T3");
     }
     const xValues = Array.from({ length: s.p }, (_, i) => i * state.config.plotUpdateInterval);
-
-    // console.log("Migration count values for plot:", s.migrationCountsForPlot);
 
     const traces = [
         {
@@ -1041,9 +810,6 @@ function updateLatencyPlot(s) {
         algorithmNames.push(s.algorithms[i].name === "tRL" ? "ReStore" : (s.algorithms[i].name === "tTemp" ? "TEMP" : s.algorithms[i].name));
     }
 
-    // console.log("Latency values for plot:", latencyValues);
-
-    // TODO: replace with history if needed
     const xValues = Array.from({ length: s.p }, (_, i) => i * state.config.plotUpdateInterval);
 
     const traces = [
@@ -1126,18 +892,10 @@ function initializeWithRandomPages(s) {
 }
 
 function calculate(s, algorithms) {
-    // const s = state.indiv;
 
     const totalSteps = s.workload.length;
     console.log("Starting simulation...");
     updateProgress(0, totalSteps);
-
-    // Assign algorithms
-    // const ACEalgorithms = [ACELRU, ACECFLRU, ACELRUWSR];
-    // const baseAlgorithms = [baseLRU, baseCFLRU, baseLRUWSR];
-    // s.ACEAlgorithm = ACEalgorithms[baseAlgID];
-    // s.baseAlgorithm = baseAlgorithms[baseAlgID];
-    // s.baseAlgorithmID = baseAlgID;
 
     if (!s.started) {
         initializeWithRandomPages(s);
@@ -1163,95 +921,55 @@ function calculate(s, algorithms) {
     }
 }
 
-function finisher() {
-    const s = state.tiers;
-    // need to fix the following later (if needed)
-    if (!s.workload || s.workload.length === 0) {
-        console.warn("⚠️ No workload loaded. Cannot finish simulation.");
+function finisher(s) {
+    if (!s.workload || s.workload.length === 0 || s.p >= s.workload.length) {
+        console.warn("⚠️ No ongoing simulation.");
         return;
     }
     s.delay = state.config.finisher_step_delay;
-    // console.log("🏁 Finishing simulation from scratch...");
-
-    // s.playing = false;
-    // s.pauser = false;
-    // s.reloader = 0;
-
-    // // Reset simulation state (just like progress-bar logic)
-    // resetStats();
-
-    // s.buffer = [];
-    // s.dirty = [];
-    // s.coldflag = [];
-    // s.uses = {};
-
-    // s.ACEbuffer = [];
-    // s.ACEdirty = [];
-    // s.ACEcoldflag = [];
-    // s.ACEuses = {};
-
-    // s.bufferHit = 0;
-    // s.bufferMiss = 0;
-    // s.readIO = 0;
-    // s.writeIO = 0;
-    // s.pagesWritten = 0;
-    // s.pagesRead = 0;
-    // s.pagesEvicted = 0;
-    // s.pagesPrefetched = 0;
-
-    // s.ACEbufferHit = 0;
-    // s.ACEbufferMiss = 0;
-    // s.ACEreadIO = 0;
-    // s.ACEwriteIO = 0;
-    // s.ACEpagesWritten = 0;
-    // s.ACEpagesRead = 0;
-    // s.ACEpagesEvicted = 0;
-    // s.ACEpagesPrefetched = 0;
-
-    // s.aceWriteBatches = [];
-    // s.traditionalWriteBatches = [];
-    // s.aceLatency = [];
-    // s.traditionalLatency = [];
-
-    // let samplingRate = 10;
-
-    // // Re-parse the values
-    // let baseReadLatency = parseFloat($('#lat').val()) || 1;
-    // let asymmetry = parseFloat($('#asym').val()) || 1;
-
-    // for (let i = 0; i < s.workload.length; i++) {
-    //     s.baseAlgorithm(i, s);
-    //     s.ACEAlgorithm(i, s);
-
-    //     s.tradLatency = calculateLatency(s.writeIO, s.readIO, false, baseReadLatency, asymmetry) / 1000;
-    //     s.aceLatencyval = calculateLatency(s.ACEwriteIO, s.ACEreadIO, true, baseReadLatency, asymmetry) / 1000;
-
-    //     if (i % samplingRate === 0 || i === s.workload.length - 1) {
-    //         s.aceWriteBatches.push(s.ACEwriteIO);
-    //         s.traditionalWriteBatches.push(s.writeIO);
-    //         s.aceLatency.push(s.aceLatencyval);
-    //         s.traditionalLatency.push(s.tradLatency);
-    //     }
-    // }
-
-    // // Final latency calculation (in case last loop iteration didn’t run sampling block)
-    // s.tradLatency = calculateLatency(s.writeIO, s.readIO, false, baseReadLatency, asymmetry) / 1000;
-    // s.aceLatencyval = calculateLatency(s.ACEwriteIO, s.ACEreadIO, true, baseReadLatency, asymmetry) / 1000;
-
-    // s.p = s.workload.length - 1;
-
-    // baseDisplay();
-    // ACEDisplay();
-    // updateProgress(s.p, s.workload.length);
-    // updateMigrationCountPlot(s);
-    // updateIndivMigrationCountPlot(s);
-    // updateLatencyPlot(s);
-    // $("#play-button").prop('disabled', false);
+    s.pauser = true; // Ensure it's not paused
+    s.playing = false; // Ensure it's in playing state
+    s.finished = true; // Mark as finished to prevent further play
+    $("#play-button-text").text("PAUSE"); // Reset play button text
+    for (; s.p < s.workload.length; s.p++) {
+        for (let i = 0; i < s.algorithms.length; i++) {
+            s.algorithms[i](s);
+        }
+        if ((s.p - 1) % state.config.plotUpdateInterval === 0) {
+            for (let k = 0; k < s.algorithms.length; k++) {
+                s.latencyValuesForPlot[k].push(calculateLatencyFromTiers(k) / 1000);
+                s.migrationCountsForPlot[k].push(calculateTotalMigrationCountFromTiers(k));
+                s.t2t1MigrationCountsForPlot[k].push(s.tier2_1Migration[k]);
+                s.t2t3MigrationCountsForPlot[k].push(s.tier2_3Migration[k]);
+            }
+        }
+        // updateProgress(s.p, s.workload.length);
+        // if (s.p % 200 === 0) {
+        //     document.getElementById("curRound").textContent = s.p;
+        //     document.getElementById("curOp").textContent = s.workload[s.p-1][0] === 'R' ?
+        //         `Read from Page ${s.workload[s.p-1][1]}` : `Write to Page ${s.workload[s.p-1][1]}`;
+        //     for (let i = 0; i < s.algorithms.length; i++) {
+        //         algoDisplay(i, s);
+        //     }
+        //     updateLatencyPlot(s);
+        //     updateMigrationCountPlot(s);
+        //     updateIndivMigrationCountPlot(s);
+        // }
+    }
+    document.getElementById("curRound").textContent = s.p;
+    document.getElementById("curOp").textContent = s.workload[s.p-1][0] === 'R' ?
+        `Read from Page ${s.workload[s.p-1][1]}` : `Write to Page ${s.workload[s.p-1][1]}`;
+    for (let i = 0; i < s.algorithms.length; i++) {
+        algoDisplay(i, s);
+    }
+    updateLatencyPlot(s);
+    updateMigrationCountPlot(s);
+    updateIndivMigrationCountPlot(s);
+    s.p = s.workload.length; // Ensure progress is complete
+    $("#play-button-text").text("PLAY"); // Reset play button text
 }
 
 function algoDisplay(algoIndex, s) {
-    // console.log("Updating algoDisplay for algorithm:", algoIndex);
-
     let perAlgoDelay = s.delay * 0.9; // Allocate 90% of the delay to cell highlighting and tier updates
     let perActionDelay = perAlgoDelay;
     let cell1InHTML = null;
@@ -1368,15 +1086,9 @@ function getTemperaturePage(tier) {
 }
 
 function tLRU(s) {
-    // console.log("Running tLRU");
     const currentRound = s.p;
     const entry = s.workload[currentRound];
     if (!entry) return;
-
-    // console.log(entry);
-    // console.log(s.tier1CurPages[0]);
-    // console.log(s.tier2CurPages[0]);
-    // console.log(s.tier3CurPages[0]);
 
     const type = entry[0];   // "R" or "W"
     const page = entry[1];
@@ -1386,7 +1098,6 @@ function tLRU(s) {
     // ----------------------------------
     // Find the page index in tier1CurPages[0] whose id matches page from workload
     const foundPageT1Index = s.tier1CurPages[0].findIndex(p => p.id === page);
-    // console.log(`Page ${page} found in Tier 1 at index: ${foundPageT1Index}`);
     if (foundPageT1Index !== -1) {
         const foundPageT1 = s.tier1CurPages[0][foundPageT1Index];
         if (type === "W") {
@@ -1397,8 +1108,6 @@ function tLRU(s) {
             s.tier1read[0]++;
             //highlightCells([`tier1alg0-${foundPageT1Index}`], "highlight-read", s.delay);
             s.simActions[0].push({ op: 'R', tierId: 1, cellId: foundPageT1Index });
-        } else {
-            console.log("tLRU: Workload: Not W, Not R: What treachery is this!!");
         }
         foundPageT1.lastRequestRound = currentRound;  // update lastRequestRound
         //await sleep(500);
@@ -1410,7 +1119,6 @@ function tLRU(s) {
     // CASE 2: Page in Tier 2
     // ----------------------------------
     const foundPageT2Index = s.tier2CurPages[0].findIndex(p => p.id === page);
-    // console.log(`Page ${page} found in Tier 2 at index: ${foundPageT2Index}`);
     if (foundPageT2Index !== -1) {
         const foundPageT2 = s.tier2CurPages[0][foundPageT2Index];
         if (type === "W") {
@@ -1421,8 +1129,6 @@ function tLRU(s) {
             s.tier2read[0]++;
             //highlightCells([`tier2alg0-${foundPageT2Index}`], "highlight-read", s.delay);
             s.simActions[0].push({ op: 'R', tierId: 2, cellId: foundPageT2Index });
-        } else {
-            console.log("tLRU: Workload: Not W, Not R: What treachery is this!!");
         }
 
         //await sleep(500);
@@ -1483,7 +1189,6 @@ function tLRU(s) {
     // CASE 3: Page in Tier 3
     // ----------------------------------
     const foundPageT3Index = s.tier3CurPages[0].findIndex(p => p.id === page);
-    // console.log(`Page ${page} found in Tier 3 at index: ${foundPageT3Index}`);
 
     if (foundPageT3Index !== -1) {
 
@@ -1497,12 +1202,7 @@ function tLRU(s) {
             s.tier3read[0]++;
             // highlightCells([`tier3alg0-${foundPageT3Index}`], "highlight-read", s.delay);
             s.simActions[0].push({ op: 'R', tierId: 3, cellId: foundPageT3Index });
-        } else {
-            console.log("tLRU: Workload: Not W, Not R: What treachery is this!!");
         }
-        // sleep(s.delay);
-        //await sleep(500);
-        // sleep(500);
         // -----------------------------
         // Find LRU page in Tier 2
         // -----------------------------
@@ -1570,8 +1270,6 @@ function tLRU(s) {
 }
 
 function tLFU(s) {
-    // console.log("Running tLFU");
-
     const currentRound = s.p;
     const entry = s.workload[currentRound];
     if (!entry) return;
@@ -1583,7 +1281,6 @@ function tLFU(s) {
     // CASE 1: Page already in Tier 1
     // ----------------------------------
     const foundPageT1Index = s.tier1CurPages[1].findIndex(p => p.id === page);
-    // console.log(s.tier1CurPages[1], foundPageT1Index);
 
     if (foundPageT1Index !== -1) {
         const foundPageT1 = s.tier1CurPages[1][foundPageT1Index];
@@ -1607,7 +1304,6 @@ function tLFU(s) {
     // CASE 2: Page in Tier 2
     // ----------------------------------
     const foundPageT2Index = s.tier2CurPages[1].findIndex(p => p.id === page);
-    // console.log(s.tier2CurPages[1], foundPageT2Index);
 
     if (foundPageT2Index !== -1) {
 
@@ -1635,8 +1331,6 @@ function tLFU(s) {
 
             const victimFreq = lfuT1page.frequency ?? 0;
 
-            // console.log(victimFreq, foundPageT2.frequency);
-
             if (foundPageT2.frequency > victimFreq) {
 
                 const temp = s.tier1CurPages[1][lfuT1Index];
@@ -1662,7 +1356,6 @@ function tLFU(s) {
     // CASE 3: Page in Tier 3
     // ----------------------------------
     const foundPageT3Index = s.tier3CurPages[1].findIndex(p => p.id === page);
-    // console.log(s.tier3CurPages[1], foundPageT3Index);
 
     if (foundPageT3Index !== -1) {
 
@@ -1689,8 +1382,6 @@ function tLFU(s) {
             const lfuT2page = lfuInfo.page;
 
             const victimFreq = lfuT2page.frequency ?? 0;
-
-            // console.log(victimFreq, foundPageT3.frequency);
 
             if (foundPageT3.frequency > victimFreq) {
 
@@ -1753,7 +1444,6 @@ function getAvgTemp(tier) {
 }
 
 function tTemp(s) {
-    // console.log("Running tTemp");
     const algoIndex = 2;
     const currentRound = s.p;
     const minAccessToT1 = 3;
@@ -1772,7 +1462,6 @@ function tTemp(s) {
     // CASE 1: Page already in Tier 1
     // ----------------------------------
     const foundPageT1Index = s.tier1CurPages[2].findIndex(p => p.id === page);
-    // console.log(s.tier1CurPages[2], foundPageT1Index);
 
     if (foundPageT1Index !== -1) {
         const foundPageT1 = s.tier1CurPages[2][foundPageT1Index];
@@ -1806,7 +1495,6 @@ function tTemp(s) {
     // CASE 2: Page in Tier 2
     // ----------------------------------
     const foundPageT2Index = s.tier2CurPages[2].findIndex(p => p.id === page);
-    // console.log(s.tier2CurPages[2], foundPageT2Index);
 
     if (foundPageT2Index !== -1) {
 
@@ -1872,7 +1560,6 @@ function tTemp(s) {
     // CASE 3: Page in Tier 3
     // ----------------------------------
     const foundPageT3Index = s.tier3CurPages[2].findIndex(p => p.id === page);
-    // console.log(s.tier3CurPages[2], foundPageT3Index);
 
     if (foundPageT3Index !== -1) {
 
@@ -1902,11 +1589,7 @@ function tTemp(s) {
 
             const victimTemp = getAvgTemp(s.tier2CurPages[2]);
 
-            // console.log(foundPageT3.temperature, victimTemp);
-
             if (foundPageT3.temperature > Math.max(victimTemp, minT2MigrationTemp)) {
-
-                // console.log(foundPageT3.temperature, victimTemp);
 
                 const temp = s.tier2CurPages[2][tempT2Index];
                 s.tier2CurPages[2][tempT2Index] = foundPageT3;
@@ -2036,8 +1719,6 @@ function initRL(s, total_num_pages) {
     const init_rng_s2_t1 =
         cal_s2(2, s.t1Concurrency, s.t1ReadLatency, s.t1AlphaVal) -
         cal_s2(0, s.t1Concurrency, s.t1ReadLatency, s.t1AlphaVal);
-    console.warn("init_rng_s2_t1", init_rng_s2_t1);
-    console.warn(cal_s2(2, s.t1Concurrency, s.t1ReadLatency, s.t1AlphaVal), cal_s2(0, s.t1Concurrency, s.t1ReadLatency, s.t1AlphaVal));
 
     const init_avg_s2_t1 =
         cal_s2(1, s.t1Concurrency, s.t1ReadLatency, s.t1AlphaVal);
@@ -2090,25 +1771,18 @@ function initRL(s, total_num_pages) {
 
     // ---- NEW: correct scaling factor ----
     const inv_scale = 1 / a_scale;
-
-    console.log("DEBUG initRL: p_init", p_init, "beta ", beta, "lambda ", lam, "inv_scale ", inv_scale);
-    console.log("a_i_1", a_i_1, "b_i_1", b_i_1, "a_i_2", a_i_2, "b_i_2", b_i_2, "a_i_3", a_i_3, "b_i_3", b_i_3);
+    if (DEBUG) {
+        console.log("DEBUG initRL: p_init", p_init, "beta ", beta, "lambda ", lam, "inv_scale ", inv_scale);
+        console.log("a_i_1", a_i_1, "b_i_1", b_i_1, "a_i_2", a_i_2, "b_i_2", b_i_2, "a_i_3", a_i_3, "b_i_3", b_i_3);
+    }
     s.rlAgent1 = new TDAgent(2, p_init, beta, lam, inv_scale, a_i_1, b_i_1);
     s.rlAgent2 = new TDAgent(2, p_init, beta, lam, inv_scale, a_i_2, b_i_2);
     s.rlAgent3 = new TDAgent(2, p_init, beta, lam, inv_scale, a_i_3, b_i_3);
 }
 
 // Reward function
-function reward_from_avgtemp(
-    Tier1, Tier2, Tier3,
-    avg_temp_T1, avg_temp_T2, avg_temp_T3,
-    read_time_tier1, asym_tier1,
-    read_time_tier2, asym_tier2,
-    read_time_tier3, asym_tier3,
-    wr_ww,
-    total_num_pages
-) {
-    // console.log("Checking sizes: ", Tier1.size, Tier2.size, Tier3.size);
+function reward_from_avgtemp( Tier1, Tier2, Tier3, avg_temp_T1, avg_temp_T2, avg_temp_T3, read_time_tier1, asym_tier1,
+    read_time_tier2, asym_tier2, read_time_tier3, asym_tier3, wr_ww, total_num_pages) {
     const sumExpT1 = Math.exp((1 + avg_temp_T1) / 2) * Tier1.size;
     const sumExpT2 = Math.exp((1 + avg_temp_T2) / 2) * Tier2.size;
     const sumExpT3 = Math.exp((1 + avg_temp_T3) / 2) * Tier3.size;
@@ -2344,12 +2018,7 @@ function updateApproxQueueSizes(s, algoIndex, totalEnqueuedReqCount) {
     s.approxT2QueueSizeEstimate = s.tier2Queue[algoIndex].length;
     s.approxT3QueueSizeEstimate = s.tier3Queue[algoIndex].length;
 
-    // console.log(s.approxT1QueueSizeEstimate, s.approxT2QueueSizeEstimate, s.approxT3QueueSizeEstimate);
-
     const curTimeInMicrosecondEstimate = totalEnqueuedReqCount * state.config.perReqEnqueueTime;
-
-    // console.log(s.approxT1QueueSizeEstimate, s.approxT2QueueSizeEstimate, s.approxT3QueueSizeEstimate);
-    // console.log(curTimeInMicrosecondEstimate);
 
     timeTier1 = timeTier2 = timeTier3 = 0;
     // the following can be made even better if we consider how concurrent requests are processed in each tier
@@ -2366,7 +2035,6 @@ function updateApproxQueueSizes(s, algoIndex, totalEnqueuedReqCount) {
             timeTier1 += s.t1ReadLatency;
         }
         s.approxT1QueueSizeEstimate--;
-        // console.log(timeTier1 / s.t1Concurrency, curTimeInMicrosecondEstimate);
         if (timeTier1 / s.t1Concurrency > curTimeInMicrosecondEstimate) break;
     }
     // the following uses the concept of batches, but maybe this is not how it is done in CPP, so commented out
@@ -2383,8 +2051,6 @@ function updateApproxQueueSizes(s, algoIndex, totalEnqueuedReqCount) {
     //     if (timeTier1 > curTimeInMicrosecondEstimate) break;
     // }
 
-    // console.log(`Approx queue size after T1 processing: ${s.approxT1QueueSizeEstimate}, T2: ${s.approxT2QueueSizeEstimate}, T3: ${s.approxT3QueueSizeEstimate}`);
-
     for (let i = 0; i < s.tier2Queue[algoIndex].length; i++) {
         operation = s.tier2Queue[algoIndex][i];
         if (operation === "W") {
@@ -2396,8 +2062,6 @@ function updateApproxQueueSizes(s, algoIndex, totalEnqueuedReqCount) {
         s.approxT2QueueSizeEstimate--;
         if (timeTier2 / s.t2Concurrency > curTimeInMicrosecondEstimate) break;
     }
-
-    // console.log(`Approx queue size after T2 processing: ${s.approxT2QueueSizeEstimate}, T1: ${s.approxT1QueueSizeEstimate}, T3: ${s.approxT3QueueSizeEstimate}`);
 
     for (let i = 0; i < s.tier3Queue[algoIndex].length; i++) {
         operation = s.tier3Queue[algoIndex][i];
@@ -2411,29 +2075,18 @@ function updateApproxQueueSizes(s, algoIndex, totalEnqueuedReqCount) {
         if (timeTier3 / s.t3Concurrency > curTimeInMicrosecondEstimate) break;
     }
 
-    // console.log(`Approx queue size after T3 processing: ${s.approxT3QueueSizeEstimate}, T1: ${s.approxT1QueueSizeEstimate}, T2: ${s.approxT2QueueSizeEstimate}`);
-
-    // console.log(`Total enqueued req count: ${totalEnqueuedReqCount}`);
-    // console.log(`Time of completion: ${timeOfCompletion}, TimeTier1: ${timeTier1}, TimeTier2: ${timeTier2}, TimeTier3: ${timeTier3}`);
-    // console.log(`Approx queue sizes - T1: ${s.approxT1QueueSizeEstimate}, T2: ${s.approxT2QueueSizeEstimate}, T3: ${s.approxT3QueueSizeEstimate}`);
-    // console.log(s.approxT1QueueSizeEstimate, s.approxT2QueueSizeEstimate, s.approxT3QueueSizeEstimate);
     if (s.approxT1QueueSizeEstimate < 0) {
-        // console.warn("Negative queue size estimate for T1, resetting to 0");
         s.approxT1QueueSizeEstimate = 0;
     }
     if (s.approxT2QueueSizeEstimate < 0) {
-        // console.warn("Negative queue size estimate for T2, resetting to 0");
         s.approxT2QueueSizeEstimate = 0;
     }
     if (s.approxT3QueueSizeEstimate < 0) {
-        // console.warn("Negative queue size estimate for T3, resetting to 0");
         s.approxT3QueueSizeEstimate = 0;
     }
-    // console.log(s.approxT1QueueSizeEstimate, s.approxT2QueueSizeEstimate, s.approxT3QueueSizeEstimate);
 }
 
 function tRL(s) {
-    // console.log("Running ReStore");
     const algoIndex = 3;
     const currentRound = s.p;
     const minAccessToT1 = 3;
@@ -2443,12 +2096,7 @@ function tRL(s) {
     const minT2MigrationTemp = 1 - 0.5 / Math.exp(tempAlpha * minAccessToT2);
 
     if (s.rlAgent1 === null) {
-        // console.log("initRL inputs:", s.t1ReadLatency, s.t2ReadLatency, s.t3ReadLatency,
-            // s.t1Concurrency, s.t2Concurrency, s.t3Concurrency,
-            // s.t1AlphaVal, s.t2AlphaVal, s.t3AlphaVal);
         initRL(s, totalPages);
-        // console.log("a_i_1:", s.rlAgent1.a_i, "b_i_1:", s.rlAgent1.b_i);
-        // console.log("a_i_2:", s.rlAgent2.a_i, "b_i_2:", s.rlAgent2.b_i);
     }
 
     const entry = s.workload[currentRound];
@@ -2461,7 +2109,6 @@ function tRL(s) {
     if (!s.rlStartUpdate && s.tier1CurPages[algoIndex].findIndex(p => p.id === page) === -1) {
         s.rlStartUpdate = true;  // Enable updates
         s.rlStartUpdate_i = currentRound;    // Record the iteration where update starts
-        console.log(`RL updates enabled starting from round ${currentRound} (page ${page})`);
     }
 
     s1_t1_be = getAvgTemp(s.tier1CurPages[algoIndex]);
@@ -2509,7 +2156,6 @@ function tRL(s) {
     // CASE 1: Page already in Tier 1
     // ----------------------------------
     const foundPageT1Index = s.tier1CurPages[algoIndex].findIndex(p => p.id === page);
-    // console.log(s.tier1CurPages[algoIndex], foundPageT1Index);
 
     if (foundPageT1Index !== -1) {
         const foundPageT1 = s.tier1CurPages[algoIndex][foundPageT1Index];
@@ -2630,24 +2276,26 @@ function tRL(s) {
             // Accumulate sumPhi for T3
             s.sumPhiT3 = s.sumPhiT3.map((v, i) => v + phi_t3_snap[i]);
             // RL Based Decision
-
-            console.log(`Round: ${currentRound} - RL Decision for Tier 2 to Tier 1 migration:`);
-            // print page temperature, s1 value and s2 value for before and after states of both tiers, and the left and right values for comparison
-            console.log(`Page ${foundPageT2.id} temp: ${foundPageT2.temperature}, Page ${tempT1page.id} temp: ${tempT1page.temperature}`);
-            console.log(`Approx queue size before - Tier 2: ${s.approxT2QueueSizeEstimate}, Tier 1: ${s.approxT1QueueSizeEstimate}`);
-            console.log(`Approx queue size after - +2 to both previous queue sizes`);
-            console.log(`Tier 2 before state - s1: ${state_t2_be[0]}, s2: ${state_t2_be[1]}, cost: ${cost_t2_be}, phi: ${phi_t2}`);
-            console.log(`Tier 1 before state - s1: ${state_t1_be[0]}, s2: ${state_t1_be[1]}, cost: ${cost_t1_be}, phi: ${phi_t1}`);
-            console.log(`Tier 2 after state - s1: ${s1_t2_af}, s2: ${s2_t2_af}, cost: ${cost_t2_af}, phi: ${phi_t2_af}`);
-            console.log(`Tier 1 after state - s1: ${s1_t1_af}, s2: ${s2_t1_af}, cost: ${cost_t1_af}, phi: ${phi_t1_af}`);
-            console.log(`Left (cost_t1_be + cost_t2_be): ${left}, Right (cost_t1_af + cost_t2_af): ${right}`);
-            if (left <= right) {
-                console.log(`Migrating page ${foundPageT2.id} from Tier 2 to Tier 1, swapping with page ${tempT1page.id} in Tier 1`);
+            if (DEBUG) {
+                console.log(`Round: ${currentRound} - RL Decision for Tier 2 to Tier 1 migration:`);
+                // print page temperature, s1 value and s2 value for before and after states of both tiers, and the left and right values for comparison
                 console.log(`Page ${foundPageT2.id} temp: ${foundPageT2.temperature}, Page ${tempT1page.id} temp: ${tempT1page.temperature}`);
-            }
-            else {
-                console.log(`Not migrating page ${foundPageT2.id} from Tier 2 to Tier 1`);
-                console.log(`Page ${foundPageT2.id} temp: ${foundPageT2.temperature}, Page ${tempT1page.id} temp: ${tempT1page.temperature}`);
+                console.log(`Approx queue size before - Tier 2: ${s.approxT2QueueSizeEstimate}, Tier 1: ${s.approxT1QueueSizeEstimate}`);
+                console.log(`Approx queue size after - +2 to both previous queue sizes`);
+                console.log(`Tier 2 before state - s1: ${state_t2_be[0]}, s2: ${state_t2_be[1]}, cost: ${cost_t2_be}, phi: ${phi_t2}`);
+                console.log(`Tier 1 before state - s1: ${state_t1_be[0]}, s2: ${state_t1_be[1]}, cost: ${cost_t1_be}, phi: ${phi_t1}`);
+                console.log(`Tier 2 after state - s1: ${s1_t2_af}, s2: ${s2_t2_af}, cost: ${cost_t2_af}, phi: ${phi_t2_af}`);
+                console.log(`Tier 1 after state - s1: ${s1_t1_af}, s2: ${s2_t1_af}, cost: ${cost_t1_af}, phi: ${phi_t1_af}`);
+                console.log(`Left (cost_t1_be + cost_t2_be): ${left}, Right (cost_t1_af + cost_t2_af): ${right}`);
+                
+                if (left <= right) {
+                    console.log(`Migrating page ${foundPageT2.id} from Tier 2 to Tier 1, swapping with page ${tempT1page.id} in Tier 1`);
+                    console.log(`Page ${foundPageT2.id} temp: ${foundPageT2.temperature}, Page ${tempT1page.id} temp: ${tempT1page.temperature}`);
+                }
+                else {
+                    console.log(`Not migrating page ${foundPageT2.id} from Tier 2 to Tier 1`);
+                    console.log(`Page ${foundPageT2.id} temp: ${foundPageT2.temperature}, Page ${tempT1page.id} temp: ${tempT1page.temperature}`);
+                }
             }
 
             // if (left <= right && foundPageT2.temperature > Math.max(victimTemp, minT1MigrationTemp)) {
@@ -2681,7 +2329,6 @@ function tRL(s) {
     // CASE 3: Page in Tier 3
     // ----------------------------------
     const foundPageT3Index = s.tier3CurPages[algoIndex].findIndex(p => p.id === page);
-    // console.log(s.tier3CurPages[algoIndex], foundPageT3Index);
 
     if (foundPageT3Index !== -1) {
         s.tier3Queue[algoIndex].push(type);
@@ -2705,7 +2352,6 @@ function tRL(s) {
         var timeOfCompletion = ((s.tier3write[algoIndex] + s.tier2_3Migration[algoIndex]) * s.t3Alpha +
             (s.tier3read[algoIndex] + s.tier2_3Migration[algoIndex])) * s.t3ReadLatency;
         var totalEnqueuedReqCount = Math.floor(timeOfCompletion / state.config.perReqEnqueueTime);
-        // console.log(`Page ${page} in Tier 3, Time of completion: ${timeOfCompletion} microseconds, Total enqueued req count: ${totalEnqueuedReqCount}`);
         updateApproxQueueSizes(s, algoIndex, currentRound);
 
         const tempInfo = getTemperaturePage(s.tier2CurPages[algoIndex]);
@@ -2775,24 +2421,26 @@ function tRL(s) {
             // Accumulate sumPhi for T1
             s.sumPhiT1 = s.sumPhiT1.map((v, i) => v + phi_t1_snap[i]);
             // RL Based Decision
-            console.log(`Round: ${currentRound} - RL Decision for Tier 3 to Tier 2 migration:`);
-            // print page temperature, s1 value and s2 value for before and after states of both tiers, and the left and right values for comparison
-            console.log(`Page ${foundPageT3.id} temp: ${foundPageT3.temperature}, Page ${tempT2page.id} temp: ${tempT2page.temperature}`);
-            console.log(`Approx queue size before - Tier 3: ${s.approxT3QueueSizeEstimate}, Tier 2: ${s.approxT2QueueSizeEstimate}`);
-            console.log(`Approx queue size after - +2 to both previous queue sizes`);
-            console.log(`Tier 3 before state - s1: ${state_t3_be[0]}, s2: ${state_t3_be[1]}, cost: ${cost_t3_be}, phi: ${phi_t3}`);
-            console.log(`Tier 2 before state - s1: ${state_t2_be[0]}, s2: ${state_t2_be[1]}, cost: ${cost_t2_be}, phi: ${phi_t2}`);
-            console.log(`Tier 3 after state - s1: ${s1_t3_af}, s2: ${s2_t3_af}, cost: ${cost_t3_af}, phi: ${phi_t3_af}`);
-            console.log(`Tier 2 after state - s1: ${s1_t2_af}, s2: ${s2_t2_af}, cost: ${cost_t2_af}, phi: ${phi_t2_af}`);
-            console.log(`Left (cost_t2_be + cost_t3_be): ${left}, Right (cost_t2_af + cost_t3_af): ${right}`);
-            // if (left <= right && foundPageT3.temperature > Math.max(victimTemp, minT2MigrationTemp)) {
-            if (left <= right) {
-                console.log(`Migrating page ${foundPageT3.id} from Tier 3 to Tier 2, swapping with page ${tempT2page.id} in Tier 2`);
+            if (DEBUG) {
+                console.log(`Round: ${currentRound} - RL Decision for Tier 3 to Tier 2 migration:`);
+                // print page temperature, s1 value and s2 value for before and after states of both tiers, and the left and right values for comparison
                 console.log(`Page ${foundPageT3.id} temp: ${foundPageT3.temperature}, Page ${tempT2page.id} temp: ${tempT2page.temperature}`);
-            }
-            else {
-                console.log(`Not migrating page ${foundPageT3.id} from Tier 3 to Tier 2`);
-                console.log(`Page ${foundPageT3.id} temp: ${foundPageT3.temperature}, Page ${tempT2page.id} temp: ${tempT2page.temperature}`);
+                console.log(`Approx queue size before - Tier 3: ${s.approxT3QueueSizeEstimate}, Tier 2: ${s.approxT2QueueSizeEstimate}`);
+                console.log(`Approx queue size after - +2 to both previous queue sizes`);
+                console.log(`Tier 3 before state - s1: ${state_t3_be[0]}, s2: ${state_t3_be[1]}, cost: ${cost_t3_be}, phi: ${phi_t3}`);
+                console.log(`Tier 2 before state - s1: ${state_t2_be[0]}, s2: ${state_t2_be[1]}, cost: ${cost_t2_be}, phi: ${phi_t2}`);
+                console.log(`Tier 3 after state - s1: ${s1_t3_af}, s2: ${s2_t3_af}, cost: ${cost_t3_af}, phi: ${phi_t3_af}`);
+                console.log(`Tier 2 after state - s1: ${s1_t2_af}, s2: ${s2_t2_af}, cost: ${cost_t2_af}, phi: ${phi_t2_af}`);
+                console.log(`Left (cost_t2_be + cost_t3_be): ${left}, Right (cost_t2_af + cost_t3_af): ${right}`);
+                // if (left <= right && foundPageT3.temperature > Math.max(victimTemp, minT2MigrationTemp)) {
+                if (left <= right) {
+                    console.log(`Migrating page ${foundPageT3.id} from Tier 3 to Tier 2, swapping with page ${tempT2page.id} in Tier 2`);
+                    console.log(`Page ${foundPageT3.id} temp: ${foundPageT3.temperature}, Page ${tempT2page.id} temp: ${tempT2page.temperature}`);
+                }
+                else {
+                    console.log(`Not migrating page ${foundPageT3.id} from Tier 3 to Tier 2`);
+                    console.log(`Page ${foundPageT3.id} temp: ${foundPageT3.temperature}, Page ${tempT2page.id} temp: ${tempT2page.temperature}`);
+                }
             }
             if (left <= right) {
                 s.tier2Queue[algoIndex].push("R");

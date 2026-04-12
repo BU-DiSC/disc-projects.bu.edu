@@ -105,13 +105,19 @@ function generateWorkloadOriginal() {
             return [];
         }
         if (Number(s_val[i]) < 0 || Number(s_val[i]) > 100) {
-            alert("Skewness must be between 0% and 100%.");
+            alert("Access percentage to the selected pages must be between 0% and 100%.");
             return [];
         }
         if (Number(d_val[i]) < 0 || Number(d_val[i]) > 100) {
-            alert("Target data skew must be between 0% and 100%.");
+            alert("Page percentage for skewed access must be between 0% and 100%.");
             return [];
         }
+    }
+    // Allow total number of operations to be between 100 to 10000
+    const totalOps = x_val.reduce((acc, val) => acc + Number(val), 0);
+    if (totalOps < 100 || totalOps > 10000) {
+        alert("Please choose a total number of operations between 100 and 10000.");
+        return [];
     }
 
     // Generate workload

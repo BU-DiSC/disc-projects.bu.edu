@@ -1,6 +1,5 @@
 function renderTiers(tier1, tier2, tier3, algorithms, currentRound) {
     var tooltipText = "Page Property";
-    console.log("Rendering tiers for algorithms: ", algorithms);
     for (let algNo = 0; algNo < algorithms.length; algNo++) {
         if (algorithms[algNo] === null) continue; // skip rendering for null
         renderTier(1, `tier1alg${algNo}`, tier1, algorithms[algNo].name);
@@ -21,53 +20,6 @@ function renderUpdatedTiers(fromTier, toTier, fromPos, toPos, algNo) {
     fromEl.textContent = toText;
     toEl.textContent = fromText;
 }
-
-// function renderTemperature(tier1, tier2, tier3, algorithms, algNo, currentRound) {
-//     var backgroundColor = "inherit";
-//     var hotness = 0;
-//     var hotnessDenominator = 100; // Just to scale down the hotness for better visualization, can be adjusted based on actual values
-//     const algorithmName = algorithms[algNo].name;
-//     if (currentRound < 0) {
-//         // backgroundColor = "inherit"; // default color
-//     }
-//     else if (currentRound === 0) {
-//         // backgroundColor = lowest end of gradient
-//     }
-//     else if (currentRound > 100 && algorithmName === "tLRU") {
-//         hotnessDenominator = currentRound
-//     }
-//     else if (currentRound > 100 && algorithmName === "tLFU") {
-//         // get the frequency of the hottest page in all tiers
-//         tier1.forEach((page, i) => {
-//             if (page.frequency > hotnessDenominator) {
-//                 hotnessDenominator = page.frequency;
-//             }
-//         });
-//         tier2.forEach((page, i) => {
-//             if (page.frequency > hotnessDenominator) {
-//                 hotnessDenominator = page.frequency;
-//             }
-//         });
-//         tier3.forEach((page, i) => {
-//             if (page.frequency > hotnessDenominator) {
-//                 hotnessDenominator = page.frequency;
-//             }
-//         });
-//     }
-
-//     tier1.forEach((page, i) => {
-
-//         if (algorithmName === "tLRU") {
-//             hotness = page.lastRequestRound / hotnessDenominator;
-//         }
-//         else if (algorithmName === "tLFU") {
-//             hotness = page.frequency / hotnessDenominator;
-//         }
-//         else if (algorithmName === "tTemp" || algorithmName === "tRL") {
-//             hotness = page.temperature;
-//         }
-//         // set cell background color based on hotness, using a red gradient
-// }
 
 function renderTemperature(tier1, tier2, tier3, algorithms, algNo, currentRound) {
     var hotness = 0;

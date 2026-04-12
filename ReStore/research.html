@@ -361,11 +361,9 @@
 
 						<!-- Control Buttons -->
 						<div id="lsm-button-group" class="btn-group" role="group" aria-label="progress-control">
-							<button id="backward-button" type="button" class="btn btn-primary"> << </button>
-							<button id="play-button" type="button" class="btn btn-info">
-								<img src="img/play_pause.png" width="40" height="40">
+							<button id="play-button" type="button" class="btn btn-info d-flex align-items-center">
+								<span><img src="img/play_pause.png" width="40" height="40"></span><span id="play-button-text">PLAY</span>
 							</button>
-							<button id="forward-button" type="button" class="btn btn-primary">>></button>
 							<button id="fast-button" type="button" class="btn btn-warning">Fast</button>
 							<button id="medium-button" type="button" class="btn btn-success">Medium</button>
 							<button id="slow-button" type="button" class="btn btn-secondary">Slow</button>
@@ -388,7 +386,7 @@
 							<!-- Progress Percentage -->
 							<div class="input-group-append">
 								<span id="progress-label"
-									class="input-group-text progress-percent"><strong>0%</strong></span>
+									class="input-group-text progress-percent">0%</span>
 							</div>
 						</div>
 					</div>

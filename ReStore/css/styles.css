@@ -727,11 +727,12 @@ progress::-moz-progress-bar {
 /* Play button */
 #play-button, #b-button, #f-button {
     background: linear-gradient(135deg, #5D6D7E 0%, #AAB7B8 100%) !important; /* Light grey gradient */
-    color: black;
+    color: white;
+    width: 120px;
 }
 
 #play-button:hover {
-    background: linear-gradient(135deg, #1B2631 0%, #5D6D7E 100%) !important; /* Slightly darker gradient on hover */
+    background: linear-gradient(135deg, #3B5661 0%, #8D9DAE 100%) !important; /* Slightly darker gradient on hover */
 }
 
 /* Finish button */
