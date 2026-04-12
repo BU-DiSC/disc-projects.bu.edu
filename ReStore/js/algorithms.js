@@ -24,6 +24,7 @@ const state = {
         tier2_1Migration: [0, 0, 0, 0, 0, 0, 0],
         tier2_3Migration: [0, 0, 0, 0, 0, 0, 0],
 
+        // stores tuples of operations and their enqueue times based on current round of workload for each algorithm
         tier1Queue: [[], [], [], [], [], [], []],
         tier2Queue: [[], [], [], [], [], [], []],
         tier3Queue: [[], [], [], [], [], [], []],
@@ -302,6 +303,8 @@ function handleInputChange() {
 
     // Re-enable play button
     $("#play-button").prop("disabled", false);
+    $("#play-button-text").text("PLAY");;
+    
 
     console.log("Simulation reset. Waiting for Play button.");
 }
@@ -438,20 +441,6 @@ $(document).ready(function () {
         else if (playButtonText.text() === "PAUSE") {
             playButtonText.text("PLAY");
         }
-        // need to fix ui naming
-        // curently alphaX means concurreny, asymX means alpha, latX means read latency
-        // console.log("Raw UI values:",
-        //     $("#lat1").val(),
-        //     $("#lat2").val(),
-        //     $("#lat3").val(),
-        //     $("#asym1").val(),
-        //     $("#asym2").val(),
-        //     $("#asym3").val(),
-        //     $("#alpha1").val(),
-        //     $("#alpha2").val(),
-        //     $("#alpha3").val()
-        // );
-
         const t1AlphaVal = parseFloat($("#asym1").val());
         const t2AlphaVal = parseFloat($("#asym2").val());
         const t3AlphaVal = parseFloat($("#asym3").val());
@@ -553,6 +542,7 @@ function myLoop(s) {
         console.log("Completed all steps.");
         s.playing = false;
         s.finished = true;
+        $("#play-button-text").text("PLAY");
         return;
     }
 
@@ -575,7 +565,7 @@ function myLoop(s) {
                 updateProgress(s.p, s.workload.length);
             }
 
-            if ((s.p - 1) % state.config.plotUpdateInterval === 0) { // || s.p === s.workload.length - 1) {
+            if ((s.p - 1) % state.config.plotUpdateInterval === 0 || s.p === s.workload.length - 1) {
                 updateLatencyPlot(s);
                 updateMigrationCountPlot(s);
                 updateIndivMigrationCountPlot(s);
@@ -597,47 +587,110 @@ function updateProgress(currentStep, totalSteps) {
     $("#progress-bar").trigger('change');  // Force DOM refresh
 }
 
-function calculateTotalMigrationCountFromTiers(algoIndex) {
-    tier1MigrationCount = state.tiers.tier2_1Migration[algoIndex];
-    tier3MigrationCount = state.tiers.tier2_3Migration[algoIndex];
+function calculateTotalMigrationCountFromTiers(s, algoIndex) {
+    tier1MigrationCount = s.tier2_1Migration[algoIndex];
+    tier3MigrationCount = s.tier2_3Migration[algoIndex];
     tier2MigrationCount = tier1MigrationCount + tier3MigrationCount;
     return tier2MigrationCount;
 }
 
-function calculateLatencyFromTiers(algoIndex) {
-    const s = state.tiers;
-    tier1ReadCounts = s.tier1read[algoIndex];
-    tier1WriteCounts = s.tier1write[algoIndex];
-    tier2ReadCounts = s.tier2read[algoIndex];
-    tier2WriteCounts = s.tier2write[algoIndex];
-    tier3ReadCounts = s.tier3read[algoIndex];
-    tier3WriteCounts = s.tier3write[algoIndex];
-    tier1MigrationCount = s.tier2_1Migration[algoIndex];
-    tier3MigrationCount = s.tier2_3Migration[algoIndex];
-    tier2MigrationCount = tier1MigrationCount + tier3MigrationCount;
+function calculateExactPerTierLatency(s, algoIndex, tierNo) {
+    let lat, alpha, concurrency, queue, opLatency, tierReadCounts=0, tierWriteCounts=0;
+    if (tierNo === 1) {
+        queue = s.tier1Queue[algoIndex];
+        lat = s.t1ReadLatency;
+        alpha = s.t1Alpha;
+        concurrency = s.t1Concurrency;
+    }
+    else if (tierNo === 2) {
+        queue = s.tier2Queue[algoIndex];
+        lat = s.t2ReadLatency;
+        alpha = s.t2Alpha;
+        concurrency = s.t2Concurrency;
+    }
+    else if (tierNo === 3) {
+        queue = s.tier3Queue[algoIndex];
+        lat = s.t3ReadLatency;
+        alpha = s.t3Alpha;
+        concurrency = s.t3Concurrency;
+    }
+    // initialize a time array of cocurrency length to track parallel execution of operations in the tier and calculate latency based on that
+    let timeArray = new Array(concurrency).fill(0);
+    for (const [opType, enqueueTime] of queue) {
+        if (opType === 'R') {
+            opLatency = lat;
+            tierReadCounts++;
+        } else if (opType === 'W') {
+            opLatency = lat * alpha;
+            tierWriteCounts++;
+        }
+        // get the earliest available slot in the time array to execute this operation
+        const earliestSlotIndex = timeArray.indexOf(Math.min(...timeArray));
+        // schedule the operation in that slot and update the time array
+        timeArray[earliestSlotIndex] = opLatency + Math.max(enqueueTime, timeArray[earliestSlotIndex]);
+    }
+    const tierLatency = Math.max(...timeArray)
+    if (DEBUG) {
+        if (algoIndex === 1) {
+            console.log(`T${tierNo}: ${tierReadCounts}R ${tierWriteCounts}W`);
+            console.log(`Round ${s.p} for algo index ${algoIndex}: T${tierNo}=${tierLatency}}`);
+        }
+    }
+    return tierLatency;
+}
 
-    // 1 migration = 1 read + 1 write on source tier, 1 write + 1 read on dest tier
-    // so read counts and write counts for both tiers should be incremented by the migration count
-    tier1ReadCounts += tier1MigrationCount;
-    tier1WriteCounts += tier1MigrationCount;
-    tier3ReadCounts += tier3MigrationCount;
-    tier3WriteCounts += tier3MigrationCount;
-    tier2ReadCounts += tier2MigrationCount;
-    tier2WriteCounts += tier2MigrationCount;
+function calculatePerTierLatency(s, algoIndex, tierNo) {
+    let tierReadCounts, tierWriteCounts, tierMigrationCount, lat, alpha, concurrency;
+    if (tierNo === 1) {
+        tierReadCounts = s.tier1read[algoIndex];
+        tierWriteCounts = s.tier1write[algoIndex];
+        tierMigrationCount = s.tier2_1Migration[algoIndex];
+        lat = s.t1ReadLatency;
+        alpha = s.t1Alpha;
+        concurrency = s.t1Concurrency;
+    }
+    else if (tierNo === 2) {
+        tierReadCounts = s.tier2read[algoIndex];
+        tierWriteCounts = s.tier2write[algoIndex];
+        tierMigrationCount = calculateTotalMigrationCountFromTiers(s, algoIndex);
+        lat = s.t2ReadLatency;
+        alpha = s.t2Alpha;
+        concurrency = s.t2Concurrency;
+    }
+    else if (tierNo === 3) {
+        tierReadCounts = s.tier3read[algoIndex];
+        tierWriteCounts = s.tier3write[algoIndex];
+        tierMigrationCount = s.tier2_3Migration[algoIndex];
+        lat = s.t3ReadLatency;
+        alpha = s.t3Alpha;
+        concurrency = s.t3Concurrency;
+    }
+    tierReadCounts += tierMigrationCount;   // since migrations also involve reads and writes to the page being migrated
+    tierWriteCounts += tierMigrationCount;
 
-    tier1Latency = s.t1ReadLatency * (tier1ReadCounts + tier1WriteCounts * s.t1Alpha);
-    tier2Latency = s.t2ReadLatency * (tier2ReadCounts + tier2WriteCounts * s.t2Alpha);
-    tier3Latency = s.t3ReadLatency * (tier3ReadCounts + tier3WriteCounts * s.t3Alpha);
+    const tierLatency = (lat * (tierReadCounts + tierWriteCounts * alpha)) / concurrency;
+
+    console.log(`T${tierNo}: ${tierReadCounts}R ${tierWriteCounts}W`);
+    console.log(`Calculated latencies at round ${s.p} for algo index ${algoIndex}: T${tierNo}=${tierLatency}}`);
+    return tierLatency;
+}
+
+function calculateLatencyFromTiers(s, algoIndex) {
+    // tier1Latency = calculatePerTierLatency(s, algoIndex, 1);
+    // tier2Latency = calculatePerTierLatency(s, algoIndex, 2);
+    // tier3Latency = calculatePerTierLatency(s, algoIndex, 3);
+    tier1Latency = calculateExactPerTierLatency(s, algoIndex, 1);
+    tier2Latency = calculateExactPerTierLatency(s, algoIndex, 2);
+    tier3Latency = calculateExactPerTierLatency(s, algoIndex, 3);
 
     accumulatedLatency = Math.max(tier1Latency, tier2Latency, tier3Latency);    // since they will be executed in parallel
-
     return accumulatedLatency;
 }
 
 function updateMigrationCountPlot(s) {
     let algorithmNames = [];
     for (let i = 0; i < s.algorithms.length; i++) {
-        s.migrationCountsForPlot[i].push(calculateTotalMigrationCountFromTiers(i));
+        s.migrationCountsForPlot[i].push(calculateTotalMigrationCountFromTiers(s, i));
         algorithmNames.push(s.algorithms[i].name === "tRL" ? "ReStore" : (s.algorithms[i].name === "tTemp" ? "TEMP" : s.algorithms[i].name));
     }
     const xValues = Array.from({ length: s.p }, (_, i) => i * state.config.plotUpdateInterval);
@@ -806,7 +859,7 @@ function updateLatencyPlot(s) {
     let algorithmNames = [];
 
     for (let i = 0; i < s.algorithms.length; i++) {
-        s.latencyValuesForPlot[i].push(calculateLatencyFromTiers(i) / 1000);
+        s.latencyValuesForPlot[i].push(calculateLatencyFromTiers(s, i) / 1000);
         algorithmNames.push(s.algorithms[i].name === "tRL" ? "ReStore" : (s.algorithms[i].name === "tTemp" ? "TEMP" : s.algorithms[i].name));
     }
 
@@ -894,7 +947,6 @@ function initializeWithRandomPages(s) {
 function calculate(s, algorithms) {
 
     const totalSteps = s.workload.length;
-    console.log("Starting simulation...");
     updateProgress(0, totalSteps);
 
     if (!s.started) {
@@ -937,24 +989,12 @@ function finisher(s) {
         }
         if ((s.p - 1) % state.config.plotUpdateInterval === 0) {
             for (let k = 0; k < s.algorithms.length; k++) {
-                s.latencyValuesForPlot[k].push(calculateLatencyFromTiers(k) / 1000);
-                s.migrationCountsForPlot[k].push(calculateTotalMigrationCountFromTiers(k));
+                s.latencyValuesForPlot[k].push(calculateLatencyFromTiers(s, k) / 1000);
+                s.migrationCountsForPlot[k].push(calculateTotalMigrationCountFromTiers(s, k));
                 s.t2t1MigrationCountsForPlot[k].push(s.tier2_1Migration[k]);
                 s.t2t3MigrationCountsForPlot[k].push(s.tier2_3Migration[k]);
             }
         }
-        // updateProgress(s.p, s.workload.length);
-        // if (s.p % 200 === 0) {
-        //     document.getElementById("curRound").textContent = s.p;
-        //     document.getElementById("curOp").textContent = s.workload[s.p-1][0] === 'R' ?
-        //         `Read from Page ${s.workload[s.p-1][1]}` : `Write to Page ${s.workload[s.p-1][1]}`;
-        //     for (let i = 0; i < s.algorithms.length; i++) {
-        //         algoDisplay(i, s);
-        //     }
-        //     updateLatencyPlot(s);
-        //     updateMigrationCountPlot(s);
-        //     updateIndivMigrationCountPlot(s);
-        // }
     }
     document.getElementById("curRound").textContent = s.p;
     document.getElementById("curOp").textContent = s.workload[s.p-1][0] === 'R' ?
@@ -966,7 +1006,7 @@ function finisher(s) {
     updateMigrationCountPlot(s);
     updateIndivMigrationCountPlot(s);
     s.p = s.workload.length; // Ensure progress is complete
-    $("#play-button-text").text("PLAY"); // Reset play button text
+    $("#play-button-text").text("PLAY");
 }
 
 function algoDisplay(algoIndex, s) {
@@ -1086,6 +1126,7 @@ function getTemperaturePage(tier) {
 }
 
 function tLRU(s) {
+    const algoIndex = 0;
     const currentRound = s.p;
     const entry = s.workload[currentRound];
     if (!entry) return;
@@ -1100,6 +1141,7 @@ function tLRU(s) {
     const foundPageT1Index = s.tier1CurPages[0].findIndex(p => p.id === page);
     if (foundPageT1Index !== -1) {
         const foundPageT1 = s.tier1CurPages[0][foundPageT1Index];
+        s.tier1Queue[algoIndex].push([type, currentRound * state.config.perReqEnqueueTime]);
         if (type === "W") {
             s.tier1write[0]++;
             //highlightCells([`tier1alg0-${foundPageT1Index}`], "highlight-write", s.delay);
@@ -1121,6 +1163,7 @@ function tLRU(s) {
     const foundPageT2Index = s.tier2CurPages[0].findIndex(p => p.id === page);
     if (foundPageT2Index !== -1) {
         const foundPageT2 = s.tier2CurPages[0][foundPageT2Index];
+        s.tier2Queue[algoIndex].push([type, currentRound * state.config.perReqEnqueueTime]);
         if (type === "W") {
             s.tier2write[0]++;
             //highlightCells([`tier2alg0-${foundPageT2Index}`], "highlight-write", s.delay);
@@ -1145,7 +1188,10 @@ function tLRU(s) {
             // condition in cpp:
             // if (current_page.last_request_round > int(k_lru * lru_page_t1.last_request_round + max_capacity_tier1))
             if (foundPageT2.lastRequestRound > lruRound + tier1Size) {
-                // if (s.p > lruRound) {
+                s.tier1Queue[algoIndex].push(["R", currentRound * state.config.perReqEnqueueTime]);
+                s.tier2Queue[algoIndex].push(["W", currentRound * state.config.perReqEnqueueTime]);
+                s.tier2Queue[algoIndex].push(["R", currentRound * state.config.perReqEnqueueTime]);
+                s.tier1Queue[algoIndex].push(["W", currentRound * state.config.perReqEnqueueTime]);
 
                 // -----------------------------
                 // MIGRATION: Tier2 <-> Tier1
@@ -1154,18 +1200,6 @@ function tLRU(s) {
                 const temp = s.tier1CurPages[0][lruT1Index];
                 s.tier1CurPages[0][lruT1Index] = foundPageT2;
                 s.tier2CurPages[0][foundPageT2Index] = temp;
-
-                // -----------------------------
-                // Update IO counters
-                // -----------------------------
-
-                // // Tier1: read (demotion) + write (promotion)
-                // s.tier1read[0]++;
-                // s.tier1write[0]++;
-
-                // // Tier2: read (promotion) + write (demotion)
-                // s.tier2read[0]++;
-                // s.tier2write[0]++;
 
                 s.tier2_1Migration[0]++;
 
@@ -1193,6 +1227,7 @@ function tLRU(s) {
     if (foundPageT3Index !== -1) {
 
         const foundPageT3 = s.tier3CurPages[0][foundPageT3Index];
+        s.tier3Queue[algoIndex].push([type, currentRound * state.config.perReqEnqueueTime]);
 
         if (type === "W") {
             s.tier3write[0]++;
@@ -1216,6 +1251,10 @@ function tLRU(s) {
             const lruRound = lruT2page.lastRequestRound ?? -1;
 
             if (foundPageT3.lastRequestRound > lruRound + tier2Size) {
+                s.tier2Queue[algoIndex].push(["R", currentRound * state.config.perReqEnqueueTime]);
+                s.tier3Queue[algoIndex].push(["W", currentRound * state.config.perReqEnqueueTime]);
+                s.tier3Queue[algoIndex].push(["R", currentRound * state.config.perReqEnqueueTime]);
+                s.tier2Queue[algoIndex].push(["W", currentRound * state.config.perReqEnqueueTime]);
                 // if (s.p > lruRound) {
 
                 // -----------------------------
@@ -1270,6 +1309,7 @@ function tLRU(s) {
 }
 
 function tLFU(s) {
+    const algoIndex = 1;
     const currentRound = s.p;
     const entry = s.workload[currentRound];
     if (!entry) return;
@@ -1284,6 +1324,7 @@ function tLFU(s) {
 
     if (foundPageT1Index !== -1) {
         const foundPageT1 = s.tier1CurPages[1][foundPageT1Index];
+        s.tier1Queue[algoIndex].push([type, currentRound * state.config.perReqEnqueueTime]);
         foundPageT1.frequency++;
 
         if (type === "W") {
@@ -1308,6 +1349,7 @@ function tLFU(s) {
     if (foundPageT2Index !== -1) {
 
         const foundPageT2 = s.tier2CurPages[1][foundPageT2Index];
+        s.tier2Queue[algoIndex].push([type, currentRound * state.config.perReqEnqueueTime]);
         foundPageT2.frequency++;
 
         if (type === "W") {
@@ -1332,6 +1374,11 @@ function tLFU(s) {
             const victimFreq = lfuT1page.frequency ?? 0;
 
             if (foundPageT2.frequency > victimFreq) {
+
+                s.tier1Queue[algoIndex].push(["R", currentRound * state.config.perReqEnqueueTime]);
+                s.tier2Queue[algoIndex].push(["W", currentRound * state.config.perReqEnqueueTime]);
+                s.tier2Queue[algoIndex].push(["R", currentRound * state.config.perReqEnqueueTime]);
+                s.tier1Queue[algoIndex].push(["W", currentRound * state.config.perReqEnqueueTime]);
 
                 const temp = s.tier1CurPages[1][lfuT1Index];
                 s.tier1CurPages[1][lfuT1Index] = foundPageT2;
@@ -1360,6 +1407,7 @@ function tLFU(s) {
     if (foundPageT3Index !== -1) {
 
         const foundPageT3 = s.tier3CurPages[1][foundPageT3Index];
+        s.tier3Queue[algoIndex].push([type, currentRound * state.config.perReqEnqueueTime]);
         foundPageT3.frequency++;
 
         if (type === "W") {
@@ -1384,7 +1432,10 @@ function tLFU(s) {
             const victimFreq = lfuT2page.frequency ?? 0;
 
             if (foundPageT3.frequency > victimFreq) {
-
+                s.tier2Queue[algoIndex].push(["R", currentRound * state.config.perReqEnqueueTime]);
+                s.tier3Queue[algoIndex].push(["W", currentRound * state.config.perReqEnqueueTime]);
+                s.tier3Queue[algoIndex].push(["R", currentRound * state.config.perReqEnqueueTime]);
+                s.tier2Queue[algoIndex].push(["W", currentRound * state.config.perReqEnqueueTime]);
                 const temp = s.tier2CurPages[1][lfuT2Index];
                 s.tier2CurPages[1][lfuT2Index] = foundPageT3;
                 s.tier3CurPages[1][foundPageT3Index] = temp;
@@ -1465,6 +1516,7 @@ function tTemp(s) {
 
     if (foundPageT1Index !== -1) {
         const foundPageT1 = s.tier1CurPages[2][foundPageT1Index];
+        s.tier1Queue[algoIndex].push([type, currentRound * state.config.perReqEnqueueTime]);
 
         const timeWindow = totalPages;
         // updateTemperature(foundPageT1, currentRound, s.workload.length/100);
@@ -1499,6 +1551,7 @@ function tTemp(s) {
     if (foundPageT2Index !== -1) {
 
         const foundPageT2 = s.tier2CurPages[2][foundPageT2Index];
+        s.tier2Queue[algoIndex].push([type, currentRound * state.config.perReqEnqueueTime]);
 
         const timeWindow = totalPages;
         updateTemperature(foundPageT2, currentRound, timeWindow);
@@ -1524,7 +1577,10 @@ function tTemp(s) {
             const victimTemp = getAvgTemp(s.tier1CurPages[2]);
 
             if (foundPageT2.temperature > Math.max(victimTemp, minT1MigrationTemp)) {
-
+                s.tier1Queue[algoIndex].push(["R", currentRound * state.config.perReqEnqueueTime]);
+                s.tier2Queue[algoIndex].push(["W", currentRound * state.config.perReqEnqueueTime]);
+                s.tier2Queue[algoIndex].push(["R", currentRound * state.config.perReqEnqueueTime]);
+                s.tier1Queue[algoIndex].push(["W", currentRound * state.config.perReqEnqueueTime]);
                 // (foundPageT2.temperature, victimTemp);
 
                 const temp = s.tier1CurPages[2][tempT1Index];
@@ -1564,6 +1620,7 @@ function tTemp(s) {
     if (foundPageT3Index !== -1) {
 
         const foundPageT3 = s.tier3CurPages[2][foundPageT3Index];
+        s.tier3Queue[algoIndex].push([type, currentRound * state.config.perReqEnqueueTime]);
 
         const timeWindow = totalPages;
         updateTemperature(foundPageT3, currentRound, timeWindow);
@@ -1590,7 +1647,10 @@ function tTemp(s) {
             const victimTemp = getAvgTemp(s.tier2CurPages[2]);
 
             if (foundPageT3.temperature > Math.max(victimTemp, minT2MigrationTemp)) {
-
+                s.tier2Queue[algoIndex].push(["R", currentRound * state.config.perReqEnqueueTime]);
+                s.tier3Queue[algoIndex].push(["W", currentRound * state.config.perReqEnqueueTime]);
+                s.tier3Queue[algoIndex].push(["R", currentRound * state.config.perReqEnqueueTime]);
+                s.tier2Queue[algoIndex].push(["W", currentRound * state.config.perReqEnqueueTime]);
                 const temp = s.tier2CurPages[2][tempT2Index];
                 s.tier2CurPages[2][tempT2Index] = foundPageT3;
                 s.tier3CurPages[2][foundPageT3Index] = temp;
@@ -2027,7 +2087,7 @@ function updateApproxQueueSizes(s, algoIndex, totalEnqueuedReqCount) {
     // and we just accumulate the time taken for each request in the queue
     // until we reach the current time estimate, then stop and use that to update the queue size estimates
     for (let i = 0; i < s.tier1Queue[algoIndex].length; i++) {
-        operation = s.tier1Queue[algoIndex][i];
+        operation = s.tier1Queue[algoIndex][i][0];
         if (operation === "W") {
             timeTier1 += s.t1ReadLatency * s.t1AlphaVal;
         }
@@ -2041,7 +2101,7 @@ function updateApproxQueueSizes(s, algoIndex, totalEnqueuedReqCount) {
     // for (let i = 0; i < s.tier1Queue[algoIndex].length; ) {
     //     let batchLatency = s.t1ReadLatency;
     //     for (let threadNo = 0; threadNo < s.t1Concurrency && i < s.tier1Queue[algoIndex].length; threadNo++, i++) {
-    //         operation = s.tier1Queue[algoIndex][i];
+    //         operation = s.tier1Queue[algoIndex][i][0];
     //         if (operation === "W") {
     //             batchLatency = s.t1ReadLatency * s.t1AlphaVal;
     //         }
@@ -2052,7 +2112,7 @@ function updateApproxQueueSizes(s, algoIndex, totalEnqueuedReqCount) {
     // }
 
     for (let i = 0; i < s.tier2Queue[algoIndex].length; i++) {
-        operation = s.tier2Queue[algoIndex][i];
+        operation = s.tier2Queue[algoIndex][i][0];
         if (operation === "W") {
             timeTier2 += s.t2ReadLatency * s.t2AlphaVal;
         }
@@ -2064,7 +2124,7 @@ function updateApproxQueueSizes(s, algoIndex, totalEnqueuedReqCount) {
     }
 
     for (let i = 0; i < s.tier3Queue[algoIndex].length; i++) {
-        operation = s.tier3Queue[algoIndex][i];
+        operation = s.tier3Queue[algoIndex][i][0];
         if (operation === "W") {
             timeTier3 += s.t3ReadLatency * s.t3AlphaVal;
         }
@@ -2159,7 +2219,7 @@ function tRL(s) {
 
     if (foundPageT1Index !== -1) {
         const foundPageT1 = s.tier1CurPages[algoIndex][foundPageT1Index];
-        s.tier1Queue[algoIndex].push(type);
+        s.tier1Queue[algoIndex].push([type, currentRound * state.config.perReqEnqueueTime]);
 
         const timeWindow = totalPages;
         updateTemperature(foundPageT1, currentRound, timeWindow);
@@ -2191,7 +2251,7 @@ function tRL(s) {
     const foundPageT2Index = s.tier2CurPages[algoIndex].findIndex(p => p.id === page);
 
     if (foundPageT2Index !== -1) {
-        s.tier2Queue[algoIndex].push(type);
+        s.tier2Queue[algoIndex].push([type, currentRound * state.config.perReqEnqueueTime]);
         const foundPageT2 = s.tier2CurPages[algoIndex][foundPageT2Index];
 
         const timeWindow = totalPages;
@@ -2300,10 +2360,10 @@ function tRL(s) {
 
             // if (left <= right && foundPageT2.temperature > Math.max(victimTemp, minT1MigrationTemp)) {
             if (left <= right) {
-                s.tier1Queue[algoIndex].push("R");
-                s.tier2Queue[algoIndex].push("W");
-                s.tier2Queue[algoIndex].push("R");
-                s.tier1Queue[algoIndex].push("W");
+                s.tier1Queue[algoIndex].push(["R", currentRound * state.config.perReqEnqueueTime]);
+                s.tier2Queue[algoIndex].push(["W", currentRound * state.config.perReqEnqueueTime]);
+                s.tier2Queue[algoIndex].push(["R", currentRound * state.config.perReqEnqueueTime]);
+                s.tier1Queue[algoIndex].push(["W", currentRound * state.config.perReqEnqueueTime]);
                 // const temp = s.tier1CurPages[algoIndex][tempT1Index];
                 const temp = tempT1page;
                 s.tier1CurPages[algoIndex][tempT1Index] = foundPageT2;
@@ -2311,8 +2371,6 @@ function tRL(s) {
 
                 s.tier2_1Migration[algoIndex]++;
                 s.simActions[algoIndex].push({ op: 'M', tierId: 2, cellId: [foundPageT2Index, tempT1Index] });
-
-                s
 
             }
         }
@@ -2331,7 +2389,7 @@ function tRL(s) {
     const foundPageT3Index = s.tier3CurPages[algoIndex].findIndex(p => p.id === page);
 
     if (foundPageT3Index !== -1) {
-        s.tier3Queue[algoIndex].push(type);
+        s.tier3Queue[algoIndex].push([type, currentRound * state.config.perReqEnqueueTime]);
         const foundPageT3 = s.tier3CurPages[algoIndex][foundPageT3Index];
 
         const timeWindow = totalPages;
@@ -2443,10 +2501,10 @@ function tRL(s) {
                 }
             }
             if (left <= right) {
-                s.tier2Queue[algoIndex].push("R");
-                s.tier3Queue[algoIndex].push("W");
-                s.tier3Queue[algoIndex].push("R");
-                s.tier2Queue[algoIndex].push("W");
+                s.tier2Queue[algoIndex].push(["R", currentRound * state.config.perReqEnqueueTime]);
+                s.tier3Queue[algoIndex].push(["W", currentRound * state.config.perReqEnqueueTime]);
+                s.tier3Queue[algoIndex].push(["R", currentRound * state.config.perReqEnqueueTime]);
+                s.tier2Queue[algoIndex].push(["W", currentRound * state.config.perReqEnqueueTime]);
                 // const temp = s.tier2CurPages[algoIndex][tempT2Index];
                 const temp = tempT2page;
                 s.tier2CurPages[algoIndex][tempT2Index] = foundPageT3;

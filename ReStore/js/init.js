@@ -165,24 +165,27 @@ function printSimulationInputs(savedTime, savedTier1, savedTier2, savedTier3, sa
     console.log(`Tier 2 Pages:\n[${savedTier2.join(', ')}]`);
     console.log(`Tier 3 Pages:\n[${savedTier3.join(', ')}]`);
 
+    if (DEBUG) {
     // print workload in the format of the savedWorkloadFixed1, i.e., list of [R/W, pageId]
     // 10 in each row and an additional newline after 10 such rows, each entry should be enclosed in [ and ]
-    let workloadLines = [];
-    for (let i = 0; i < savedWorkload.length; i += 10) {
-        let line = savedWorkload.slice(i, i + 10).map(req => `['${req[0]}', ${req[1]}]`).join(', ');
-        if (i+10 < savedWorkload.length) {
-            line += ','; // add comma at the end of the line if it's not the last line
+        let workloadLines = [];
+        for (let i = 0; i < savedWorkload.length; i += 10) {
+            let line = savedWorkload.slice(i, i + 10).map(req => `['${req[0]}', ${req[1]}]`).join(', ');
+            if (i+10 < savedWorkload.length) {
+                line += ','; // add comma at the end of the line if it's not the last line
+            }
+
+            // After every 10 lines → add extra blank line
+            if ((i / 10 + 1) % 10 === 0) {
+                line += '\n'; // add comma at the end of the line if it's not the last line and we are adding an extra newline after this
+            }
+            workloadLines.push(line);
         }
 
-        // After every 10 lines → add extra blank line
-        if ((i / 10 + 1) % 10 === 0) {
-            line += '\n'; // add comma at the end of the line if it's not the last line and we are adding an extra newline after this
-        }
-        workloadLines.push(line);
+        const formatted = workloadLines.join('\n');
+        console.log(`Workload:\n${formatted}`);
     }
-
-    const formatted = workloadLines.join('\n');
-    console.log(`Workload:\n${formatted}`);
+    printWorkloadStats(savedWorkload);
 }
 
 window.addEventListener('DOMContentLoaded', () => {

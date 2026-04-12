@@ -184,8 +184,8 @@ function generateWorkloadOriginal() {
         //         workload.push(['W', pageId]);
         // }
     }
-    console.log("Generated workload, len = ", workload.length);
-    console.log(workload);
+    // console.log("Generated workload, len = ", workload.length);
+    // console.log(workload);
     // printWorkloadStats(workload);
     return workload;
 }
@@ -270,7 +270,7 @@ $(document).ready(function () {
     // const smallCustomWorkload = [100, 90, 10, 50]; // Placeholder for custom workload, will be updated with user inputs
     const smallCustomWorkload = [2500, 80, 15, 50]; // Placeholder for custom workload, will be updated with user inputs
     const smallDynamicWorkload1 = [[1000, 4000], [90, 100], [5, 100], [50, 50]];
-    const smallDynamicWorkload2 = [[2000, 3000], [80, 80], [10, 10], [20, 90]];
+    const smallDynamicWorkload2 = [[2000, 3000], [80, 80], [10, 10], [90, 20]];
 
     var workloads = [smallWorkload1, smallWorkload2, smallWorkload3, smallWorkload4, smallWorkload5, smallCustomWorkload, smallDynamicWorkload1, smallDynamicWorkload2];
     const ids = [$x, $s, $d, $e];
