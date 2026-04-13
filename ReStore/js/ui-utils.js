@@ -2,9 +2,9 @@ function renderTiers(tier1, tier2, tier3, algorithms, currentRound) {
     var tooltipText = "Page Property";
     for (let algNo = 0; algNo < algorithms.length; algNo++) {
         if (algorithms[algNo] === null) continue; // skip rendering for null
-        renderTier(1, `tier1alg${algNo}`, tier1, algorithms[algNo].name);
-        renderTier(2, `tier2alg${algNo}`, tier2, algorithms[algNo].name);
-        renderTier(3, `tier3alg${algNo}`, tier3, algorithms[algNo].name);
+        renderTier(1, `tier1alg${algNo}`, tier1);
+        renderTier(2, `tier2alg${algNo}`, tier2);
+        renderTier(3, `tier3alg${algNo}`, tier3);
         renderTemperature(tier1, tier2, tier3, algorithms, algNo, currentRound);
     }
 }
@@ -30,18 +30,6 @@ function renderTemperature(tier1, tier2, tier3, algorithms, algNo, currentRound)
     if (currentRound < 0) {
         return;
     }
-    // else if (currentRound === 0) {
-    //     [tier1, tier2, tier3].forEach((tierArr, t) => {
-    //         tierArr.forEach((page, i) => {
-    //             const el = document.getElementById(`tier${t + 1}alg${algNo}-${i}`);
-    //             if (el) el.style.backgroundColor = `rgb(255, 250, 150)`;
-    //         });
-    //     });
-    //     return;
-    // }
-    // else if (currentRound > totalPages/2 && algorithmName === "tLRU") {
-    //     hotnessDenominator = currentRound;
-    // }
     else if (currentRound > totalPages/2 && algorithmName === "tLFU") {
         // hotnessDenominator = 100;
         tier1.forEach(page => { if (page.frequency > hotnessDenominator) hotnessDenominator = page.frequency; });
@@ -56,10 +44,10 @@ function renderTemperature(tier1, tier2, tier3, algorithms, algNo, currentRound)
     else if (algorithmName === "tLFU") {
         tooltipPrefix = "Frequency: ";
     }
-    else if (algorithmName === "tTemp") {
+    else if (algorithmName === "TEMP") {
         tooltipPrefix = "Temperature: ";
     }
-    else if (algorithmName === "tRL") {
+    else if (algorithmName === "ReStore") {
         tooltipPrefix = "Temperature: ";
     }
 
@@ -79,7 +67,7 @@ function renderTemperature(tier1, tier2, tier3, algorithms, algNo, currentRound)
             } else if (algorithmName === "tLFU") {
                 tooltipSuffix = `${page.frequency}`;
                 hotness = page.frequency / hotnessDenominator;
-            } else if (algorithmName === "tTemp" || algorithmName === "tRL") {
+            } else if (algorithmName === "TEMP" || algorithmName === "ReStore") {
                 tooltipSuffix = `${page.temperature.toFixed(2)}`;
                 hotness = page.temperature;
                 // if (page.id === 42 || page.id === 26 || page.id === 15 || page.id === 21) {
@@ -107,7 +95,7 @@ function renderTemperature(tier1, tier2, tier3, algorithms, algNo, currentRound)
     applyHeatToTier(tier3, 3);
 }
 
-function renderTier(tierNo, id, arr, algorithmName) {
+function renderTier(tierNo, id, arr) {
     // console.log(id);
     const container = document.getElementById(id);
     container.innerHTML = "";
