@@ -30,11 +30,23 @@ function renderTemperature(tier1, tier2, tier3, algorithms, algNo, currentRound)
     if (currentRound < 0) {
         return;
     }
-    else if (currentRound > totalPages/2 && algorithmName === "tLFU") {
-        // hotnessDenominator = 100;
+    else if (algorithmName === "tLFU") {
+        hotnessDenominator = totalPages/4;
         tier1.forEach(page => { if (page.frequency > hotnessDenominator) hotnessDenominator = page.frequency; });
         tier2.forEach(page => { if (page.frequency > hotnessDenominator) hotnessDenominator = page.frequency; });
         tier3.forEach(page => { if (page.frequency > hotnessDenominator) hotnessDenominator = page.frequency; });
+    }
+    else if (algorithmName === "EXD") {
+        hotnessDenominator = totalPages/4; // this is a hyperparameter that controls how much the exd weight affects the heat, can be tuned based on experiments
+        tier1.forEach(page => { if (page.exdWeight > hotnessDenominator) hotnessDenominator = page.exdWeight; });
+        tier2.forEach(page => { if (page.exdWeight > hotnessDenominator) hotnessDenominator = page.exdWeight; });
+        tier3.forEach(page => { if (page.exdWeight > hotnessDenominator) hotnessDenominator = page.exdWeight; });
+    }
+    else if (algorithmName === "LRFU") {
+        hotnessDenominator = 0.5*1/(1-state.tiers.lrfu_lambda); // this is a hyperparameter that controls how much the lrfu score affects the heat, can be tuned based on experiments
+        tier1.forEach(page => { if (page.lrfuScore > hotnessDenominator) hotnessDenominator = page.lrfuScore; });
+        tier2.forEach(page => { if (page.lrfuScore > hotnessDenominator) hotnessDenominator = page.lrfuScore; });
+        tier3.forEach(page => { if (page.lrfuScore > hotnessDenominator) hotnessDenominator = page.lrfuScore; });
     }
 
     var tooltipPrefix = "Page Property: ";
@@ -50,29 +62,44 @@ function renderTemperature(tier1, tier2, tier3, algorithms, algNo, currentRound)
     else if (algorithmName === "ReStore") {
         tooltipPrefix = "Temperature: ";
     }
+    else if (algorithmName === "LRFU") {
+        tooltipPrefix = "CRF Value: ";
+    }
+    else if (algorithmName === "EXD") {
+        tooltipPrefix = "EXD Score: ";
+    }
 
     function applyHeatToTier(tierArr, tierNo) {
         tierArr.forEach((page, i) => {
             if (algorithmName === "tLRU") {
-                tooltipSuffix = `${page.lastRequestRound}`;
-                if (currentRound - page.lastRequestRound > hotnessDenominator) {
+                tooltipSuffix = `${page.lastRequestRound === -1 ? "Never Accessed" : page.lastRequestRound}`;
+                if (page.lastRequestRound === -1 || (currentRound - page.lastRequestRound > hotnessDenominator) ) {
                     hotness = 0; // if the page hasn't been accessed for a long time, consider it cold
                 }
                 else if (currentRound < hotnessDenominator) {
-                    hotness = 1 - (hotnessDenominator - page.lastRequestRound) / hotnessDenominator;
+                    hotness = 1 - (hotnessDenominator - page.lastRequestRound) / (hotnessDenominator * 1.1);
                 }
                 else {
-                    hotness = 1 - (currentRound - page.lastRequestRound) / hotnessDenominator;
+                    hotness = 1 - (currentRound - page.lastRequestRound) / (hotnessDenominator * 1.1);
                 }
             } else if (algorithmName === "tLFU") {
                 tooltipSuffix = `${page.frequency}`;
-                hotness = page.frequency / hotnessDenominator;
+                hotness = page.frequency / (hotnessDenominator * 1.1);
             } else if (algorithmName === "TEMP" || algorithmName === "ReStore") {
+                hotnessDenominator = 0.95; // temperature is already normalized to [0, 1]
                 tooltipSuffix = `${page.temperature.toFixed(2)}`;
-                hotness = page.temperature;
+                hotness = page.temperature / hotnessDenominator;
                 // if (page.id === 42 || page.id === 26 || page.id === 15 || page.id === 21) {
                 //     console.log(`Page ${page.id} temperature ${page.temperature} in algorithm ${algorithmName} at round ${currentRound}`);
                 // }
+            } else if (algorithmName === "LRFU") {
+                console.log(page);
+                tooltipSuffix = `${page.lrfuScore.toFixed(2)}`;
+                hotness = page.lrfuScore / (hotnessDenominator * 1.1);
+            } else if (algorithmName === "EXD") {
+                console.log(page);
+                tooltipSuffix = `${page.exdWeight.toFixed(2)}`;
+                hotness = page.exdWeight / (hotnessDenominator * 1.1);
             }
 
             hotness = Math.max(0, Math.min(1, hotness)); // clamp to [0, 1]

@@ -35,7 +35,9 @@ function createPage(id) {
         lastRequestRound: -1,
         frequency: 0,
         temperature: 0.5,
-        reqRounds: []
+        reqRounds: [],
+        lrfuScore: 0,
+        exdWeight: 0,
     };
 }
 

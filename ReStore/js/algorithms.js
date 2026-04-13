@@ -45,7 +45,9 @@ const state = {
             lastRequestRound: 0,
             frequency: 0,
             temperature: 0.5,
-            reqRounds: []
+            reqRounds: [],
+            exdWeight: 0,
+            lrfuScore: 0
         },
 
         // Playback Control
@@ -102,6 +104,10 @@ const state = {
         s1T1List: [0.5], s1T2List: [0.5], s1T3List: [0.5],
         s2T1List: [0], s2T2List: [0], s2T3List: [0],
         numElementsToConsider: 30,//300,
+
+        // exd and lrfu specific parameters
+        exd_alpha: -0.001,
+        lrfu_lambda: 0.6,
 
         approxTimeElapsed: 0,
         approxT1QueueSizeEstimate: 0,
@@ -387,7 +393,9 @@ function clonePage(p) {
         lastRequestRound: p.lastRequestRound,
         frequency: p.frequency,
         temperature: p.temperature,
-        reqRounds: [...p.reqRounds]
+        reqRounds: [...p.reqRounds],
+        exdWeight: p.exdWeight,
+        lrfuScore: p.lrfuScore
     };
 }
 
@@ -1195,6 +1203,40 @@ function getTemperaturePage(tier) {
         const t = tier[i].temperature ?? -1;
         if (t < minTemp) {
             minTemp = t;
+            minIndex = i;
+        }
+    }
+    return {
+        page: tier[minIndex],
+        index: minIndex
+    };
+}
+
+function getLRFUPage(tier) {
+    if (tier.length === 0) return null;
+    let minIndex = 0;
+    let minScore = tier[0].lrfuScore ?? 0;
+    for (let i = 1; i < tier.length; i++) {
+        const s = tier[i].lrfuScore ?? 0;
+        if (s < minScore) {
+            minScore = s;
+            minIndex = i;
+        }
+    }
+    return {
+        page: tier[minIndex],
+        index: minIndex
+    };
+}
+
+function getEXDPage(tier) {
+    if (tier.length === 0) return null;
+    let minIndex = 0;
+    let minWeight = tier[0].exdWeight ?? 0;
+    for (let i = 1; i < tier.length; i++) {
+        const w = tier[i].exdWeight ?? 0;
+        if (w < minWeight) {
+            minWeight = w;
             minIndex = i;
         }
     }
@@ -2403,43 +2445,254 @@ function ReStore(s) {
 
 function LRFU(s) {
     const algoIndex = s.algorithms.findIndex(algo => algo.name === "LRFU");
-    return;
+    console.log(`LRFU's index: ${algoIndex}`);
+    const currentRound = s.p;
+    const entry = s.workload[currentRound];
+    if (!entry) return;
+
+    const type = entry[0];
+    const page = entry[1];
+
+    // ----------------------------------
+    // CASE 1: Page already in Tier 1
+    // ----------------------------------
+    const foundPageT1Index = s.tier1CurPages[algoIndex].findIndex(p => p.id === page);
+
+    if (foundPageT1Index !== -1) {
+        const foundPageT1 = s.tier1CurPages[algoIndex][foundPageT1Index];
+        s.tier1Queue[algoIndex].push([type, currentRound * state.config.perReqEnqueueTime]);
+        
+        foundPageT1.lrfuScore = 1 + foundPageT1.lrfuScore * Math.pow(s.lrfu_lambda, (currentRound - foundPageT1.lastRequestRound));
+        foundPageT1.lastRequestRound = currentRound;
+
+        if (type === "W") {
+            s.tier1write[algoIndex]++;
+            s.simActions[algoIndex].push({ op: 'W', tierId: 1, cellId: foundPageT1Index });
+        } else {
+            s.tier1read[algoIndex]++;
+            s.simActions[algoIndex].push({ op: 'R', tierId: 1, cellId: foundPageT1Index });
+        }
+        return;
+    }
+
+    // ----------------------------------
+    // CASE 2: Page in Tier 2
+    // ----------------------------------
+    const foundPageT2Index = s.tier2CurPages[algoIndex].findIndex(p => p.id === page);
+
+    if (foundPageT2Index !== -1) {
+
+        const foundPageT2 = s.tier2CurPages[algoIndex][foundPageT2Index];
+        s.tier2Queue[algoIndex].push([type, currentRound * state.config.perReqEnqueueTime]);
+        
+        foundPageT2.lrfuScore = 1 + foundPageT2.lrfuScore * Math.pow(s.lrfu_lambda, (currentRound - foundPageT2.lastRequestRound));
+        foundPageT2.lastRequestRound = currentRound;
+
+        if (type === "W") {
+            s.tier2write[algoIndex]++;
+            s.simActions[algoIndex].push({ op: 'W', tierId: 2, cellId: foundPageT2Index });
+        } else {
+            s.tier2read[algoIndex]++;
+            s.simActions[algoIndex].push({ op: 'R', tierId: 2, cellId: foundPageT2Index });
+        }
+        const lrfuInfo = getLRFUPage(s.tier1CurPages[algoIndex]);
+
+        if (lrfuInfo !== null) {
+
+            const lrfuT1Index = lrfuInfo.index;
+            const lrfuT1page = lrfuInfo.page;
+
+            const victimLRFUScore = lrfuT1page.lrfuScore ?? 0;
+
+            if (foundPageT2.lrfuScore > victimLRFUScore) {
+
+                s.tier1Queue[algoIndex].push(["R", currentRound * state.config.perReqEnqueueTime]);
+                s.tier2Queue[algoIndex].push(["W", currentRound * state.config.perReqEnqueueTime]);
+                s.tier2Queue[algoIndex].push(["R", currentRound * state.config.perReqEnqueueTime]);
+                s.tier1Queue[algoIndex].push(["W", currentRound * state.config.perReqEnqueueTime]);
+
+                const temp = s.tier1CurPages[algoIndex][lrfuT1Index];
+                s.tier1CurPages[algoIndex][lrfuT1Index] = foundPageT2;
+                s.tier2CurPages[algoIndex][foundPageT2Index] = temp;
+
+                s.tier2_1Migration[algoIndex]++;
+                s.simActions[algoIndex].push({ op: 'M', tierId: 2, cellId: [foundPageT2Index, lrfuT1Index] });
+            }
+        }
+        return;
+    }
+
+    // ----------------------------------
+    // CASE 3: Page in Tier 3
+    // ----------------------------------
+    const foundPageT3Index = s.tier3CurPages[algoIndex].findIndex(p => p.id === page);
+
+    if (foundPageT3Index !== -1) {
+
+        const foundPageT3 = s.tier3CurPages[algoIndex][foundPageT3Index];
+        s.tier3Queue[algoIndex].push([type, currentRound * state.config.perReqEnqueueTime]);
+        foundPageT3.lrfuScore = 1 + foundPageT3.lrfuScore * Math.pow(s.lrfu_lambda, (currentRound - foundPageT3.lastRequestRound));
+        foundPageT3.lastRequestRound = currentRound;
+
+        if (type === "W") {
+            s.tier3write[algoIndex]++;
+            s.simActions[algoIndex].push({ op: 'W', tierId: 3, cellId: foundPageT3Index });
+        } else {
+            s.tier3read[algoIndex]++;
+            s.simActions[algoIndex].push({ op: 'R', tierId: 3, cellId: foundPageT3Index });
+        }
+
+        sleep(s.delay);
+
+        const lrfuInfo = getLRFUPage(s.tier2CurPages[algoIndex]);
+
+        if (lrfuInfo !== null) {
+
+            const lrfuT2Index = lrfuInfo.index;
+            const lrfuT2page = lrfuInfo.page;
+
+            const victimLRFUScore = lrfuT2page.lrfuScore ?? 0;
+
+            if (foundPageT3.lrfuScore > victimLRFUScore) {
+                s.tier2Queue[algoIndex].push(["R", currentRound * state.config.perReqEnqueueTime]);
+                s.tier3Queue[algoIndex].push(["W", currentRound * state.config.perReqEnqueueTime]);
+                s.tier3Queue[algoIndex].push(["R", currentRound * state.config.perReqEnqueueTime]);
+                s.tier2Queue[algoIndex].push(["W", currentRound * state.config.perReqEnqueueTime]);
+                const temp = s.tier2CurPages[algoIndex][lrfuT2Index];
+                s.tier2CurPages[algoIndex][lrfuT2Index] = foundPageT3;
+                s.tier3CurPages[algoIndex][foundPageT3Index] = temp;
+
+                s.tier2_3Migration[algoIndex]++;
+                s.simActions[algoIndex].push({ op: 'M', tierId: 3, cellId: [foundPageT3Index, lrfuT2Index] });
+            }
+        }
+        return;
+    }
 }
 
 function EXD(s) {
     const algoIndex = s.algorithms.findIndex(algo => algo.name === "EXD");
-    return;
+    console.log(`EXD's index: ${algoIndex}`);
+    const currentRound = s.p;
+    const entry = s.workload[currentRound];
+    if (!entry) return;
+
+    const type = entry[0];
+    const page = entry[1];
+
+    // ----------------------------------
+    // CASE 1: Page already in Tier 1
+    // ----------------------------------
+    const foundPageT1Index = s.tier1CurPages[algoIndex].findIndex(p => p.id === page);
+
+    if (foundPageT1Index !== -1) {
+        const foundPageT1 = s.tier1CurPages[algoIndex][foundPageT1Index];
+        s.tier1Queue[algoIndex].push([type, currentRound * state.config.perReqEnqueueTime]);
+        
+        foundPageT1.exdWeight = 1 + foundPageT1.exdWeight * Math.exp(s.exd_alpha * (currentRound - foundPageT1.lastRequestRound));
+        foundPageT1.lastRequestRound = currentRound;
+
+        if (type === "W") {
+            s.tier1write[algoIndex]++;
+            s.simActions[algoIndex].push({ op: 'W', tierId: 1, cellId: foundPageT1Index });
+        } else {
+            s.tier1read[algoIndex]++;
+            s.simActions[algoIndex].push({ op: 'R', tierId: 1, cellId: foundPageT1Index });
+        }
+        return;
+    }
+
+    // ----------------------------------
+    // CASE 2: Page in Tier 2
+    // ----------------------------------
+    const foundPageT2Index = s.tier2CurPages[algoIndex].findIndex(p => p.id === page);
+
+    if (foundPageT2Index !== -1) {
+
+        const foundPageT2 = s.tier2CurPages[algoIndex][foundPageT2Index];
+        s.tier2Queue[algoIndex].push([type, currentRound * state.config.perReqEnqueueTime]);
+        
+        foundPageT2.exdWeight = 1 + foundPageT2.exdWeight * Math.exp(s.exd_alpha * (currentRound - foundPageT2.lastRequestRound));
+        foundPageT2.lastRequestRound = currentRound;
+
+        if (type === "W") {
+            s.tier2write[algoIndex]++;
+            s.simActions[algoIndex].push({ op: 'W', tierId: 2, cellId: foundPageT2Index });
+        } else {
+            s.tier2read[algoIndex]++;
+            s.simActions[algoIndex].push({ op: 'R', tierId: 2, cellId: foundPageT2Index });
+        }
+        const exdInfo = getEXDPage(s.tier1CurPages[algoIndex]);
+
+        if (exdInfo !== null) {
+
+            const exdT1Index = exdInfo.index;
+            const exdT1page = exdInfo.page;
+
+            const victimExdWeight = exdT1page.exdWeight ?? 0;
+
+            if (foundPageT2.exdWeight > victimExdWeight) {
+
+                s.tier1Queue[algoIndex].push(["R", currentRound * state.config.perReqEnqueueTime]);
+                s.tier2Queue[algoIndex].push(["W", currentRound * state.config.perReqEnqueueTime]);
+                s.tier2Queue[algoIndex].push(["R", currentRound * state.config.perReqEnqueueTime]);
+                s.tier1Queue[algoIndex].push(["W", currentRound * state.config.perReqEnqueueTime]);
+
+                const temp = s.tier1CurPages[algoIndex][exdT1Index];
+                s.tier1CurPages[algoIndex][exdT1Index] = foundPageT2;
+                s.tier2CurPages[algoIndex][foundPageT2Index] = temp;
+
+                s.tier2_1Migration[algoIndex]++;
+                s.simActions[algoIndex].push({ op: 'M', tierId: 2, cellId: [foundPageT2Index, exdT1Index] });
+            }
+        }
+        return;
+    }
+
+    // ----------------------------------
+    // CASE 3: Page in Tier 3
+    // ----------------------------------
+    const foundPageT3Index = s.tier3CurPages[algoIndex].findIndex(p => p.id === page);
+
+    if (foundPageT3Index !== -1) {
+
+        const foundPageT3 = s.tier3CurPages[algoIndex][foundPageT3Index];
+        s.tier3Queue[algoIndex].push([type, currentRound * state.config.perReqEnqueueTime]);
+        foundPageT3.exdWeight = 1 + foundPageT3.exdWeight * Math.exp(s.exd_alpha * (currentRound - foundPageT3.lastRequestRound));
+        foundPageT3.lastRequestRound = currentRound;
+
+        if (type === "W") {
+            s.tier3write[algoIndex]++;
+            s.simActions[algoIndex].push({ op: 'W', tierId: 3, cellId: foundPageT3Index });
+        } else {
+            s.tier3read[algoIndex]++;
+            s.simActions[algoIndex].push({ op: 'R', tierId: 3, cellId: foundPageT3Index });
+        }
+
+        sleep(s.delay);
+
+        const exdInfo = getLFUPage(s.tier2CurPages[algoIndex]);
+
+        if (exdInfo !== null) {
+
+            const exdT2Index = exdInfo.index;
+            const exdT2page = exdInfo.page;
+
+            const victimExdWeight = exdT2page.exdWeight ?? 0;
+
+            if (foundPageT3.exdWeight > victimExdWeight) {
+                s.tier2Queue[algoIndex].push(["R", currentRound * state.config.perReqEnqueueTime]);
+                s.tier3Queue[algoIndex].push(["W", currentRound * state.config.perReqEnqueueTime]);
+                s.tier3Queue[algoIndex].push(["R", currentRound * state.config.perReqEnqueueTime]);
+                s.tier2Queue[algoIndex].push(["W", currentRound * state.config.perReqEnqueueTime]);
+                const temp = s.tier2CurPages[algoIndex][exdT2Index];
+                s.tier2CurPages[algoIndex][exdT2Index] = foundPageT3;
+                s.tier3CurPages[algoIndex][foundPageT3Index] = temp;
+
+                s.tier2_3Migration[algoIndex]++;
+                s.simActions[algoIndex].push({ op: 'M', tierId: 3, cellId: [foundPageT3Index, exdT2Index] });
+            }
+        }
+        return;
+    }
 }
-
-/*
-
-Say, we are at round 100
-Maybe 50 in tier 1
-30 in tier 2, 20 in tier 3
-
-migration 2-1: 10
-migration 3-2: 5
-
-tier1QueueLen = 50 + migration 2-1
-tier2QueueLen = 30 + migration 3-2 + migration 2-1
-tier3QueueLen = 20 + migration 3-2
-
-// these should not be calculated in the updateApprox function
-// these should be accumulated as we go, and then used in the updateApprox function to calculate the new approx queue sizes after the time window
-// Use queues of tiers
-
-Enter tRL:
-Start a timer
-End the timer
-totalTimeInTRL +=  (end - start)
-// we need make sure the iterations thorugh the previous workloads are not included in time
-
-// start from the first req in the workload
-// iterate through the workload until we reach a time (we add the latencies) that exceeds the totalTimeInTRL for each tier
-// by that time we will have some requests served, say the counts are t1Count, t2Count, t3Count for each tier respectively
-
-tier1QueueLen -= t1Count
-tier2QueueLen -= t2Count
-tier3QueueLen -= t3Count
-
-*/

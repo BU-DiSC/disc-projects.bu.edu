@@ -130,13 +130,12 @@ ul > .nav-item{
     background: #4fa49d;
     padding: 20px;
     width: 30px;
-    height: 90px;
+    height: 92px;
 }
 
 .rcorners-text-1 {
 position: relative;
-bottom: 5px;
-left: -16px;
+left: -18px;
 writing-mode: vertical-rl;
 text-align: center;
 font-weight: bolder;
@@ -145,7 +144,7 @@ font-size: 1.5em;
 
 .rcorners-2 {
     position: absolute;
-    bottom: -60px;
+    bottom: -55px;
     border-radius: 0px 10px 10px 0px;
     background: #4fa49d;
     padding: 20px;
@@ -155,8 +154,7 @@ font-size: 1.5em;
 
 .rcorners-text-2 {
 position: relative;
-bottom: 5px;
-left: -16px;
+left: -18px;
 writing-mode: vertical-rl;
 text-align: center;
 font-weight: bolder;
@@ -166,18 +164,17 @@ font-size: 1.5em;
 
 .rcorners-3 {
     position: absolute;
-    bottom: -310px;
+    bottom: -260px;
     border-radius: 0px 10px 10px 0px;
     background: #4fa49d;
     padding: 20px;
     width: 30px;
-    height: 218px;
+    height: 178px;
 }
 
 .rcorners-text-3 {
 position: relative;
-bottom: 5px;
-left: -16px;
+left: -18px;
 writing-mode: vertical-rl;
 text-align: center;
 font-weight: bolder;
@@ -726,13 +723,13 @@ progress::-moz-progress-bar {
 
 /* Play button */
 #play-button, #b-button, #f-button {
-    background: linear-gradient(135deg, #5D6D7E 0%, #AAB7B8 100%) !important; /* Light grey gradient */
+    background: linear-gradient(135deg, #78b8e1 0%, #0e74e1 100%) !important; /* Light grey gradient */
     color: white;
     width: 120px;
 }
 
 #play-button:hover {
-    background: linear-gradient(135deg, #3B5661 0%, #8D9DAE 100%) !important; /* Slightly darker gradient on hover */
+    background: linear-gradient(135deg, #5887b1 0%, #0064d1 100%) !important; /* Slightly darker gradient on hover */
 }
 
 /* Finish button */
