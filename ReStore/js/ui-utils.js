@@ -97,7 +97,6 @@ function renderTemperature(tier1, tier2, tier3, algorithms, algNo, currentRound)
                 tooltipSuffix = `${page.lrfuScore.toFixed(2)}`;
                 hotness = page.lrfuScore / (hotnessDenominator * 1.1);
             } else if (algorithmName === "EXD") {
-                console.log(page);
                 tooltipSuffix = `${page.exdWeight.toFixed(2)}`;
                 hotness = page.exdWeight / (hotnessDenominator * 1.1);
             }

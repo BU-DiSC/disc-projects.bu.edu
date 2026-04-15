@@ -492,7 +492,7 @@ $(document).ready(function () {
     });
 
     $("#finish-button").click(function () {
-        const s = state.tiers;
+        const s = state;
         finisher(s);
     });
 
@@ -636,7 +636,9 @@ function myLoop(s) {
         if (!s.pauser) {
             for (let i = 0; i < s.algorithms.length; i++) {
                 s.algorithms[i](s);
+                // print temeprature of all pages in all tiers for this algorithm for debugging
             }
+
             for (let i = 0; i < s.algorithms.length; i++) {
                 algoDisplay(i, s);
             }
@@ -1058,15 +1060,17 @@ function calculate(s, algorithms) {
 }
 
 function finisher(s) {
+    s.tiers.delay = state.config.finisher_step_delay;
+    s = s.tiers;
     if (!s.workload || s.workload.length === 0 || s.p >= s.workload.length) {
         console.warn("⚠️ No ongoing simulation.");
         return;
     }
-    s.delay = state.config.finisher_step_delay;
     s.pauser = true; // Ensure it's not paused
     s.playing = false; // Ensure it's in playing state
     s.finished = true; // Mark as finished to prevent further play
     $("#play-button-text").text("PAUSE"); // Reset play button text
+    // console.log(s.p, s.workload.length, s.tier1CurPages, s.tier2CurPages, s.tier3CurPages);
     for (; s.p < s.workload.length; s.p++) {
         for (let i = 0; i < s.algorithms.length; i++) {
             s.algorithms[i](s);
@@ -1084,19 +1088,36 @@ function finisher(s) {
     document.getElementById("curRound").textContent = s.p;
     document.getElementById("curOp").textContent = s.workload[s.p-1][0] === 'R' ?
         `Read from Page ${s.workload[s.p-1][1]}` : `Write to Page ${s.workload[s.p-1][1]}`;
-    for (let i = 0; i < s.algorithms.length; i++) {
-        algoDisplay(i, s);
-    }
     updateLatencyPlot(s);
     updateMigrationCountPlot(s);
     updateIndivMigrationCountPlot(s);
-    s.p = s.workload.length; // Ensure progress is complete
+    for (let algNo = 0; algNo < s.algorithms.length; algNo++) {
+        // algoDisplay(algNo, s);
+        renderTier(1, `tier1alg${algNo}`, s.tier1CurPages[algNo]);
+        renderTier(2, `tier2alg${algNo}`, s.tier2CurPages[algNo]);
+        renderTier(3, `tier3alg${algNo}`, s.tier3CurPages[algNo]);
+        renderTemperature(s.tier1CurPages[algNo], s.tier2CurPages[algNo], s.tier3CurPages[algNo], s.algorithms, algNo, s.p);
+    
+        // WRITES
+        $(`#alg${algNo}-pages-written-t1`).text(s.tier1write[algNo]);
+        $(`#alg${algNo}-pages-written-t2`).text(s.tier2write[algNo]);
+        $(`#alg${algNo}-pages-written-t3`).text(s.tier3write[algNo]);
+
+        // READS
+        $(`#alg${algNo}-pages-read-t1`).text(s.tier1read[algNo]);
+        $(`#alg${algNo}-pages-read-t2`).text(s.tier2read[algNo]);
+        $(`#alg${algNo}-pages-read-t3`).text(s.tier3read[algNo]);
+
+        // MIGRATIONS
+        $(`#alg${algNo}-pages-migrated-t1t2`).text(s.tier2_1Migration[algNo]);
+        $(`#alg${algNo}-pages-migrated-t2t3`).text(s.tier2_3Migration[algNo]);
+    }
     $("#play-button-text").text("PLAY");
     enableAlgorithmSelection();
 }
 
 function algoDisplay(algoIndex, s) {
-    console.log(algoIndex, s.algorithms[algoIndex].name, s.tier1CurPages[algoIndex]);
+    // console.log(algoIndex, s.algorithms[algoIndex].name, s.tier1CurPages[algoIndex]);
     let perAlgoDelay = s.delay * 0.9; // Allocate 90% of the delay to cell highlighting and tier updates
     let perActionDelay = perAlgoDelay;
     let cell1InHTML = null;
@@ -1378,7 +1399,6 @@ function tLRU(s) {
 
 function tLFU(s) {
     const algoIndex = s.algorithms.findIndex(algo => algo.name === "tLFU");
-    console.log(`tLFU's index: ${algoIndex}`);
     const currentRound = s.p;
     const entry = s.workload[currentRound];
     if (!entry) return;
@@ -1500,7 +1520,6 @@ function tLFU(s) {
 
 function decayTemperatures(tier, currentRound, dropThreshold = Math.round(totalPages / 10), dropScale = 0.02) {
     for (const page of tier) {
-        if (page.lastRequestRound === undefined || page.lastRequestRound === -1) continue;
         const idleTime = currentRound - page.lastRequestRound;
         if (idleTime > 0 && idleTime % dropThreshold === 0) {
             page.temperature = Math.max(page.temperature - dropScale, 0);
@@ -1566,9 +1585,9 @@ function TEMP(s) {
             s.simActions[algoIndex].push({ op: 'R', tierId: 1, cellId: foundPageT1Index });
         }
         // temperature decay of all pages
-        decayTemperatures(s.tier1CurPages[algoIndex], currentRound, 1, 0.002);
-        decayTemperatures(s.tier2CurPages[algoIndex], currentRound, 1, 0.002);
-        decayTemperatures(s.tier3CurPages[algoIndex], currentRound, 1, 0.002);
+        decayTemperatures(s.tier1CurPages[algoIndex], currentRound, 1, 0.005);
+        decayTemperatures(s.tier2CurPages[algoIndex], currentRound, 1, 0.005);
+        decayTemperatures(s.tier3CurPages[algoIndex], currentRound, 1, 0.005);
         // decayTemperatures(s.tier1CurPages[algoIndex], currentRound, 10, 0.02);
         // decayTemperatures(s.tier1CurPages[algoIndex], currentRound, 10, 0.02);
         // decayTemperatures(s.tier1CurPages[algoIndex], currentRound, 10, 0.02);
@@ -1620,9 +1639,9 @@ function TEMP(s) {
             }
         }
         // temperature decay of all pages
-        decayTemperatures(s.tier1CurPages[algoIndex], currentRound, 1, 0.002);
-        decayTemperatures(s.tier2CurPages[algoIndex], currentRound, 1, 0.002);
-        decayTemperatures(s.tier3CurPages[algoIndex], currentRound, 1, 0.002);
+        decayTemperatures(s.tier1CurPages[algoIndex], currentRound, 1, 0.005);
+        decayTemperatures(s.tier2CurPages[algoIndex], currentRound, 1, 0.005);
+        decayTemperatures(s.tier3CurPages[algoIndex], currentRound, 1, 0.005);
         // decayTemperatures(s.tier1CurPages[algoIndex], currentRound, 10, 0.02);
         // decayTemperatures(s.tier1CurPages[algoIndex], currentRound, 10, 0.02);
         // decayTemperatures(s.tier1CurPages[algoIndex], currentRound, 10, 0.02);
@@ -1675,9 +1694,9 @@ function TEMP(s) {
             }
         }
         // temperature decay of all pages
-        decayTemperatures(s.tier1CurPages[algoIndex], currentRound, 1, 0.002);
-        decayTemperatures(s.tier2CurPages[algoIndex], currentRound, 1, 0.002);
-        decayTemperatures(s.tier3CurPages[algoIndex], currentRound, 1, 0.002);
+        decayTemperatures(s.tier1CurPages[algoIndex], currentRound, 1, 0.005);
+        decayTemperatures(s.tier2CurPages[algoIndex], currentRound, 1, 0.005);
+        decayTemperatures(s.tier3CurPages[algoIndex], currentRound, 1, 0.005);
         // decayTemperatures(s.tier1CurPages[algoIndex], currentRound, 10, 0.02);
         // decayTemperatures(s.tier1CurPages[algoIndex], currentRound, 10, 0.02);
         // decayTemperatures(s.tier1CurPages[algoIndex], currentRound, 10, 0.02);
@@ -1957,8 +1976,9 @@ function computeAB(s1List, s2List, tierType, concurrency, readLat, alpha, a_scal
 
     let b_i = [5 / range_s1, 5 / rng_s2];
     if (tierType === 3) {
-        //avg_s2 = s2_last;
+        // // avg_s2 = s2_last;
         b_i = [5 / range_s1, 5 / rng_s2];
+        // b_i = [7 / range_s1, 3 / rng_s2];
     }
     const a_i = [
         Math.exp(a_scale * average_s1 * 5 / range_s1),
@@ -2171,9 +2191,9 @@ function ReStore(s) {
 
         updateApproxQueueSizes(s, algoIndex, currentRound);
         // temperature decay of all pages
-        decayTemperatures(s.tier1CurPages[algoIndex], currentRound, 1, 0.002);
-        decayTemperatures(s.tier2CurPages[algoIndex], currentRound, 1, 0.002);
-        decayTemperatures(s.tier3CurPages[algoIndex], currentRound, 1, 0.002);
+        decayTemperatures(s.tier1CurPages[algoIndex], currentRound, 1, 0.005);
+        decayTemperatures(s.tier2CurPages[algoIndex], currentRound, 1, 0.005);
+        decayTemperatures(s.tier3CurPages[algoIndex], currentRound, 1, 0.005);
 
         // learn
         rlLearn(s, algoIndex);
@@ -2303,9 +2323,9 @@ function ReStore(s) {
             }
         }
         // temperature decay of all pages
-        decayTemperatures(s.tier1CurPages[algoIndex], currentRound, 1, 0.002);
-        decayTemperatures(s.tier2CurPages[algoIndex], currentRound, 1, 0.002);
-        decayTemperatures(s.tier3CurPages[algoIndex], currentRound, 1, 0.002);
+        decayTemperatures(s.tier1CurPages[algoIndex], currentRound, 1, 0.005);
+        decayTemperatures(s.tier2CurPages[algoIndex], currentRound, 1, 0.005);
+        decayTemperatures(s.tier3CurPages[algoIndex], currentRound, 1, 0.005);
         // ---- RL LEARNING ----
         rlLearn(s, algoIndex);
         return;
@@ -2433,9 +2453,9 @@ function ReStore(s) {
             }
         }
         // temperature decay of all pages
-        decayTemperatures(s.tier1CurPages[algoIndex], currentRound, 1, 0.002);
-        decayTemperatures(s.tier2CurPages[algoIndex], currentRound, 1, 0.002);
-        decayTemperatures(s.tier3CurPages[algoIndex], currentRound, 1, 0.002);
+        decayTemperatures(s.tier1CurPages[algoIndex], currentRound, 1, 0.005);
+        decayTemperatures(s.tier2CurPages[algoIndex], currentRound, 1, 0.005);
+        decayTemperatures(s.tier3CurPages[algoIndex], currentRound, 1, 0.005);
 
         // ---- RL LEARNING ----
         rlLearn(s, algoIndex);
@@ -2445,7 +2465,6 @@ function ReStore(s) {
 
 function LRFU(s) {
     const algoIndex = s.algorithms.findIndex(algo => algo.name === "LRFU");
-    console.log(`LRFU's index: ${algoIndex}`);
     const currentRound = s.p;
     const entry = s.workload[currentRound];
     if (!entry) return;
@@ -2572,7 +2591,6 @@ function LRFU(s) {
 
 function EXD(s) {
     const algoIndex = s.algorithms.findIndex(algo => algo.name === "EXD");
-    console.log(`EXD's index: ${algoIndex}`);
     const currentRound = s.p;
     const entry = s.workload[currentRound];
     if (!entry) return;
@@ -2671,7 +2689,7 @@ function EXD(s) {
 
         sleep(s.delay);
 
-        const exdInfo = getLFUPage(s.tier2CurPages[algoIndex]);
+        const exdInfo = getEXDPage(s.tier2CurPages[algoIndex]);
 
         if (exdInfo !== null) {
 

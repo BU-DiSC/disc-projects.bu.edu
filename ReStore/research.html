@@ -92,10 +92,10 @@
 									<option value=1 selected>1 (Balanced)</option>
 									<option value=2>2 (Read-heavy)</option>
 									<option value=3>3 (Write-heavy)</option>
-									<option value=4>4 (Very Skewed)</option>
+									<option value=4>4 (Skewed)</option>
 									<option value=5>5 (Uniform)</option>
-									<option value=7>6 (Dynamic 1)</option>
-									<option value=8>7 (Dynamic 2)</option>
+									<option value=7>6 (Dynamic)</option>
+									<!-- <option value=8>7 (Dynamic-2)</option> -->
 								</select>
 							</div>
 						</div>
@@ -150,7 +150,7 @@
 								<div class="input-group-prepend">
 									<span class="input-group-text">% Access</span>
 								</div>
-								<input type="text" class="form-control" value=80 id="s" min=0>
+								<input type="text" class="form-control" value=60 id="s" min=0>
 							</div>
 						</div>
 
@@ -340,7 +340,7 @@
 						<div class="col-sm-2">
 							<label><input type="checkbox" value="LRFU"> LRFU</label>
 						</div>
-						<div class="col-sm-2 d-none">
+						<div class="col-sm-2">
 							<label><input type="checkbox" value="EXD"> EXD</label>
 						</div>
 						<div class="col-sm-2">

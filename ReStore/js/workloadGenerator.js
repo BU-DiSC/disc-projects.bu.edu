@@ -262,15 +262,15 @@ $(document).ready(function () {
     const $s = $('#s'); //skewness
     const $d = $('#d'); // skewness data
 
-    const smallWorkload1 = [2500, 80, 10, 50];
-    const smallWorkload2 = [2500, 80, 10, 90];
-    const smallWorkload3 = [2500, 80, 10, 20];
-    const smallWorkload4 = [2500, 90, 5, 50];
+    const smallWorkload1 = [2500, 60, 10, 50];
+    const smallWorkload2 = [2500, 60, 10, 90];
+    const smallWorkload3 = [2500, 60, 10, 20];
+    const smallWorkload4 = [2500, 85, 10, 80];
     const smallWorkload5 = [2500, 100, 100, 50];
     // const smallCustomWorkload = [100, 90, 10, 50]; // Placeholder for custom workload, will be updated with user inputs
     const smallCustomWorkload = [2500, 80, 10, 50]; // Placeholder for custom workload, will be updated with user inputs
-    const smallDynamicWorkload1 = [[1000, 4000], [90, 100], [5, 100], [50, 50]];
-    const smallDynamicWorkload2 = [[2000, 3000], [80, 80], [10, 10], [90, 20]];
+    const smallDynamicWorkload1 = [[2500, 2500], [60, 100], [10, 100], [50, 50]];
+    const smallDynamicWorkload2 = [[2000, 3000], [85, 60], [10, 10], [90, 20]];
 
     var workloads = [smallWorkload1, smallWorkload2, smallWorkload3, smallWorkload4, smallWorkload5, smallCustomWorkload, smallDynamicWorkload1, smallDynamicWorkload2];
     const ids = [$x, $s, $d, $e];
