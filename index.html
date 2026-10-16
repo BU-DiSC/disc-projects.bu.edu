@@ -1,10 +1,355 @@
-<html>
-<META http-equiv="refresh" content="0;URL=https://disc.bu.edu/research/">
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>DiSC Lab Demos and Projects</title>
+	<meta name="description" content="Interactive demos and project pages from the Data-intensive Systems and Computing (DiSC) lab at Boston University.">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+	<style>
+		:root {
+			--ink: #1f1f1f;
+			--muted: #6b6b6b;
+			--line: #e4e4e4;
+			--bg: #ffffff;
+			--bg-alt: #f5f5f5;
+			--header: #222222;
+			--accent: #1e6b52;
+			--footer: #2c3e50;
+		}
+
+		* { box-sizing: border-box; }
+
+		html, body {
+			margin: 0;
+			background: var(--bg);
+			color: var(--ink);
+			font-family: "Lato", "Helvetica Neue", Arial, sans-serif;
+			font-weight: 300;
+			-webkit-font-smoothing: antialiased;
+		}
+
+		a { color: inherit; text-decoration: none; }
+
+		/* Header (after disc.bu.edu) */
+		header.site {
+			background: var(--header);
+			color: #fff;
+		}
+
+		header.site .bar {
+			max-width: 1200px;
+			margin: 0 auto;
+			padding: 22px 24px;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 24px;
+		}
+
+		.brand {
+			display: flex;
+			align-items: center;
+			gap: 14px;
+		}
+
+		.brand img {
+			height: 44px;
+			width: auto;
+			background: #fff;
+			border-radius: 2px;
+		}
+
+		.brand span {
+			font-family: "EB Garamond", Garamond, Georgia, serif;
+			font-size: 22px;
+			letter-spacing: .01em;
+		}
+
+		nav.site ul {
+			list-style: none;
+			margin: 0;
+			padding: 0;
+			display: flex;
+			align-items: center;
+			gap: 26px;
+		}
+
+		nav.site a {
+			font-size: 11px;
+			font-weight: 700;
+			letter-spacing: .16em;
+			text-transform: uppercase;
+			color: rgba(255, 255, 255, .85);
+			transition: color .2s;
+		}
+
+		nav.site a:hover { color: #fff; }
+
+		nav.site li:last-child { margin-left: 28px; }
+
+		nav.site a.pill {
+			border: 1.5px solid #fff;
+			border-radius: 999px;
+			padding: 9px 16px;
+			color: #fff;
+		}
+
+		/* Intro */
+		.intro {
+			max-width: 1200px;
+			margin: 0 auto;
+			padding: 64px 24px 24px;
+		}
+
+		.intro h1 {
+			font-family: "EB Garamond", Garamond, Georgia, serif;
+			font-weight: 400;
+			font-size: 40px;
+			color: var(--accent);
+			margin: 0 0 10px;
+		}
+
+		.intro p {
+			margin: 0;
+			max-width: 720px;
+			color: var(--muted);
+			font-size: 17px;
+			line-height: 1.6;
+		}
+
+		/* Grid of demos */
+		.grid {
+			max-width: 1200px;
+			margin: 0 auto;
+			padding: 32px 24px 80px;
+			display: grid;
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+			gap: 40px 32px;
+		}
+
+		.card {
+			display: block;
+		}
+
+		.card .shot {
+			position: relative;
+			aspect-ratio: 16 / 10;
+			overflow: hidden;
+			border: 1px solid var(--line);
+			border-radius: 4px;
+			background: var(--bg-alt);
+		}
+
+		.card .shot img {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+			object-position: top center;
+			display: block;
+			transition: transform .45s ease;
+		}
+
+		.card .shot::after {
+			content: "Open demo \2192";
+			position: absolute;
+			inset: auto 0 0 0;
+			padding: 12px 16px;
+			font-size: 12px;
+			font-weight: 700;
+			letter-spacing: .14em;
+			text-transform: uppercase;
+			color: #fff;
+			background: linear-gradient(to top, rgba(0, 0, 0, .7), rgba(0, 0, 0, 0));
+			opacity: 0;
+			transition: opacity .3s;
+		}
+
+		.card:hover .shot img,
+		.card:focus-visible .shot img { transform: scale(1.04); }
+
+		.card:hover .shot::after,
+		.card:focus-visible .shot::after { opacity: 1; }
+
+		.card:focus-visible { outline: 2px solid var(--accent); outline-offset: 6px; border-radius: 4px; }
+
+		.card h2 {
+			font-family: "Lato", sans-serif;
+			font-weight: 400;
+			font-size: 22px;
+			line-height: 1.25;
+			margin: 18px 0 6px;
+		}
+
+		.card:hover h2 { color: var(--accent); }
+
+		.card .tag {
+			font-family: "EB Garamond", Garamond, Georgia, serif;
+			font-size: 14px;
+			color: var(--muted);
+		}
+
+		.card p {
+			margin: 8px 0 0;
+			font-size: 15px;
+			line-height: 1.55;
+			color: #444;
+		}
+
+		/* Footer (after Compactionary) */
+		footer.site {
+			background: var(--footer);
+			color: rgba(255, 255, 255, .8);
+			padding: 36px 24px;
+		}
+
+		footer.site .logos {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			gap: 80px;
+			flex-wrap: wrap;
+		}
+
+		footer.site .logos img {
+			height: 64px;
+			width: auto;
+		}
+
+		footer.site .copy {
+			text-align: center;
+			font-size: 13px;
+			margin-top: 22px;
+		}
+
+		@media (max-width: 960px) {
+			.grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+		}
+
+		@media (max-width: 720px) {
+			header.site .bar { padding: 16px; gap: 16px; }
+			.brand span { display: none; }
+			nav.site ul { gap: 18px; }
+			nav.site li:last-child { margin-left: 6px; }
+			.intro { padding: 40px 16px 8px; }
+			.intro h1 { font-size: 32px; }
+			.grid { grid-template-columns: 1fr; padding: 24px 16px 56px; gap: 36px; }
+			footer.site .logos { gap: 40px; }
+			footer.site .logos img { height: 52px; }
+		}
+
+		@media (max-width: 400px) {
+			header.site .bar { gap: 10px; }
+			.brand img { height: 38px; }
+			nav.site ul { gap: 12px; }
+			nav.site a { letter-spacing: .1em; }
+			nav.site a.pill { padding: 8px 12px; }
+			nav.site li:last-child { margin-left: 0; }
+		}
+	</style>
+</head>
 
 <body>
+	<header class="site">
+		<div class="bar">
+			<a class="brand" href="https://disc.bu.edu/">
+				<img src="compactionary/img/disc-logo.png" alt="DiSC lab logo">
+				<span>DiSC lab &middot; Demos</span>
+			</a>
+			<nav class="site">
+				<ul>
+					<li><a href="https://disc.bu.edu/">Home</a></li>
+					<li><a href="https://disc.bu.edu/team">Team</a></li>
+					<li><a class="pill" href="https://disc.bu.edu/publications">Publications</a></li>
+				</ul>
+			</nav>
+		</div>
+	</header>
 
+	<main>
+		<section class="intro">
+			<h1>Demos and Project Pages</h1>
+			<p>Interactive demonstrations and project pages from the Data-intensive Systems and Computing Lab at Boston University. Click a card to explore it.</p>
+		</section>
 
-Coming soon...
+		<section class="grid">
+			<a class="card" href="sortedness/">
+				<div class="shot"><img src="img/demos/sortedness.jpg" alt="Screenshot of the Indexing for Near-Sorted Data demo" loading="lazy"></div>
+				<h2>Indexing for Near-Sorted Data</h2>
+				<span class="tag">Demo</span>
+				<p>Configure near-sorted workloads with the K-L sortedness metric and ingest them into sortedness-aware indexes and classic B+-trees.</p>
+			</a>
+
+			<a class="card" href="ReStore/">
+				<div class="shot"><img src="img/demos/ReStore.jpg" alt="Screenshot of the ReStore demo" loading="lazy"></div>
+				<h2>ReStore: RL-based Multi-Tier Storage Management</h2>
+				<span class="tag">Demo</span>
+				<p>Reinforcement-learning agents decide how to migrate data across storage tiers as the workload shifts.</p>
+			</a>
+
+			<a class="card" href="ACE/">
+				<div class="shot"><img src="img/demos/ACE.jpg" alt="Screenshot of the ACE buffer pool manager demo" loading="lazy"></div>
+				<h2>ACE: A Bufferpool for SSDs</h2>
+				<span class="tag">Demo</span>
+				<p>An asymmetry- and concurrency-aware buffer pool manager that exploits the read/write asymmetry and parallelism of modern SSDs.</p>
+			</a>
+
+			<a class="card" href="https://research.redhat.com/blog/research_project/near-data-data-transformation/">
+				<div class="shot"><img src="img/demos/near-data.jpg" alt="Screenshot of the Near-Data Data Transformation project page" loading="lazy"></div>
+				<h2>Near-Data Data Transformation</h2>
+				<span class="tag">Project Page</span>
+				<p>A hardware-software co-design that reorganizes data on the fly near memory, serving both transactional and analytical workloads.</p>
+			</a>
+
+			<a class="card" href="https://disc.bu.edu/persistent-deletes">
+				<div class="shot"><img src="img/demos/persistent-deletes.jpg" alt="Screenshot of the Persistent Deletes project page" loading="lazy"></div>
+				<h2>Achieving Persistent Deletes</h2>
+				<span class="tag">Project Page</span>
+				<p>From privacy regulations to system design: making deletes timely and persistent across the policy, application, and storage layers.</p>
+			</a>
+
+			<a class="card" href="compactionary/">
+				<div class="shot"><img src="img/demos/compactionary.jpg" alt="Screenshot of the LSM Compactionary demo" loading="lazy"></div>
+				<h2>LSM Compactionary</h2>
+				<span class="tag">Demo</span>
+				<p>Visualize and compare compaction strategies in LSM-trees and see how each choice affects writes, lookups, and space.</p>
+			</a>
+
+			<a class="card" href="acheron/">
+				<div class="shot"><img src="img/demos/acheron.jpg" alt="Screenshot of the Acheron demo" loading="lazy"></div>
+				<h2>Acheron: Persisting Deletes</h2>
+				<span class="tag">Demo</span>
+				<p>See how LSM engines can guarantee that deleted data is physically purged within a user-defined time bound.</p>
+			</a>
+
+			<a class="card" href="lethe/">
+				<div class="shot"><img src="img/demos/lethe.jpg" alt="Screenshot of the Lethe project page" loading="lazy"></div>
+				<h2>Lethe: Timely and Persistent Deletes</h2>
+				<span class="tag">Project Page</span>
+				<p>Delete-aware compaction and data layouts that make deletes efficient and timely in out-of-place key-value stores.</p>
+			</a>
+
+			<a class="card" href="parametric-io-model/">
+				<div class="shot"><img src="img/demos/parametric-io-model.jpg" alt="Screenshot of the Parametric I/O Model demo" loading="lazy"></div>
+				<h2>Parametric I/O Model</h2>
+				<span class="tag">Demo</span>
+				<p>An I/O model that captures read/write asymmetry and device concurrency, with algorithms designed around it.</p>
+			</a>
+		</section>
+	</main>
+
+	<footer class="site">
+		<div class="logos">
+			<a href="https://www.bu.edu/"><img src="compactionary/img/BU-logo.png" alt="Boston University"></a>
+			<a href="https://disc.bu.edu/"><img src="compactionary/img/disc-logo.png" alt="DiSC lab"></a>
+		</div>
+		<div class="copy">Copyright &copy; <span id="year">2026</span> DiSC lab, Boston University.</div>
+	</footer>
+
+	<script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 
 </html>
